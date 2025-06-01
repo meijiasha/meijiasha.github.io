@@ -4,35 +4,61 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>店家後台管理</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="LOGO.svg" type="image/x-icon" />
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    <!-- Bootstrap 圖示 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
     <style>
       body {
-        padding-top: 56px;
+        padding-top: 56px; /* 為固定的 navbar 留出空間 */
         font-size: 0.9rem;
       }
       .container {
-        max-width: 100%;
+        max-width: 100%; /* 使容器佔滿可用寬度 */
         padding-left: 20px;
         padding-right: 20px;
       }
       .table th,
       .table td {
         vertical-align: middle;
-        white-space: nowrap;
+        white-space: nowrap; /* 預設不換行，讓表格自己處理滾動 */
       }
+      /* 排序表頭樣式 */
+      .table th[data-sortable] {
+        cursor: pointer;
+        position: relative; /* 為了排序圖示的定位 */
+      }
+      .table th[data-sortable]:hover {
+        background-color: #f8f9fa; /* 滑鼠懸停效果 */
+      }
+      .table th .sort-icon {
+        /* 排序圖示 */
+        margin-left: 5px;
+        opacity: 0.4;
+        font-size: 0.8em;
+      }
+      .table th.sort-asc .sort-icon.bi-arrow-up,
+      .table th.sort-desc .sort-icon.bi-arrow-down {
+        opacity: 1;
+        color: #0d6efd; /* Bootstrap primary color */
+      }
+      /* 讓登出按鈕在導覽列右邊 */
       .navbar .btn-logout {
         margin-left: auto;
       }
+
+      /* 針對特定欄位的寬度和換行控制 */
       .table th.col-name,
       .table td.col-name {
         min-width: 180px;
-        white-space: normal;
+        white-space: normal; /* 允許店家名稱換行 */
       }
       .table th.col-address,
       .table td.col-address {
         min-width: 220px;
-        white-space: normal;
+        white-space: normal; /* 允許地址換行 */
       }
       .table th.col-editor,
       .table td.col-editor {
@@ -44,22 +70,81 @@
       }
       .table th.col-actions,
       .table td.col-actions {
-        min-width: 130px;
+        min-width: 130px; /* 確保編輯和刪除按鈕有足夠空間 */
         text-align: center;
       }
+
+      /* 讓表格本身可以水平滾動 */
       #storeListContainer {
         overflow-x: auto;
       }
+
       .table .btn-sm {
         padding: 0.2rem 0.4rem;
         font-size: 0.8rem;
       }
       .pagination-controls {
-        margin-top: 1.5rem;
-      } /* 分頁控制項的間距 */
+        margin-top: 1.5rem; /* 分頁控制項的間距 */
+      }
+
+      /* CSS Loader Styles */
+      .loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 200px; /* 給 loader 一些顯示空間 */
+      }
+      .loader {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        position: relative;
+        animation: rotate 1s linear infinite;
+        margin-bottom: 0.5rem;
+      }
+      .loader::before,
+      .loader::after {
+        content: "";
+        box-sizing: border-box;
+        position: absolute;
+        inset: 0px;
+        border-radius: 50%;
+        border: 5px solid #6c757d; /* Loader 顏色 */
+        animation: prixClipFix 2s linear infinite;
+      }
+      .loader::after {
+        inset: 8px;
+        transform: rotate3d(90, 90, 0, 180deg);
+        border-color: #fd7e14; /* Loader 動態部分顏色 */
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes prixClipFix {
+        0% {
+          clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
+        }
+        50% {
+          clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
+        }
+        75%,
+        100% {
+          clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
+        }
+      }
     </style>
   </head>
   <body>
+    <!-- 導覽列 -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">店家後台</a>
@@ -76,35 +161,39 @@
         </div>
       </div>
 
-      <div id="loadingIndicator" class="text-center my-5" style="display: none">
-        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">載入中...</span></div>
-        <p>正在載入店家資料...</p>
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="my-5 loader-container" style="display: none">
+        <span class="loader"></span>
+        <p class="mt-2">正在載入店家資料...</p>
       </div>
 
-      <div id="storeListContainer">
+      <!-- Store List Table -->
+      <div id="storeListContainer" style="display: none">
+        <!-- 初始隱藏，登入且有資料後顯示 -->
         <table class="table table-striped table-hover table-bordered">
           <thead>
             <tr>
-              <th scope="col" class="col-name">店家名稱</th>
-              <th scope="col">行政區</th>
-              <th scope="col">分類</th>
-              <th scope="col" class="col-address">地址</th>
-              <th scope="col">價格 (自訂)</th>
-              <th scope="col" class="col-editor">最後編輯者</th>
-              <th scope="col" class="col-time">最後編輯時間</th>
+              <th scope="col" class="col-name" data-sortable data-column="name">店家名稱 <span class="sort-icon bi bi-arrow-down-up"></span></th>
+              <th scope="col" data-sortable data-column="district">行政區 <span class="sort-icon bi bi-arrow-down-up"></span></th>
+              <th scope="col" data-sortable data-column="category">分類 <span class="sort-icon bi bi-arrow-down-up"></span></th>
+              <th scope="col" class="col-address" data-sortable data-column="address">地址 <span class="sort-icon bi bi-arrow-down-up"></span></th>
+              <th scope="col" data-sortable data-column="price">價格 (自訂) <span class="sort-icon bi bi-arrow-down-up"></span></th>
+              <th scope="col" class="col-editor" data-sortable data-column="lastEditedBy.email">最後編輯者 <span class="sort-icon bi bi-arrow-down-up"></span></th>
+              <th scope="col" class="col-time" data-sortable data-column="lastEditedAt">最後編輯時間 <span class="sort-icon bi bi-arrow-down-up"></span></th>
               <th scope="col" class="col-actions">操作</th>
             </tr>
           </thead>
           <tbody id="storesTableBody">
-            <tr>
-              <td colspan="8" class="text-center" id="noStoresMessage" style="display: none">目前沒有店家資料。</td>
-            </tr>
+            <!-- 資料將由 JavaScript 填入 -->
+            <!-- noStoresMessage 會在 JS 中根據情況插入或移除 -->
           </tbody>
         </table>
       </div>
+      <!-- 此處不再需要固定的 noStoresMessage tr，JS 會在 tbody 為空時處理 -->
 
-      <!-- **** 新增：每頁顯示筆數選擇 和 分頁控制項 **** -->
-      <div class="d-flex justify-content-between align-items-center pagination-controls">
+      <!-- Pagination Controls -->
+      <div class="d-flex justify-content-between align-items-center pagination-controls" id="paginationContainer" style="display: none">
+        <!-- 初始隱藏 -->
         <div>
           <label for="itemsPerPageSelect" class="form-label me-2">每頁顯示:</label>
           <select class="form-select form-select-sm d-inline-block" id="itemsPerPageSelect" style="width: auto">
@@ -117,44 +206,78 @@
         <nav aria-label="店家列表分頁">
           <ul class="pagination pagination-sm mb-0" id="paginationUl">
             <!-- 分頁按鈕將由 JS 填入 -->
-            <!-- 範例:
-                  <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一頁</a></li>
-                  <li class="page-item active" aria-current="page"><a class="page-link" href="#">1</a></li>
-                  <li class="page-item"><a class="page-link" href="#">2</a></li>
-                  <li class="page-item"><a class="page-link" href="#">下一頁</a></li>
-                  -->
           </ul>
         </nav>
       </div>
-      <!-- **** ---- **** -->
 
+      <!-- Authentication Message -->
       <div id="authMessage" class="alert alert-warning mt-4" role="alert" style="display: none">您需要登入才能查看此頁面。正在檢查登入狀態...</div>
     </div>
 
-    <!-- ... (scripts 區塊保持不變) ... -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <!-- Firebase SDK (Compat - 使用您指定的版本，並帶有 cache-busting) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js?version=3"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js?version=3"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js?version=3"></script>
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-functions-compat.js?version=3"></script> -->
+
+    <!-- Firebase 初始化 -->
     <script>
+      console.log("HTML: Firebase config script block started.");
       const firebaseConfig = {
-        apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
-        authDomain: "meijiasha-64de6.firebaseapp.com",
-        projectId: "meijiasha-64de6",
-        storageBucket: "meijiasha-64de6.firebasestorage.app",
-        messagingSenderId: "732275424686",
-        appId: "1:732275424686:web:9e1349c421503f75da5c3f",
-        measurementId: "G-07JZNDTJN7",
+        apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4", // 請務必替換成您的 Firebase API Key
+        authDomain: "meijiasha-64de6.firebaseapp.com", // 請務必替換成您的 Firebase Auth Domain
+        projectId: "meijiasha-64de6", // 請務必替換成您的 Firebase Project ID
+        storageBucket: "meijiasha-64de6.appspot.com", // 請務必替換成您的 Firebase Storage Bucket
+        messagingSenderId: "732275424686", // 請務必替換成您的 Firebase Messaging Sender ID
+        appId: "1:732275424686:web:9e1349c421503f75da5c3f", // 請務必替換成您的 Firebase App ID
+        measurementId: "G-07JZNDTJN7", // 可選
       };
+
+      var db; // 宣告為全域變數，以便 admin-script.js 可以訪問
+      var auth; // 宣告為全域變數
+      // var functions; // 如果您使用 functions
+
       try {
-        firebase.initializeApp(firebaseConfig);
-        var db = firebase.firestore();
-        var auth = firebase.auth();
-        console.log("後台 HTML: Firebase Initialized.");
+        // 確保 firebase 全域物件已由 SDK 載入
+        if (typeof firebase !== "undefined" && typeof firebase.initializeApp === "function") {
+          firebase.initializeApp(firebaseConfig);
+          console.log("HTML: firebase.initializeApp called.");
+
+          if (typeof firebase.firestore === "function") {
+            db = firebase.firestore();
+            console.log("HTML: db instance created and assigned to global var.");
+          } else {
+            console.error("HTML: firebase.firestore is not a function! Firestore SDK might not have loaded correctly.");
+          }
+          if (typeof firebase.auth === "function") {
+            auth = firebase.auth();
+            console.log("HTML: auth instance created and assigned to global var.");
+          } else {
+            console.error("HTML: firebase.auth is not a function! Auth SDK might not have loaded correctly.");
+          }
+          // if (typeof firebase.functions === 'function') { // 檢查 functions 是否存在
+          //    functions = firebase.functions();
+          //    console.log("HTML: Firebase Functions Initialized (if SDK was included).");
+          // }
+          console.log("HTML: Firebase Initialized successfully. 'db' and 'auth' should be globally available.");
+        } else {
+          console.error("HTML: Firebase global object or initializeApp function is not available BEFORE initialization attempt! SDKs might not have loaded.");
+          alert("Firebase SDK 核心載入失敗，頁面可能無法正常運作。請檢查網路連線或瀏覽器主控台。");
+        }
       } catch (error) {
-        console.error("Firebase Init Error:", error);
+        console.error("HTML: Firebase Initialization CRITICAL Failed:", error);
+        alert("Firebase 初始化發生嚴重錯誤，請檢查設定物件或網路連線，並查看主控台錯誤。");
+        db = null; // 確保在出錯時，這些變數是 null
+        auth = null;
+        // functions = null;
       }
+      console.log("HTML: Firebase config script block finished. db type:", typeof db, "auth type:", typeof auth);
     </script>
+
+    <!-- 後台專用 JavaScript (確保路徑正確) -->
     <script src="admin-script.js"></script>
   </body>
 </html>

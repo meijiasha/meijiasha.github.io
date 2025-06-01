@@ -1,117 +1,126 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增店家資料</title> <!-- 標題不同 -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新增店家資料</title>
+    <!-- 標題不同 -->
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
-        body { padding-top: 56px; }
-        .container { max-width: 768px; }
+      body {
+        padding-top: 56px;
+      }
+      .container {
+        max-width: 768px;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="admin.html">返回店家列表</a>
-        </div>
+      <div class="container-fluid">
+        <a class="navbar-brand" href="admin.html">返回店家列表</a>
+      </div>
     </nav>
 
     <div class="container mt-4">
-        <h2>新增店家資料</h2> <!-- 標題不同 -->
-        <hr>
+      <h2>新增店家資料</h2>
+      <!-- 標題不同 -->
+      <hr />
 
-        <!-- 新增表單 ID 改為 addStoreForm，欄位 ID 可以沿用或加上 "add" 前綴以示區別 -->
-        <form id="addStoreForm">
-            <!-- 注意：新增模式不需要 storeDocId 隱藏欄位 -->
+      <!-- 新增表單 ID 改為 addStoreForm，欄位 ID 可以沿用或加上 "add" 前綴以示區別 -->
+      <form id="addStoreForm">
+        <!-- 注意：新增模式不需要 storeDocId 隱藏欄位 -->
 
-            <div class="mb-3">
-                <label for="addStoreName" class="form-label">店家名稱 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="addStoreName" required>
-            </div>
+        <div class="mb-3">
+          <label for="addStoreName" class="form-label">店家名稱 <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="addStoreName" required />
+        </div>
 
-            <div class="mb-3">
-                <label for="addStoreDistrict" class="form-label">行政區 <span class="text-danger">*</span></label>
-                <select class="form-select" id="addStoreDistrict" required>
-                    <option value="">-- 請選擇 --</option>
-                    <!-- 選項將由 JS 填入 -->
-                </select>
-            </div>
+        <div class="mb-3">
+          <label for="addStoreDistrict" class="form-label">行政區 <span class="text-danger">*</span></label>
+          <select class="form-select" id="addStoreDistrict" required>
+            <option value="">-- 請選擇 --</option>
+            <!-- 選項將由 JS 填入 -->
+          </select>
+        </div>
 
-            <div class="mb-3">
-                <label for="addStoreCategory" class="form-label">分類 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="addStoreCategory" required>
-            </div>
+        <div class="mb-3">
+          <label for="addStoreCategory" class="form-label">分類 <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="addStoreCategory" required />
+        </div>
 
-            <div class="mb-3">
-                <label for="addStoreAddress" class="form-label">地址</label>
-                <input type="text" class="form-control" id="addStoreAddress">
-            </div>
+        <div class="mb-3">
+          <label for="addStoreAddress" class="form-label">地址</label>
+          <input type="text" class="form-control" id="addStoreAddress" />
+        </div>
 
-            <div class="mb-3">
-                <label for="addStorePrice" class="form-label">每人平均消費約 (例如: $200-300)</label>
-                <input type="text" class="form-control" id="addStorePrice">
-            </div>
+        <div class="mb-3">
+          <label for="addStorePrice" class="form-label">每人平均消費約 (例如: $200-300)</label>
+          <input type="text" class="form-control" id="addStorePrice" />
+        </div>
 
-            <div class="mb-3">
-                <label for="addStoreDescription" class="form-label">簡介</label>
-                <textarea class="form-control" id="addStoreDescription" rows="3"></textarea>
-            </div>
+        <div class="mb-3">
+          <label for="addStoreDescription" class="form-label">簡介</label>
+          <textarea class="form-control" id="addStoreDescription" rows="3"></textarea>
+        </div>
 
-            <div class="mb-3">
-                <label for="addStorePlaceId" class="form-label">Google Place ID</label>
-                <input type="text" class="form-control" id="addStorePlaceId">
-                <div class="form-text">用於從 Google Maps 獲取店家照片、營業時間等詳細資訊。</div>
-            </div>
+        <div class="mb-3">
+          <label for="addStorePlaceId" class="form-label">Google Place ID</label>
+          <input type="text" class="form-control" id="addStorePlaceId" />
+          <div class="form-text">用於從 Google Maps 獲取店家照片、營業時間等詳細資訊。</div>
+        </div>
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="addStoreLat" class="form-label">緯度 (Latitude)</label>
-                    <input type="number" step="any" class="form-control" id="addStoreLat">
-                </div>
-                <div class="col-md-6">
-                    <label for="addStoreLng" class="form-label">經度 (Longitude)</label>
-                    <input type="number" step="any" class="form-control" id="addStoreLng">
-                </div>
-                <div class="form-text">如果手動輸入經緯度，請確保正確，否則地圖標記會不準確。</div>
-            </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="addStoreLat" class="form-label">緯度 (Latitude)</label>
+            <input type="number" step="any" class="form-control" id="addStoreLat" />
+          </div>
+          <div class="col-md-6">
+            <label for="addStoreLng" class="form-label">經度 (Longitude)</label>
+            <input type="number" step="any" class="form-control" id="addStoreLng" />
+          </div>
+          <div class="form-text">如果手動輸入經緯度，請確保正確，否則地圖標記會不準確。</div>
+        </div>
 
-            <div id="formError" class="alert alert-danger" style="display: none;" role="alert"></div>
-            <div id="formSuccess" class="alert alert-success" style="display: none;" role="alert"></div>
+        <div id="formError" class="alert alert-danger" style="display: none" role="alert"></div>
+        <div id="formSuccess" class="alert alert-success" style="display: none" role="alert"></div>
 
-            <button type="submit" class="btn btn-success">新增店家</button> <!-- 按鈕文字不同 -->
-            <a href="admin.html" class="btn btn-secondary">取消</a>
-        </form>
+        <button type="submit" class="btn btn-success">新增店家</button>
+        <!-- 按鈕文字不同 -->
+        <a href="admin.html" class="btn btn-secondary">取消</a>
+      </form>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js?version=1"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js?version=1"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js?version=1"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-functions-compat.js?version=1"></script>
     <!-- Firebase 初始化 -->
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
-            authDomain: "meijiasha-64de6.firebaseapp.com",
-            projectId: "meijiasha-64de6",
-            storageBucket: "meijiasha-64de6.firebasestorage.app",
-            messagingSenderId: "732275424686",
-            appId: "1:732275424686:web:9e1349c421503f75da5c3f",
-            measurementId: "G-07JZNDTJN7"
-            // ... 您的 Firebase 設定 ...
-        };
-        try {
-            firebase.initializeApp(firebaseConfig);
-            var db = firebase.firestore();
-            var auth = firebase.auth();
-            console.log("新增頁面 HTML: Firebase Initialized.");
-        } catch (error) { /* ... */ }
+      const firebaseConfig = {
+        apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
+        authDomain: "meijiasha-64de6.firebaseapp.com",
+        projectId: "meijiasha-64de6",
+        storageBucket: "meijiasha-64de6.firebasestorage.app",
+        messagingSenderId: "732275424686",
+        appId: "1:732275424686:web:9e1349c421503f75da5c3f",
+        measurementId: "G-07JZNDTJN7",
+        // ... 您的 Firebase 設定 ...
+      };
+      try {
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+        var auth = firebase.auth();
+        console.log("新增頁面 HTML: Firebase Initialized.");
+      } catch (error) {
+        /* ... */
+      }
     </script>
     <!-- 新增頁面專用 JavaScript -->
     <script src="add-store-script.js"></script>
-</body>
+  </body>
 </html>
