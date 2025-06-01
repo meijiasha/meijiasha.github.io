@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店家後台管理</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Bootstrap 圖示 (可選) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { padding-top: 56px; /* 為固定的 navbar 留出空間 (如果有的話) */ }
+        .container { max-width: 1140px; }
+        .table th, .table td { vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    <!-- 導覽列 (可選，可以加入登出按鈕等) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">店家後台</a>
+            <!-- 可以加入登出按鈕 -->
+            <!-- <button class="btn btn-outline-light" id="logoutButton">登出</button> -->
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>店家列表</h2>
+            <!-- 可以加入新增店家按鈕 -->
+            <!-- <button class="btn btn-success" id="addStoreButton">新增店家</button> -->
+        </div>
+
+        <div id="loadingIndicator" class="text-center my-5" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            <p>正在載入店家資料...</p>
+        </div>
+
+        <div id="storeListContainer">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">店家名稱</th>
+                        <th scope="col">行政區</th>
+                        <th scope="col">分類</th>
+                        <th scope="col">地址</th>
+                        <th scope="col">價格 (自訂)</th>
+                        <th scope="col">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="storesTableBody">
+                    <!-- 店家資料將由 JavaScript 填入 -->
+                    <tr>
+                        <td colspan="6" class="text-center" id="noStoresMessage" style="display: none;">目前沒有店家資料。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="authMessage" class="alert alert-warning mt-4" role="alert" style="display: none;">
+            您需要登入才能查看此頁面。正在檢查登入狀態...
+            <!-- <a href="login.html">前往登入頁面</a> (假設有 login.html) -->
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script> <!-- **新增 Auth SDK** -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase 初始化 (與您前端地圖專案的設定相同) -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
+        authDomain: "meijiasha-64de6.firebaseapp.com",
+        projectId: "meijiasha-64de6",
+        storageBucket: "meijiasha-64de6.firebasestorage.app",
+        messagingSenderId: "732275424686",
+        appId: "1:732275424686:web:9e1349c421503f75da5c3f",
+        measurementId: "G-07JZNDTJN7"
+        //apiKey: "YOUR_FIREBASE_API_KEY",
+        //authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        //projectId: "YOUR_PROJECT_ID",
+        //storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        //messagingSenderId: "YOUR_SENDER_ID",
+        //appId: "YOUR_APP_ID"
+      };
+
+      try {
+           firebase.initializeApp(firebaseConfig);
+           var db = firebase.firestore();
+           var auth = firebase.auth(); // **取得 Auth 實例**
+           console.log("後台 HTML: Firebase Initialized. 'db' and 'auth' should be available.");
+      } catch (error) {
+           console.error("後台 HTML: Firebase Initialization Failed:", error);
+           alert("Firebase 初始化失敗！");
+           var db = null;
+           var auth = null;
+      }
+    </script>
+
+    <!-- 後台專用 JavaScript (例如 admin-script.js) -->
+    <script src="admin-script.js"></script>
+
+</body>
+</html>
