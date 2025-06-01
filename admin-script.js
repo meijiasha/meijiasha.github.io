@@ -90,12 +90,9 @@ function addEventListenersToEditButtons() {
 
 // 函數：處理編輯按鈕點擊 (目前僅 console.log)
 function handleEditStore(storeId) {
-    console.log(`點擊了編輯按鈕，店家 ID: ${storeId}`);
-    alert(`準備編輯店家 ID: ${storeId} (實際編輯功能待實現)`);
-    // 之後的步驟：
-    // 1. 可以跳轉到一個新的編輯頁面，並將 storeId 作為 URL 參數傳遞。
-    // 2. 或者，可以在當前頁面彈出一個模態框 (modal) 並預填該店家的資料。
-    // window.location.href = `edit-store.html?id=${storeId}`; // 跳轉範例
+    console.log(`準備編輯店家 ID: ${storeId}`);
+    // 跳轉到編輯頁面，並將 storeId 作為 URL 查詢參數傳遞
+    window.location.href = `edit-store.html?id=${storeId}`;
 }
 
 
