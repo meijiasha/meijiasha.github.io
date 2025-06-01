@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /stores_taipei/{storeId} {
+
+      allow read: if true;
+
+      // --- 創建 (CREATE) 新店家文件 ---
+      allow create: if
+            // 基本授權
+            request.auth != null &&
+            request.auth.token.admin === true &&
+
+            // 檢查請求中是否包含必要的頂層欄位 (類型檢查稍後可逐步加入)
+            // 確保客戶端傳遞了這些欄位，即使它們的值可能是物件或 serverTimestamp
+            ('name' in request.resource.data) &&
+            ('district' in request.resource.data) &&
+            ('category' in request.resource.data) &&
+            ('createdBy' in request.resource.data) &&
+            ('lastEditedBy' in request.resource.data) &&
+            ('createdAt' in request.resource.data) && // 客戶端應傳 FieldValue.serverTimestamp()
+            ('lastEditedAt' in request.resource.data) && // 客戶端應傳 FieldValue.serverTimestamp()
+
+            // 驗證創建者 UID 是否匹配 (如果 createdBy 是物件)
+            request.resource.data.createdBy.uid == request.auth.uid;
+            // 您可以逐步加回其他驗證，例如：
+            // && request.resource.data.name is string && request.resource.data.name.size() > 0
+
+
+      // --- 更新 (UPDATE) 現有店家文件 ---
+      allow update: if
+            // 基本授權
+            request.auth != null &&
+            request.auth.token.admin === true &&
+
+            // 確保 lastEditedBy 被更新為當前用戶 (如果 lastEditedBy 是物件)
+            request.resource.data.lastEditedBy.uid == request.auth.uid &&
+
+            // 確保客戶端意圖更新 lastEditedAt
+            ('lastEditedAt' in request.resource.data) &&
+
+            // 確保創建時間不被修改 (如果 createdAt 存在於舊數據中)
+            // 注意：如果舊數據就沒有 createdAt，這個比較可能會失敗或行為不確定
+            // 一個更安全的方式是檢查 request.resource.data 中是否沒有 createdAt，
+            // 或者如果有，它必須等於舊值。
+            // 為了簡化，我們先假設如果客戶端傳了 createdAt，它必須等於舊值。
+            // 如果客戶端不傳 createdAt (通常更新時不應該傳)，則此條件不適用。
+            // Firestore 的 set(data, {merge: true}) 更新行為是關鍵。
+            // 如果 request.resource.data.createdAt 等於 resource.data.createdAt，
+            // 或者 request.resource.data 中根本沒有 createdAt 鍵，都是可以接受的。
+            // 所以，更準確的可能是：
+            // ( !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt ) &&
+            // 這裡我們先用一個簡化的前提：更新時不應修改 createdAt。
+            // 如果 resource.data.createdAt 存在，則 request.resource.data.createdAt 必須等於它
+            // 如果 resource.data.createdAt 不存在，則 request.resource.data.createdAt 也不應存在
+            ( (resource.data.createdAt == null && request.resource.data.createdAt == null) ||
+              (resource.data.createdAt != null && request.resource.data.createdAt == resource.data.createdAt) ) &&
+
+            // 同理 createdBy
+            ( (resource.data.createdBy == null && request.resource.data.createdBy == null) ||
+              (resource.data.createdBy != null &&
+               request.resource.data.createdBy.uid == resource.data.createdBy.uid &&
+               request.resource.data.createdBy.email == resource.data.createdBy.email
+              )
+            );
+            // 您可以逐步加回其他驗證，例如：
+            // && request.resource.data.name is string && request.resource.data.name.size() > 0
+
+
+      // --- 刪除 (DELETE) 店家文件 ---
+      allow delete: if
+            request.auth != null &&
+            request.auth.token.admin === true;
+
+    } // 結束 stores_taipei
+  } // 結束 /databases/{database}/documents
+} // 結束 service cloud.firestore

@@ -135,7 +135,7 @@ if (editStoreForm) {
                 uid: currentUser.uid,
                 email: currentUser.email
             },
-            lastEditedAt: firebase.firestore.FieldValue.serverTimestamp()
+            lastEditedAt: firebase.firestore.FieldValue.serverTimestamp(),
         };
 
         const lat = storeLatInput ? parseFloat(storeLatInput.value) : NaN;
