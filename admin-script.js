@@ -104,7 +104,7 @@ async function fetchStores(direction = 'next') {
 
     try {
         let query = db.collection('stores_taipei')
-                      .orderBy('lastEditedAt', 'desc'); // **必須有排序才能用 cursor**
+                      //.orderBy('lastEditedAt', 'desc'); // **必須有排序才能用 cursor**
 
         if (direction === 'next') {
             if (lastFetchedDoc) { // 如果 lastFetchedDoc 存在，表示不是第一頁
