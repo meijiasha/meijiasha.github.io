@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
     <style>
       body {
-        padding-top: 56px; /* 為固定的 navbar 留出空間 (如果有的話) */
+        padding-top: 56px; /* 為固定的 navbar 留出空間 */
       }
       .container {
         max-width: 1140px;
@@ -19,23 +19,29 @@
       .table td {
         vertical-align: middle;
       }
+      /* 讓登出按鈕在導覽列右邊 */
+      .navbar .btn-logout {
+        margin-left: auto;
+      }
     </style>
   </head>
   <body>
-    <!-- 導覽列 (可選，可以加入登出按鈕等) -->
+    <!-- 導覽列 -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">店家後台</a>
-        <!-- 可以加入登出按鈕 -->
-        <!-- <button class="btn btn-outline-light" id="logoutButton">登出</button> -->
+        <!-- **** 新增/修改登出按鈕 **** -->
+        <button class="btn btn-outline-light btn-logout" id="logoutButton" style="display: none">
+          <!-- 初始隱藏，登入後顯示 -->
+          <i class="bi bi-box-arrow-right"></i> 登出
+        </button>
       </div>
     </nav>
 
     <div class="container mt-4">
+      <!-- ... (店家列表、載入中、認證訊息等 HTML 保持不變) ... -->
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>店家列表</h2>
-        <!-- 可以加入新增店家按鈕 -->
-        <!-- <button class="btn btn-success" id="addStoreButton">新增店家</button> -->
       </div>
 
       <div id="loadingIndicator" class="text-center my-5" style="display: none">
@@ -58,7 +64,6 @@
             </tr>
           </thead>
           <tbody id="storesTableBody">
-            <!-- 店家資料將由 JavaScript 填入 -->
             <tr>
               <td colspan="6" class="text-center" id="noStoresMessage" style="display: none">目前沒有店家資料。</td>
             </tr>
@@ -66,10 +71,7 @@
         </table>
       </div>
 
-      <div id="authMessage" class="alert alert-warning mt-4" role="alert" style="display: none">
-        您需要<a href="login.html">登入</a>才能查看此頁面。正在檢查登入狀態... <a href="login.html">前往登入頁面</a
-        ><!-- (假設有 login.html) -->
-      </div>
+      <div id="authMessage" class="alert alert-warning mt-4" role="alert" style="display: none">您需要登入才能查看此頁面。正在檢查登入狀態...</div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -78,10 +80,9 @@
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <!-- **新增 Auth SDK** -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
-    <!-- Firebase 初始化 (與您前端地圖專案的設定相同) -->
+    <!-- Firebase 初始化 (保持不變) -->
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
@@ -91,28 +92,19 @@
         messagingSenderId: "732275424686",
         appId: "1:732275424686:web:9e1349c421503f75da5c3f",
         measurementId: "G-07JZNDTJN7",
-        //apiKey: "YOUR_FIREBASE_API_KEY",
-        //authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        //projectId: "YOUR_PROJECT_ID",
-        //storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        //messagingSenderId: "YOUR_SENDER_ID",
-        //appId: "YOUR_APP_ID"
+        // ... 您的 Firebase 設定 ...
       };
-
       try {
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
-        var auth = firebase.auth(); // **取得 Auth 實例**
-        console.log("後台 HTML: Firebase Initialized. 'db' and 'auth' should be available.");
+        var auth = firebase.auth();
+        console.log("後台 HTML: Firebase Initialized.");
       } catch (error) {
-        console.error("後台 HTML: Firebase Initialization Failed:", error);
-        alert("Firebase 初始化失敗！");
-        var db = null;
-        var auth = null;
+        /* ... */
       }
     </script>
 
-    <!-- 後台專用 JavaScript (例如 admin-script.js) -->
+    <!-- 後台專用 JavaScript -->
     <script src="admin-script.js"></script>
   </body>
 </html>
