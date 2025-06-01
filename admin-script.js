@@ -6,6 +6,7 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 const noStoresMessage = document.getElementById('noStoresMessage');
 const authMessageDiv = document.getElementById('authMessage');
 const storeListContainer = document.getElementById('storeListContainer'); // 表格容器
+const logoutButton = document.getElementById('logoutButton'); // **** 新增：獲取登出按鈕 ****
 
 // 檢查 Firebase 是否已在 HTML 中成功初始化
 if (typeof auth === 'undefined' || typeof db === 'undefined' || !auth || !db) {
@@ -105,22 +106,21 @@ if (auth) {
         if (user) {
             // 使用者已登入
             console.log("後台：使用者已登入:", user.email);
-            authMessageDiv.style.display = 'none'; // 隱藏 "需要登入" 訊息
-            storeListContainer.style.display = 'block'; // 顯示店家列表容器
-            fetchAndDisplayStores(); // 載入並顯示店家資料
+            authMessageDiv.style.display = 'none';
+            storeListContainer.style.display = 'block';
+            if (logoutButton) logoutButton.style.display = 'block'; // **** 新增：顯示登出按鈕 ****
+            fetchAndDisplayStores();
         } else {
             // 使用者未登入
             console.log("後台：使用者未登入。");
-            authMessageDiv.textContent = "您需要登入才能訪問此後台頁面。"; // 更新訊息
-            authMessageDiv.style.display = 'block'; // 顯示 "需要登入" 訊息
-            storeListContainer.style.display = 'none'; // 隱藏店家列表容器
-            loadingIndicator.style.display = 'none'; // 隱藏載入中
-            storesTableBody.innerHTML = ''; // 清空可能存在的舊列表
+            authMessageDiv.textContent = "您需要登入才能訪問此後台頁面。";
+            authMessageDiv.style.display = 'block';
+            storeListContainer.style.display = 'none';
+            if (logoutButton) logoutButton.style.display = 'none'; // **** 新增：隱藏登出按鈕 ****
+            loadingIndicator.style.display = 'none';
+            storesTableBody.innerHTML = '';
             noStoresMessage.style.display = 'none';
 
-            // **重要：實際應用中，您應該將使用者導向到登入頁面**
-            // 例如: window.location.href = 'login.html';
-            // 目前為了簡化，僅顯示訊息。
             alert("請先登入以訪問後台管理頁面。");
             window.location.href = 'login.html';
         }
@@ -146,15 +146,18 @@ if (auth) {
 //     });
 // }
 
-//(可選) 登出按鈕邏輯
-const logoutButton = document.getElementById('logoutButton');
+// **** 新增：登出按鈕邏輯 ****
 if (logoutButton && auth) {
     logoutButton.addEventListener('click', () => {
         auth.signOut().then(() => {
             console.log('使用者已登出');
-            // window.location.href = 'login.html'; // 導向登入頁
+            // 登出成功後，onAuthStateChanged 會自動被觸發，
+            // 並且因為 user 為 null，會執行導向到 login.html 的邏輯。
+            // 所以這裡通常不需要再手動 window.location.href = 'login.html';
+            // alert('您已成功登出。'); // 可選的提示
         }).catch((error) => {
             console.error('登出失敗:', error);
+            alert('登出時發生錯誤: ' + error.message);
         });
     });
 }
