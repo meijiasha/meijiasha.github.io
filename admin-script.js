@@ -54,11 +54,11 @@ async function fetchAndDisplayStores() {
                 <td>${store.district || 'N/A'}</td>
                 <td>${store.category || 'N/A'}</td>
                 <td>${store.address || 'N/A'}</td>
-                <td>${store.price || 'N/A'}</td> {/* 假設您 Firestore 有 price 欄位 */}
+                <td>${store.price || 'N/A'}</td> <!--//*{ 假設您 Firestore 有 price 欄位 }*/-->
                 <td>
                     <button class="btn btn-sm btn-primary edit-store-btn" data-id="${storeId}">編輯</button>
-                    {/* 可以稍後加入刪除按鈕 */}
-                    {/* <button class="btn btn-sm btn-danger delete-store-btn" data-id="${storeId}" data-name="${store.name || ''}">刪除</button> */}
+                    <!--/*{ 可以稍後加入刪除按鈕 }*/-->
+                    <!--{/*--> <button class="btn btn-sm btn-danger delete-store-btn" data-id="${storeId}" data-name="${store.name || ''}">刪除</button> <!--*/}-->
                 </td>
             `;
         });
@@ -145,3 +145,16 @@ if (auth) {
 //         });
 //     });
 // }
+
+//(可選) 登出按鈕邏輯
+const logoutButton = document.getElementById('logoutButton');
+if (logoutButton && auth) {
+    logoutButton.addEventListener('click', () => {
+        auth.signOut().then(() => {
+            console.log('使用者已登出');
+            // window.location.href = 'login.html'; // 導向登入頁
+        }).catch((error) => {
+            console.error('登出失敗:', error);
+        });
+    });
+}
