@@ -122,6 +122,7 @@ if (auth) {
             // 例如: window.location.href = 'login.html';
             // 目前為了簡化，僅顯示訊息。
             alert("請先登入以訪問後台管理頁面。");
+            window.location.href = 'login.html';
         }
     });
 } else {
