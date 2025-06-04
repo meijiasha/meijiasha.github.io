@@ -29,7 +29,9 @@
                     <label for="addressInput" class="form-label">輸入地址：</label>
                     <input type="text" class="form-control" id="addressInput" placeholder="例如：台北市信義區市府路1號">
                 </div>
-                <button class="btn btn-primary" id="geocodeButton" disabled> <span id="buttonText">轉換經緯度</span> </button>
+                <button class="btn btn-primary" id="geocodeButton" disabled> <!-- 初始禁用 -->
+                    <span id="buttonText">轉換經緯度</span>
+                </button>
 
                 <div id="loadingIndicator" class="mt-3" style="display: none;">
                     <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -55,7 +57,7 @@
                     <div class="result-item">
                         <strong>Place ID:</strong> <span id="resultPlaceId"></span>
                     </div>
-                    <div id="mapPreview" style="display: none;"></div> <!-- 初始隱藏，有結果再顯示 -->
+                    <div id="mapPreview" style="display: none;"></div>
                 </div>
                 <div id="errorContainer" class="alert alert-danger mt-3" style="display: none;"></div>
             </div>
@@ -64,135 +66,149 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Google Maps API 腳本 (使用您的金鑰) -->
+    <!-- Google Maps API 腳本 -->
     <script>
-        // 將 API Key 移到這裡，方便管理
         const GOOGLE_MAPS_API_KEY = "AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw"; // 請再次確認這是您正確且已啟用的金鑰
 
         function loadGoogleMapsApi() {
+            console.log("Attempting to load Google Maps API script...");
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geocoding,marker&callback=initGeocodePage&language=zh-TW&region=TW&loading=async&defer=true`;
+            // 移除 defer，讓 callback 更可靠地在腳本執行後觸發
+            // async 仍然保留，以允許非阻塞下載
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geocoding,marker&callback=onGoogleMapsApiLoaded&language=zh-TW&region=TW&loading=async`;
             script.onerror = () => {
                 console.error("Google Maps API script failed to load. Check network or API key validity.");
-                const errorContainer = document.getElementById('errorContainer');
+                const errorContainer = document.getElementById('errorContainer'); // 嘗試獲取
                 const geocodeButton = document.getElementById('geocodeButton');
                 if (errorContainer) {
-                    errorContainer.textContent = "地圖服務載入失敗，請檢查您的網路連線或 API 金鑰設定。頁面功能可能無法使用。";
+                    errorContainer.textContent = "地圖服務主要腳本載入失敗。請檢查網路連線或 API 金鑰設定。";
                     errorContainer.style.display = 'block';
                 }
-                if (geocodeButton) geocodeButton.disabled = true; // 禁用按鈕
+                if (geocodeButton) geocodeButton.disabled = true;
             };
             document.head.appendChild(script);
         }
-        // 在 window load 事件後加載 Google Maps API，確保頁面基本結構已準備好
-        window.addEventListener('load', loadGoogleMapsApi);
+        // 改變加載 API 的時機，確保 DOMContentLoaded 至少先執行一部分
+        // 或者直接在 DOMContentLoaded 裡調用 loadGoogleMapsApi
+        window.addEventListener('load', loadGoogleMapsApi); // 保持 window.load 以確保所有資源（包括圖片等）都加載完畢
     </script>
 
     <script>
+        // 全域變數，用於存儲 Google Maps 服務實例和 DOM 元素引用
         let map;
         let geocoder;
-        let currentMarker = null; // 用於追蹤當前地圖上的標記
+        let currentMarker = null;
 
-        // DOM 元素 (在 initGeocodePage 中獲取)
         let addressInput, geocodeButton, buttonText, loadingIndicator, loadingText,
             resultsContainer, errorContainer,
             resultOriginalAddress, resultFormattedAddress, resultLat, resultLng, resultPlaceId,
             mapPreviewDiv;
 
-        // API 載入後執行的初始化函數
-        function initGeocodePage() {
-            console.log("initGeocodePage CALLED: Google Maps API should be loaded.");
+        let googleMapsApiReady = false; // 標記 Google Maps API 是否已準備好
 
-            // 再次檢查 google.maps 是否真的可用
+        // Google Maps API 成功載入後的回呼函數
+        function onGoogleMapsApiLoaded() {
+            console.log("onGoogleMapsApiLoaded CALLED: Google Maps API script has executed.");
             if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                console.error("initGeocodePage: google.maps object is not available. API might not have loaded correctly.");
-                const errorContainer = document.getElementById('errorContainer');
-                if (errorContainer) {
-                    errorContainer.textContent = "地圖核心服務初始化失敗。請刷新頁面或檢查主控台。";
-                    errorContainer.style.display = 'block';
-                }
-                // 禁用按鈕
-                const geocodeBtn = document.getElementById('geocodeButton');
-                if (geocodeBtn) geocodeBtn.disabled = true;
+                console.error("onGoogleMapsApiLoaded: google.maps object is still not available. This is unexpected.");
+                const ec = document.getElementById('errorContainer');
+                if (ec) { ec.textContent = "地圖核心服務未能正確初始化。"; ec.style.display = 'block'; }
                 return;
             }
-
-            try {
-                geocoder = new google.maps.Geocoder();
-                console.log("Geocoder initialized.");
-            } catch (e) {
-                console.error("Error initializing Geocoder:", e);
-                const errorContainer = document.getElementById('errorContainer');
-                if (errorContainer) {
-                    errorContainer.textContent = "地理編碼服務初始化失敗。";
-                    errorContainer.style.display = 'block';
-                }
-                const geocodeBtn = document.getElementById('geocodeButton');
-                if (geocodeBtn) geocodeBtn.disabled = true;
-                return;
-            }
-
-
-            // 獲取 DOM 元素
-            addressInput = document.getElementById('addressInput');
-            geocodeButton = document.getElementById('geocodeButton');
-            buttonText = document.getElementById('buttonText');
-            loadingIndicator = document.getElementById('loadingIndicator');
-            loadingText = document.getElementById('loadingText'); // 如果您想改變處理中文字
-            resultsContainer = document.getElementById('resultsContainer');
-            errorContainer = document.getElementById('errorContainer');
-            resultOriginalAddress = document.getElementById('resultOriginalAddress');
-            resultFormattedAddress = document.getElementById('resultFormattedAddress');
-            resultLat = document.getElementById('resultLat');
-            resultLng = document.getElementById('resultLng');
-            resultPlaceId = document.getElementById('resultPlaceId');
-            mapPreviewDiv = document.getElementById('mapPreview');
-
-            if (!addressInput || !geocodeButton || !resultsContainer || !errorContainer || !mapPreviewDiv) {
-                console.error("initGeocodePage: One or more critical DOM elements not found.");
-                if (errorContainer) {
-                    errorContainer.textContent = "頁面結構不完整，部分功能可能無法使用。";
-                    errorContainer.style.display = 'block';
-                }
-                if (geocodeButton) geocodeButton.disabled = true;
-                return;
-            }
-
-            // 初始化地圖 (確保 mapPreviewDiv 存在)
-            try {
-                map = new google.maps.Map(mapPreviewDiv, {
-                    center: { lat: 25.0330, lng: 121.5654 }, // 預設中心點
-                    zoom: 12,
-                    disableDefaultUI: true,
-                    zoomControl: true,
-                });
-                console.log("Map initialized.");
-            } catch (e) {
-                console.error("Error initializing Map:", e);
-                if (errorContainer) {
-                    errorContainer.textContent = "地圖預覽初始化失敗。";
-                    errorContainer.style.display = 'block';
-                }
-                // 轉換功能仍然可以嘗試，但地圖預覽會失敗
-            }
-
-
-            // 啟用按鈕並綁定事件
-            geocodeButton.disabled = false; // 啟用轉換按鈕
-            geocodeButton.addEventListener('click', () => {
-                performGeocode(addressInput.value);
-            });
-            addressInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    performGeocode(addressInput.value);
-                }
-            });
-            console.log("Event listeners attached to geocode button and address input.");
+            googleMapsApiReady = true;
+            // 嘗試初始化頁面，如果 DOM 此時也好了
+            // DOMContentLoaded 事件可能已經觸發，也可能還沒有
+            // 所以我們在 DOMContentLoaded 中也嘗試初始化
+            initializePageIfReady();
         }
 
+        // 初始化頁面邏輯（在 DOM 和 Maps API 都準備好之後執行）
+        function initializePageIfReady() {
+            console.log(`initializePageIfReady CALLED. DOM Ready: ${document.readyState === "complete" || document.readyState === "interactive"}, Maps API Ready: ${googleMapsApiReady}`);
+            // 確保 DOM 和 Google Maps API 都已就緒
+            if ((document.readyState === "complete" || document.readyState === "interactive") && googleMapsApiReady) {
+                console.log("  Both DOM and Maps API are ready. Initializing page components...");
+
+                // 獲取 DOM 元素
+                addressInput = document.getElementById('addressInput');
+                geocodeButton = document.getElementById('geocodeButton');
+                buttonText = document.getElementById('buttonText');
+                loadingIndicator = document.getElementById('loadingIndicator');
+                loadingText = document.getElementById('loadingText');
+                resultsContainer = document.getElementById('resultsContainer');
+                errorContainer = document.getElementById('errorContainer');
+                resultOriginalAddress = document.getElementById('resultOriginalAddress');
+                resultFormattedAddress = document.getElementById('resultFormattedAddress');
+                resultLat = document.getElementById('resultLat');
+                resultLng = document.getElementById('resultLng');
+                resultPlaceId = document.getElementById('resultPlaceId');
+                mapPreviewDiv = document.getElementById('mapPreview');
+
+                if (!addressInput || !geocodeButton || !resultsContainer || !errorContainer || !mapPreviewDiv) {
+                    console.error("initializePageIfReady: One or more critical DOM elements not found. Halting UI setup.");
+                    if (errorContainer) {
+                        errorContainer.textContent = "頁面結構不完整，部分功能可能無法使用。";
+                        errorContainer.style.display = 'block';
+                    }
+                    if (geocodeButton) geocodeButton.disabled = true;
+                    return;
+                }
+                console.log("  All DOM elements obtained successfully.");
+
+
+                try {
+                    geocoder = new google.maps.Geocoder();
+                    console.log("  Geocoder initialized.");
+                } catch (e) {
+                    console.error("  Error initializing Geocoder:", e);
+                    if (errorContainer) { errorContainer.textContent = "地理編碼服務初始化失敗。"; errorContainer.style.display = 'block';}
+                    if (geocodeButton) geocodeButton.disabled = true;
+                    return; // Geocoder 初始化失敗則無法繼續
+                }
+
+                try {
+                    map = new google.maps.Map(mapPreviewDiv, {
+                        center: { lat: 25.0330, lng: 121.5654 },
+                        zoom: 12,
+                        disableDefaultUI: true,
+                        zoomControl: true,
+                    });
+                    console.log("  Map initialized.");
+                } catch (e) {
+                    console.error("  Error initializing Map:", e);
+                    if (errorContainer) { errorContainer.textContent = "地圖預覽初始化失敗。"; errorContainer.style.display = 'block';}
+                    // 轉換功能仍然可以嘗試，但地圖預覽會失敗
+                }
+
+                // 啟用按鈕並綁定事件
+                geocodeButton.disabled = false;
+                geocodeButton.addEventListener('click', () => {
+                    performGeocode(addressInput.value);
+                });
+                addressInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        performGeocode(addressInput.value);
+                    }
+                });
+                console.log("  Event listeners attached to geocode button and address input.");
+                console.log("--- Page Initialization Complete ---");
+
+            } else {
+                console.log("  Not all conditions met for page initialization yet.");
+            }
+        }
+
+        // DOMContentLoaded 事件監聽器
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOMContentLoaded event FIRED.");
+            // DOM 已就緒，嘗試初始化頁面（如果 Maps API 此時也好了）
+            initializePageIfReady();
+        });
+
+
         // 執行地理編碼轉換
-        async function performGeocode(address) { // 改為 async 以便使用 await for AdvancedMarkerElement
+        async function performGeocode(address) {
             console.log("performGeocode CALLED with address:", address);
             if (!geocoder) {
                 console.error("performGeocode: Geocoder not initialized.");
@@ -200,29 +216,26 @@
                 return;
             }
             if (!address || address.trim() === "") {
-                if (errorContainer) { errorContainer.textContent = "請輸入有效的地址。"; errorContainer.style.display = 'block'; }
                 if (resultsContainer) resultsContainer.style.display = 'none';
                 if (mapPreviewDiv) mapPreviewDiv.style.display = 'none';
+                if (errorContainer) { errorContainer.textContent = "請輸入有效的地址。"; errorContainer.style.display = 'block'; }
                 return;
             }
 
-            // 更新UI：顯示處理中，隱藏舊結果/錯誤
             if (loadingIndicator) loadingIndicator.style.display = 'block';
             if (buttonText && geocodeButton) { geocodeButton.disabled = true; buttonText.textContent = "轉換中...";}
             if (resultsContainer) resultsContainer.style.display = 'none';
             if (errorContainer) errorContainer.style.display = 'none';
             if (mapPreviewDiv) mapPreviewDiv.style.display = 'none';
 
-
             console.log("Calling geocoder.geocode for address:", address);
-            geocoder.geocode({ 'address': address, 'region': 'TW' }, async (results, status) => { // 回呼改為 async
-                console.log("Geocoder.geocode CALLBACK received. Status:", status, "Results:", results);
+            geocoder.geocode({ 'address': address, 'region': 'TW' }, async (results, status) => {
+                console.log("Geocoder.geocode CALLBACK received. Status:", status, "Results:", results ? results.length : 'null');
 
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 if (buttonText && geocodeButton) { geocodeButton.disabled = false; buttonText.textContent = "轉換經緯度";}
 
-
-                if (status === google.maps.places.PlacesServiceStatus.OK) { // 使用正確的狀態常量
+                if (status === google.maps.GeocoderStatus.OK) { // **** 使用 GeocoderStatus ****
                     if (results && results[0]) {
                         const location = results[0].geometry.location;
                         const lat = location.lat();
@@ -239,14 +252,13 @@
                         if (resultsContainer) resultsContainer.style.display = 'block';
 
                         if (map && mapPreviewDiv) {
-                            mapPreviewDiv.style.display = 'block'; // 顯示地圖容器
+                            mapPreviewDiv.style.display = 'block';
                             map.setCenter(location);
                             map.setZoom(17);
                             if (currentMarker) {
-                                currentMarker.map = null; // 移除舊標記
+                                currentMarker.map = null;
                             }
                             try {
-                                // 載入 AdvancedMarkerElement
                                 const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
                                 currentMarker = new AdvancedMarkerElement({
                                     map: map,
@@ -268,20 +280,20 @@
                 } else {
                     console.error("Geocode failed. Status:", status);
                     let userMessage = "地址轉換失敗。";
-                    switch (status) {
-                        case google.maps.places.PlacesServiceStatus.ZERO_RESULTS: // 使用正確的狀態常量
+                    switch (status) { // **** 使用 GeocoderStatus ****
+                        case google.maps.GeocoderStatus.ZERO_RESULTS:
                             userMessage = "找不到該地址的座標，請確認地址是否正確。";
                             break;
-                        case google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT:
+                        case google.maps.GeocoderStatus.OVER_QUERY_LIMIT:
                             userMessage = "已超出查詢配額，請稍後再試。";
                             break;
-                        case google.maps.places.PlacesServiceStatus.REQUEST_DENIED:
+                        case google.maps.GeocoderStatus.REQUEST_DENIED:
                             userMessage = "請求被拒絕，可能是 API 金鑰問題或 Geocoding API 未啟用。";
                             break;
-                        case google.maps.places.PlacesServiceStatus.INVALID_REQUEST:
+                        case google.maps.GeocoderStatus.INVALID_REQUEST:
                             userMessage = "請求無效，請檢查輸入的地址是否為空或格式錯誤。";
                             break;
-                        case google.maps.places.PlacesServiceStatus.UNKNOWN_ERROR:
+                        case google.maps.GeocoderStatus.UNKNOWN_ERROR:
                             userMessage = "發生未知的伺服器錯誤，請稍後再試。";
                             break;
                         default:
@@ -291,6 +303,7 @@
                 }
             });
         }
+        console.log("Geocoding page script fully parsed.");
     </script>
 </body>
 </html>
