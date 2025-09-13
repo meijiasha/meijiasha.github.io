@@ -33,21 +33,19 @@ function setDarkMode(isDark) {
     const htmlEl = document.documentElement;
     const darkModeSwitch = document.getElementById('darkModeSwitch');
     const darkModeLabel = document.getElementById('darkModeLabel');
-
     if (isDark) {
         htmlEl.setAttribute('data-bs-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        if (darkModeSwitch) darkModeSwitch.checked = true;
         if (darkModeLabel) darkModeLabel.innerHTML = '<i class="bi bi-sun-fill"></i>';
+        if (map) map.setOptions({ styles: darkModeMapStyles });
     } else {
         htmlEl.removeAttribute('data-bs-theme');
+        localStorage.setItem('theme', 'light');
+        if (darkModeSwitch) darkModeSwitch.checked = false;
         if (darkModeLabel) darkModeLabel.innerHTML = '<i class="bi bi-moon-stars-fill"></i>';
+        if (map) map.setOptions({ styles: [] });
     }
-
-    if (map) {
-        map.setOptions({ styles: isDark ? darkModeMapStyles : [] });
-    }
-    
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    if (darkModeSwitch) darkModeSwitch.checked = isDark;
 }
 
 // --- Helper functions ---
@@ -80,10 +78,10 @@ async function initMap() {
         disableDefaultUI: true,
         zoomControl: true
     });
-    
-    const isCurrentlyDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-    setDarkMode(isCurrentlyDark);
-
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    if (currentTheme === 'dark') {
+        map.setOptions({ styles: darkModeMapStyles });
+    }
     infoWindow = new google.maps.InfoWindow();
     placesService = new google.maps.places.PlacesService(map);
     const searchInput = document.getElementById('searchInput');
@@ -552,7 +550,30 @@ function buildInfoWindowContent(storeData) {
     if (storeData.price) content += `<p style="margin: 0 0 10px 0; color: #444;"><strong style="color: #333;">每人平均消費約:</strong> ${storeData.price}</p>`;
     if (placeDetails?.rating) content += `<p style="margin: 0 0 6px 0;"><span style="color: #FBBC05; font-size: 1.1em;">★</span> ${placeDetails.rating.toFixed(1)} <span style="color: #70757a; font-size: 0.85em; margin-left: 6px;">(${placeDetails.user_ratings_total || 0} 則評論)</span></p>`;
     content += `<p style="margin: 0 0 6px 0;"><strong>分類:</strong> ${storeData.category || '未分類'}`;
-    if (placeDetails?.price_level !== undefined) content += `  •   <span title="價格等級" style="color: #555;">${ '$'.repeat(placeDetails.price_level || 0) || '免費'}</span>`;
+    if (placeDetails?.price_level !== undefined) content += `  •   <span title="價格等級" style="color: #555;">${ '
+
+// --- 其他 UI 邏輯 ---
+function setupSearchBarAnimation() {
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const searchContainer = document.querySelector('.search-container');
+    if (!searchButton || !searchInput || !searchContainer) return;
+    searchButton.addEventListener('click', (event) => { event.preventDefault(); searchContainer.classList.add('active'); searchInput.focus(); });
+    searchInput.addEventListener('blur', () => { setTimeout(() => { const activeElement = document.activeElement; if ( searchInput.value === '' && (!activeElement || !activeElement.closest('.pac-container'))) { searchContainer.classList.remove('active'); } }, 150); });
+    searchInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault(); });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const darkModeSwitch = document.getElementById('darkModeSwitch');
+    setDarkMode(savedTheme === 'dark');
+    if(darkModeSwitch) {
+        darkModeSwitch.addEventListener('change', (event) => {
+            setDarkMode(event.target.checked);
+        });
+    }
+});
+.repeat(placeDetails.price_level || 0) || '免費'}</span>`;
     content += `</p>`;
     content += `<p style="margin: 0 0 6px 0;"><strong>地址:</strong> ${storeData.address || placeDetails?.formatted_address || 'N/A'}</p>`;
     if (placeDetails?.formatted_phone_number) content += `<p style="margin: 0 0 6px 0;"><strong>電話:</strong> <a href="tel:${placeDetails.formatted_phone_number}" style="color: #007bff;">${placeDetails.formatted_phone_number}</a></p>`;
