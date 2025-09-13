@@ -76,7 +76,7 @@ async function initMap() {
     map = new Map(document.getElementById("map"), {
         center: taipeiCenter,
         zoom: 12,
-        mapId: "DEMO_MAP_ID",
+        // mapId: "DEMO_MAP_ID", // 使用 mapId 時，styles 選項會被忽略
         disableDefaultUI: true,
         zoomControl: true
     });
@@ -600,6 +600,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if(darkModeSwitch) {
         darkModeSwitch.addEventListener('change', (event) => {
             setDarkMode(event.target.checked);
+        });
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
         });
     }
 });
