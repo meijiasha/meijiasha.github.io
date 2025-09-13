@@ -93,6 +93,27 @@ body {
     display:flex;
     align-items:center;
 }
+
+.search-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    background-color: #F55D3E;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    z-index: 2;
+    transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+    background-color: #e44d2e; /* Slightly darker hover */
+}
+
 .search-input{
     border:none;
     outline:none;
@@ -102,14 +123,15 @@ body {
     transition:width .4s ease-in-out,opacity .3s ease-in-out .1s,padding .4s ease-in-out;
     background-color:transparent;
     font-size:.9rem;
-    height:30px;
-    margin-left:-55px;
-    padding-left:45px
+    height:35px;
+    margin-left:-35px;
+    padding-left:35px;
 }
 .search-container.active .search-input,.search-input:focus{
     width:200px;
     opacity:1;
-    margin-left:0
+    margin-left:0;
+    padding-left: 15px;
 }
 
 /* --- Search Results Panel Styles --- */
@@ -125,7 +147,11 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    background: rgba(255, 255, 255, 0.6); /* White semi-transparent */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .search-results-header {
@@ -179,7 +205,24 @@ body {
   }
 
   #search-results-container {
-      background-color: #2b3035;
+      background: rgba(43, 48, 53, 0.75); /* Darker semi-transparent */
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Brighter green for random button in dark mode */
+  #randomRecommendBtn.btn-outline-success {
+    --bs-btn-color: #48d95f;
+    --bs-btn-border-color: #48d95f;
+    --bs-btn-hover-bg: #48d95f;
+    --bs-btn-hover-border-color: #48d95f;
+    --bs-btn-active-bg: #48d95f;
+    --bs-btn-active-border-color: #48d95f;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-color: #fff;
+    --bs-btn-disabled-color: #48d95f;
+    --bs-btn-disabled-border-color: #48d95f;
   }
 
   .search-results-header {
@@ -197,6 +240,11 @@ body {
   .pac-item:hover {
       background-color: #343a40;
   }
+  .pac-item-query {
+      color: #e9ecef;
+  }
+}
+}
   .pac-item-query {
       color: #e9ecef;
   }

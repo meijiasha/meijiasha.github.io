@@ -1,0 +1,17 @@
+{
+  "name": "咩呷啥 - 今天吃什麼",
+  "short_name": "咩呷啥",
+  "description": "一個解決「今天吃什麼？」難題的美食地圖與推薦工具。",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F55D3E",
+  "icons": [
+    {
+      "src": "LOGO.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}
