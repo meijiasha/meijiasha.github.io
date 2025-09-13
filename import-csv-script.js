@@ -46,7 +46,36 @@ function showToast(message, type = 'info', title = '通知', delay = 5000) {
 }
 
 // 產生並下載 CSV 範本 (與之前相同)
-function generateAndDownloadCsvTemplate() { /* ... (與之前版本相同) ... */ }
+function generateAndDownloadCsvTemplate() {
+    const headers = firestoreFields.map(field => field.label);
+    const examples = firestoreFields.map(field => field.example || '');
+
+    // PapaParse is not strictly needed to *create* a CSV string, but we can do it manually.
+    const csvHeaderString = headers.join(',') + '\n';
+    const csvExampleString = examples.join(',') + '\n';
+
+    const csvContent = csvHeaderString + csvExampleString;
+
+    // Create a Blob with UTF-8 BOM
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    // Create a temporary link to trigger the download
+    const link = document.createElement("a");
+    if (link.download !== undefined) { // feature detection
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "stores_template.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast("CSV 範本已開始下載。", "success", "下載成功");
+    } else {
+        showToast("您的瀏覽器不支援自動下載功能。", "warning", "下載失敗");
+    }
+}
 
 // **** 新增：渲染 CSV 預覽表格 ****
 function renderCsvPreview() {

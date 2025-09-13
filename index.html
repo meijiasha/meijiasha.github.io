@@ -12,52 +12,164 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- 側邊欄 Offcanvas 結構 -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">店家篩選 (台北市)</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="關閉"></button>
-      </div>
-      <div class="offcanvas-body">
-        <!-- 行政區選擇 (ID: districtSelect) -->
-        <div class="mb-3">
-          <label for="districtSelect" class="form-label">選擇行政區:</label>
-          <select class="form-select" id="districtSelect">
-            <option selected disabled value="">-- 請選擇 --</option>
-            <!-- 選項將由 JS 填入 -->
-          </select>
+    <!-- 側邊欄 -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <img src="LOGO.svg" alt="咩呷啥 Logo" class="logo" />
+            <h5 class="sidebar-title" id="sidebarOffcanvasLabel">店家篩選 (台北市)</h5>
         </div>
-        <!-- 分類列表 (ID: categoryList) -->
-        <div class="mb-3">
-          <h6>分類:</h6>
-          <div id="categoryList" class="list-group">
-            <p class="text-muted small">請先選擇行政區</p>
-            <!-- 分類會顯示在這裡 -->
+        <div class="sidebar-body">
+            <!-- 行政區選擇 (ID: districtSelect) -->
+            <div class="mb-3">
+                <label for="districtSelect" class="form-label">選擇行政區:</label>
+                <select class="form-select" id="districtSelect">
+                    <option selected disabled value="">-- 請選擇 --</option>
+                    <!-- 選項將由 JS 填入 -->
+                </select>
+            </div>
+            <!-- 分類列表 -->
+          <div class="mb-3">
+            <h6>分類:</h6>
+            <select class="form-select" id="categorySelect" disabled>
+              <option selected disabled value="">-- 請先選擇行政區 --</option>
+            </select>
           </div>
+            <!-- 營業時間過濾 -->
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch" id="openNowFilter">
+              <label class="form-check-label" for="openNowFilter">僅顯示營業中</label>
+            </div>
+            <!-- 隨機按鈕 (ID: randomRecommendBtn) -->
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-success" type="button" id="randomRecommendBtn" disabled><i class="bi bi-shuffle"></i> 隨機推薦店家 (同區域)</button>
+            </div>
+            <!-- 隨機推薦結果 -->
+            <div id="random-recommendation-result" class="mt-4"></div>
+            <hr />
+            <p class="small text-muted">其他側邊欄內容...</p>
         </div>
-        <!-- 隨機按鈕 (ID: randomRecommendBtn) -->
-        <div class="d-grid gap-2">
-          <button class="btn btn-outline-success" type="button" id="randomRecommendBtn" disabled><i class="bi bi-shuffle"></i> 隨機推薦店家 (同區域)</button>
-        </div>
-        <hr />
-        <p class="small text-muted">其他側邊欄內容...</p>
-      </div>
     </div>
 
     <!-- 主要內容區域 -->
     <div class="main-content">
-      <!-- 側邊欄觸發按鈕 -->
-      <button class="btn btn-primary position-fixed top-0 start-0 m-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" style="z-index: 1040">
-        <i class="bi bi-list"></i>
-      </button>
-      <!-- 搜尋框 (可選, ID: searchContainer, searchButton, searchInput) -->
-      <div class="search-container position-fixed top-0 end-0 m-3" style="z-index: 1040">
-        <button class="search-button" id="searchButton"><i class="bi bi-search"></i></button>
-        <input type="search" class="search-input" id="searchInput" placeholder="搜尋地點(全地圖)..." />
+        <!-- 導覽列 -->
+        <nav class="navbar navbar-expand-lg glass-navbar">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="#">咩呷啥</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutUsModal">關於我們</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#featuresModal">功能介紹</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#techStackModal">技術堆疊</a>
+                        </li>
+                    </ul>
+                    <!-- Dark Mode Switch -->
+                    <div class="form-check form-switch mx-auto me-lg-3" title="切換深色模式">
+                        <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch">
+                        <label class="form-check-label" for="darkModeSwitch" id="darkModeLabel"><i class="bi bi-moon-stars-fill"></i></label>
+                    </div>
+                    <!-- 搜尋框 (可選, ID: searchContainer, searchButton, searchInput) -->
+                    <div class="search-container">
+                        <button class="search-button" id="searchButton"><i class="bi bi-search"></i></button>
+                        <input type="search" class="search-input" id="searchInput" placeholder="搜尋地點(全地圖)..." />
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 搜尋結果面板 -->
+        <div id="search-results-container" style="display: none;"></div>
+        
+        <!-- 地圖容器 (ID: map) -->
+        <div id="map">
+            <!-- 地圖會載入這裡 -->
+        </div>
+    </div>
+
+    <!-- Modal 區域 -->
+    <!-- 關於我們 Modal -->
+    <div class="modal fade" id="aboutUsModal" tabindex="-1" aria-labelledby="aboutUsModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="aboutUsModalLabel">關於我們</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>「咩呷啥」是一個畢業製作專題，旨在解決「今天吃什麼？」這個千古難題。</p>
+            <p>我們希望透過這個平台，讓使用者可以輕鬆探索附近的美食，並透過簡單直觀的介面，快速找到想吃的店家。</p>
+            <p>感謝您的使用與支持！</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+          </div>
+        </div>
       </div>
-      <!-- 地圖容器 (ID: map) -->
-      <div id="map">
-        <!-- 地圖會載入這裡 -->
+    </div>
+
+    <!-- 功能介紹 Modal -->
+    <div class="modal fade" id="featuresModal" tabindex="-1" aria-labelledby="featuresModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="featuresModalLabel">功能介紹</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul>
+              <li><strong>行政區與分類篩選</strong>: 從側邊欄選擇行政區和店家分類，快速縮小搜尋範圍。</li>
+              <li><strong>地圖搜尋</strong>: 在右上角輸入任何地點，尋找該地點附近的店家。</li>
+              <li><strong>隨機推薦</strong>: 不知道吃什麼？讓系統為您隨機推薦店家，還能針對特定分類進行推薦。</li>
+              <li><strong>店家詳細資訊</strong>: 點擊地圖上的標記或列表中的店家，查看營業時間、評價、地址等詳細資訊。</li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 技術堆疊 Modal -->
+    <div class="modal fade" id="techStackModal" tabindex="-1" aria-labelledby="techStackModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="techStackModalLabel">技術堆疊</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-group">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                前端
+                <span class="badge bg-primary rounded-pill">HTML, CSS, JavaScript, Bootstrap 5</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                地圖服務
+                <span class="badge bg-primary rounded-pill">Google Maps API</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                後端與資料庫
+                <span class="badge bg-primary rounded-pill">Firebase</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                開發協助
+                <span class="badge bg-success rounded-pill">Gemini AI</span>
+              </li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+          </div>
+        </div>
       </div>
     </div>
 
