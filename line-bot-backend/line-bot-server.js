@@ -132,6 +132,41 @@ async function getRecommendations(district, category) {
 // --- 6. 產生 LINE Flex Message ---
 function createStoreCarousel(stores, district, category) {
     const bubbles = stores.map(store => {
+        const bodyContents = [
+            {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                    { type: 'text', text: '分類', color: '#aaaaaa', size: 'sm', flex: 1 },
+                    { type: 'text', text: store.category || '未分類', wrap: true, color: '#666666', size: 'sm', flex: 3 }
+                ]
+            },
+            {
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                contents: [
+                    { type: 'text', text: '地址', color: '#aaaaaa', size: 'sm', flex: 1 },
+                    { type: 'text', text: store.address || '未提供',
+                      wrap: true, color: '#666666', size: 'sm', flex: 3 }
+                ]
+            }
+        ];
+
+        if (store.dishes) {
+            bodyContents.push({
+                type: 'box',
+                layout: 'baseline',
+                spacing: 'sm',
+                margin: 'md',
+                contents: [
+                    { type: 'text', text: '菜色', color: '#aaaaaa', size: 'sm', flex: 1 },
+                    { type: 'text', text: store.dishes, wrap: true, color: '#666666', size: 'sm', flex: 3 }
+                ]
+            });
+        }
+
         return {
             type: 'bubble',
             size: 'kilo',
@@ -151,27 +186,7 @@ function createStoreCarousel(stores, district, category) {
             body: {
                 type: 'box',
                 layout: 'vertical',
-                contents: [
-                    {
-                        type: 'box',
-                        layout: 'baseline',
-                        spacing: 'sm',
-                        contents: [
-                            { type: 'text', text: '分類', color: '#aaaaaa', size: 'sm', flex: 1 },
-                            { type: 'text', text: store.category || '未分類', wrap: true, color: '#666666', size: 'sm', flex: 3 }
-                        ]
-                    },
-                    {
-                        type: 'box',
-                        layout: 'baseline',
-                        spacing: 'sm',
-                        contents: [
-                            { type: 'text', text: '地址', color: '#aaaaaa', size: 'sm', flex: 1 },
-                            { type: 'text', text: store.address || '未提供',
-                              wrap: true, color: '#666666', size: 'sm', flex: 3 }
-                        ]
-                    }
-                ]
+                contents: bodyContents
             },
             footer: {
                 type: 'box',
