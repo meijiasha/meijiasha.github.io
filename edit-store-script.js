@@ -2,7 +2,7 @@
 console.log("edit-store-script.js: Script loaded.");
 
 // DOM 元素引用
-let editStoreForm, storeDocIdInput, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv, loadingSpinner;
+let editStoreForm, storeDocIdInput, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv, loadingSpinner;
 
 // 台北市行政區
 const taipeiDistricts = [
@@ -72,6 +72,7 @@ async function loadStoreData(docId) {
             if(storeAddressInput) storeAddressInput.value = storeData.address || '';
             if(storePriceInput) storePriceInput.value = storeData.price || '';
             if(storeDescriptionTextarea) storeDescriptionTextarea.value = storeData.description || '';
+            if(storeDishesInput) storeDishesInput.value = storeData.dishes || '';
             if(storePlaceIdInput) storePlaceIdInput.value = storeData.place_id || '';
             if (storeData.location) {
                 if(storeLatInput) storeLatInput.value = storeData.location.latitude || '';
@@ -100,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     storeAddressInput = document.getElementById('editStoreAddress');
     storePriceInput = document.getElementById('editStorePrice');
     storeDescriptionTextarea = document.getElementById('editStoreDescription');
+    storeDishesInput = document.getElementById('editStoreDishes');
     storePlaceIdInput = document.getElementById('editStorePlaceId');
     storeLatInput = document.getElementById('editStoreLat');
     storeLngInput = document.getElementById('editStoreLng');
@@ -160,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 address: storeAddressInput ? storeAddressInput.value.trim() : '',
                 price: storePriceInput ? storePriceInput.value.trim() : '',
                 description: storeDescriptionTextarea ? storeDescriptionTextarea.value.trim() : '',
+                dishes: storeDishesInput ? storeDishesInput.value.trim() : '',
                 place_id: storePlaceIdInput ? storePlaceIdInput.value.trim() : '',
                 lastEditedBy: { uid: currentUser.uid, email: currentUser.email },
                 lastEditedAt: firebase.firestore.FieldValue.serverTimestamp()
