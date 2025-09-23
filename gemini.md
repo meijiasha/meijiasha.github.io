@@ -67,3 +67,40 @@
     -   **Firebase API Key**: Firebase 的 `apiKey` 通常被認為是公開的，但您必須搭配設定嚴格的 **Firebase 安全規則 (Security Rules)** 來保護您的資料庫，確保只有經過授權的使用者才能讀寫資料。
 
 基於目前的專案結構 (純前端 GitHub Pages 網站)，最直接有效的改善方法是為您的 **Google Maps API 金鑰設定 HTTP 參照網址限制**。
+
+---
+
+## 2025年9月23日
+
+### LINE Bot 整合與店家菜色功能開發
+
+今天完成了 LINE Bot 的初步整合，並為店家資料新增了「推薦菜色」功能。
+
+1.  **LINE Bot 後端服務建立**：
+    *   在專案根目錄下建立了獨立的 `line-bot-backend/` 資料夾，用於存放 LINE Bot 的 Node.js 後端程式碼。
+    *   `line-bot-backend/package.json` 包含了 `express`, `@line/bot-sdk`, `firebase-admin` 等必要依賴。
+    *   `line-bot-backend/line-bot-server.js` 實作了 LINE Webhook 接收、Firebase 資料查詢、智慧推薦邏輯（根據行政區和分類推薦最多 3 間店家）。
+    *   Bot 回覆訊息採用 LINE Flex Message 的卡片輪播格式，每張卡片包含店家名稱、分類、地址及 Google 地圖連結。
+
+2.  **Zeabur 部署流程設定**：
+    *   指導使用者將 `line-bot-backend` 服務部署至 Zeabur，並設定正確的「Root Directory」和環境變數 (`CHANNEL_ACCESS_TOKEN`, `CHANNEL_SECRET`, `FIREBASE_SERVICE_ACCOUNT`)。
+    *   解決了 `Error: Cannot find module '/src/index.js'` 的啟動錯誤，透過明確設定 Zeabur 的「Start Command」為 `node line-bot-server.js`。
+
+3.  **LINE Bot 回應模式修正**：
+    *   解決了 LINE Bot 同時發送程式回覆和預設自動回應的問題。
+    *   指導使用者在 LINE Official Account Manager 中將「回應模式」設定為「Bot」，並停用「自動回應」和「歡迎訊息」。
+
+4.  **店家「推薦菜色」功能**：
+    *   **資料庫擴充**：在 `add-store.html` 和 `edit-store.html` 的表單中新增了「推薦菜色」 (`dishes`) 輸入欄位。
+    *   **前端邏輯**：修改了 `add-store-script.js` 和 `edit-store-script.js`，使其能正確讀取、儲存和更新 Firebase 中店家的 `dishes` 欄位。
+    *   **後端顯示**：更新了 `line-bot-server.js` 中的 `createStoreCarousel` 函式，使 LINE Bot 在推薦卡片中顯示店家的「推薦菜色」（若有資料）。
+
+### 目前進度與下一步
+
+*   **目前狀態**：LINE Bot 的核心推薦功能和「推薦菜色」顯示功能已完成程式碼實作並部署。
+*   **待解決問題**：使用者回報 LINE Bot 在推薦「大安區」時，只顯示 2 張卡片而非預期的 3 張。
+*   **偵錯階段**：已在 `line-bot-server.js` 的 `getRecommendations` 函式中加入了偵錯日誌 (`console.log`)，以確認從 Firebase 實際查詢到的店家數量。這個版本已提交並推送到 GitHub，正在 Zeabur 上部署。
+*   **下一步**：
+    1.  等待包含偵錯日誌的最新版本部署至 Zeabur 完成。
+    2.  使用者需再次向 LINE Bot 傳送「推薦 大安區」。
+    3.  檢查 Zeabur 服務的即時日誌，將 `[Debug]` 開頭的日誌訊息提供給我，以判斷是資料庫資料不足，還是程式邏輯有誤。
