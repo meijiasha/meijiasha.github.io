@@ -104,6 +104,8 @@ async function getRecommendations(district, category) {
     const allStoresInDistrict = [];
     snapshot.forEach(doc => allStoresInDistrict.push({ id: doc.id, ...doc.data() }));
 
+    console.log(`[Debug] Found ${allStoresInDistrict.length} stores in district: ${district}`);
+
     let randomStores = [];
     const numToRecommend = 3;
 
