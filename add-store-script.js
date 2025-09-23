@@ -2,7 +2,7 @@
 console.log("add-store-script.js: Script loaded.");
 
 // DOM 元素引用
-let addStoreForm, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv;
+let addStoreForm, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv;
 
 // 台北市行政區
 const taipeiDistricts = [
@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     storeAddressInput = document.getElementById('addStoreAddress');
     storePriceInput = document.getElementById('addStorePrice');
     storeDescriptionTextarea = document.getElementById('addStoreDescription');
+    storeDishesInput = document.getElementById('addStoreDishes');
     storePlaceIdInput = document.getElementById('addStorePlaceId');
     storeLatInput = document.getElementById('addStoreLat');
     storeLngInput = document.getElementById('addStoreLng');
@@ -94,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 address: storeAddressInput ? storeAddressInput.value.trim() : '',
                 price: storePriceInput ? storePriceInput.value.trim() : '',
                 description: storeDescriptionTextarea ? storeDescriptionTextarea.value.trim() : '',
+                dishes: storeDishesInput ? storeDishesInput.value.trim() : '',
                 place_id: storePlaceIdInput ? storePlaceIdInput.value.trim() : '',
                 createdBy: { uid: currentUser.uid, email: currentUser.email },
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
