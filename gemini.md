@@ -76,6 +76,13 @@
         *   移除了程式碼中所有不再需要的 `google.maps.importLibrary("marker")` 呼叫。
         *   最終確保 `initMap` 中的 `mapId` 維持註解狀態，讓暗色樣式得以生效。
 
+### 錯誤修復：修正地圖載入失敗的語法錯誤
+
+在解決地圖暗色模式的過程中，因手動解決 git 衝突及多次修改，不慎在 `script.js` 的 `displayMarkers` 及 `displayAndFilterStores` 函式中，意外刪除了 `forEach` 迴圈的關鍵部分。
+
+*   **問題**: 此語法錯誤導致整個 JavaScript 腳本執行失敗，使得地圖無法載入，暗色模式切換等功能也完全失效。
+*   **解決方案**: 使用 `write_file` 工具，以一個經過驗證的、完全正確的 `script.js` 版本覆蓋掉損壞的檔案，從而恢復了被意外刪除的 `forEach` 迴圈，讓程式邏輯恢復正常。
+
 ---
 
 ## 2025年9月13日
