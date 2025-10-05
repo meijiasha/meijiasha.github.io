@@ -71,15 +71,50 @@ const taipeiDistricts = ["中正區", "大同區", "中山區", "松山區", "�
 
 // --- 初始化地圖與相關服務 ---
 async function initMap() {
-    const taipeiCenter = { lat: 25.0479, lng: 121.5171 };
+    let initialCenter = { lat: 25.0479, lng: 121.5171 };
+    let initialZoom = 12;
+
+    // 嘗試獲取使用者位置
+    if (navigator.geolocation) {
+        try {
+            const position = await new Promise((resolve, reject) => {
+                // 設定超時以避免無限等待
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            initialCenter = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+            };
+            initialZoom = 15;
+            console.log("成功獲取使用者位置:", initialCenter);
+        } catch (error) {
+            console.warn("獲取地理位置失敗或被拒絕。將使用預設位置。", error.message);
+        }
+    } else {
+        console.warn("此瀏覽器不支援地理位置功能。");
+    }
+
     const { Map } = await google.maps.importLibrary("maps");
     map = new Map(document.getElementById("map"), {
-        center: taipeiCenter,
-        zoom: 12,
+        center: initialCenter,
+        zoom: initialZoom,
         mapId: "DEMO_MAP_ID",
         disableDefaultUI: true,
         zoomControl: true
     });
+
+    // 如果成功獲取使用者位置，則放置一個特殊標記
+    if (initialZoom === 15) { 
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+        const userMarkerEl = document.createElement('div');
+        userMarkerEl.className = 'user-location-marker';
+        new AdvancedMarkerElement({
+            map: map,
+            position: initialCenter,
+            title: "您的目前位置",
+            content: userMarkerEl
+        });
+    }
     
     const isCurrentlyDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     setDarkMode(isCurrentlyDark);
