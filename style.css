@@ -12,7 +12,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden;font-family: 
 
 /* --- New Layout Styles --- */
 body {
-  display: flex;
+  /* display: flex; */ /* Moved to media query */
 }
 
 .sidebar {
@@ -32,7 +32,7 @@ body {
   border-bottom: 1px solid #dee2e6;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  /* gap: 1rem; */ /* Replaced with margin and flex-grow */
   transition: border-color 0.3s ease;
 }
 
@@ -44,6 +44,8 @@ body {
 .sidebar-title {
   margin-bottom: 0;
   font-size: 1.25rem;
+  margin-left: 1rem; /* Space between logo and title */
+  flex-grow: 1;      /* Push close button to the right */
 }
 
 .sidebar-body {
@@ -146,6 +148,48 @@ body {
     border-left: 0;
     border-right: 0;
     border-radius: 0;
+}
+
+/* Custom marker for user's location */
+.user-location-marker {
+    width: 18px;
+    height: 18px;
+    background-color: #4285F4;
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    /* No transform needed as AdvancedMarkerElement handles positioning */
+}
+
+
+/* =========================================== */
+/*          RESPONSIVE LAYOUT STYLES           */
+/* =========================================== */
+
+/* Mobile first: by default, sidebar is an offcanvas */
+
+/* Desktop layout (md and up) */
+@media (min-width: 768px) {
+  body {
+    display: flex;
+  }
+
+  .sidebar.offcanvas-start {
+    position: relative; /* Overwrite fixed position */
+    transform: none; /* Show the sidebar */
+    visibility: visible !important; /* Ensure it's visible */
+  }
+
+  /* Hide the offcanvas backdrop on desktop */
+  .offcanvas-backdrop {
+    display: none !important;
+  }
+}
+
+/* Custom style for the new sidebar toggler icon */
+.navbar-toggler i.bi-list {
+    font-size: 1.5rem; /* Make the icon a bit larger */
+    line-height: 1;
 }
 
 

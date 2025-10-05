@@ -12,11 +12,12 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- 側邊欄 -->
-    <div id="sidebar" class="sidebar">
+    <!-- 側邊欄 (Offcanvas) -->
+    <div class="sidebar offcanvas offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarOffcanvasLabel">
         <div class="sidebar-header">
             <img src="LOGO.svg" alt="咩呷啥 Logo" class="logo" />
             <h5 class="sidebar-title" id="sidebarOffcanvasLabel">店家篩選 (台北市)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="sidebar-body">
             <!-- 行政區選擇 (ID: districtSelect) -->
@@ -42,6 +43,7 @@
             <!-- 隨機按鈕 (ID: randomRecommendBtn) -->
             <div class="d-grid gap-2">
                 <button class="btn btn-outline-success" type="button" id="randomRecommendBtn" disabled><i class="bi bi-shuffle"></i> 隨機推薦店家 (同區域)</button>
+                <button class="btn btn-outline-primary mt-2" type="button" id="recommendNearbyBtn" disabled><i class="bi bi-geo-alt-fill"></i> 推薦附近店家</button>
             </div>
             <!-- 隨機推薦結果 -->
             <div id="random-recommendation-result" class="mt-4"></div>
@@ -55,6 +57,10 @@
         <!-- 導覽列 -->
         <nav class="navbar navbar-expand-lg glass-navbar">
             <div class="container-fluid">
+                <!-- Sidebar Toggler (Mobile) -->
+                <button class="navbar-toggler d-md-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Toggle sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
                 <a class="navbar-brand fw-bold" href="#">咩呷啥</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -87,7 +93,7 @@
 
         <!-- 搜尋結果面板 -->
         <div id="search-results-container" style="display: none;"></div>
-        
+
         <!-- 地圖容器 (ID: map) -->
         <div id="map">
             <!-- 地圖會載入這裡 -->
