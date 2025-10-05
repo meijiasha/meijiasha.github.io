@@ -54,6 +54,28 @@
         4.  選取最近的 3 間店家，顯示在地圖及側邊欄。
     *   若 2 公里內沒有任何店家，則會在側邊欄顯示「尚未收錄附近店家，我們會盡快收錄讓你知道咩呷啥」的提示訊息。
 
+### 錯誤修復：地圖暗色模式
+
+修復了網站在切換到暗色模式時，Google 地圖沒有同步變更主題的問題。
+
+1.  **問題分析**:
+    *   初步嘗試發現，地圖初始化時使用的 `mapId` 屬性會強制啟用向量地圖 (Vector Map)，導致透過 `styles` 陣列設定的客戶端自訂樣式（暗色主題）失效。
+    *   移除 `mapId` 後，雖然理論上應啟用自訂樣式，但卻導致地圖載入失敗。
+    *   經由瀏覽器 Console 的錯誤訊息 `地圖在初始化時未使用有效的地圖 ID，因此將無法使用進階標記`，最終確認了根本原因：專案中使用的 `AdvancedMarkerElement` (進階標記) **必須**依賴 `mapId` 才能運作。
+    *   這產生了一個無法兩全的衝突：**暗色主題需要移除 `mapId`**，而**進階標記需要保留 `mapId`**。
+
+2.  **解決方案**:
+    *   與使用者溝通後，決定優先實現「地圖暗色模式」功能。
+    *   將地圖標記從較新的 `AdvancedMarkerElement` 降級為傳統的 `google.maps.Marker`。
+    *   這個修改雖然會讓地圖上的圖釘變回傳統樣式，但解除了對 `mapId` 的依賴，使得暗色主題可以正常套用。
+
+3.  **程式碼修改**:
+    *   **`script.js`**:
+        *   在 `initMap` 函式中，將用於顯示使用者位置的 `AdvancedMarkerElement` 替換為 `google.maps.Marker`，並使用 `icon` 屬性重新實現了藍色圓點樣式。
+        *   在 `displayMarkers` 和 `displayAndFilterStores` 函式中，將店家標記的 `AdvancedMarkerElement` 全部替換為 `google.maps.Marker`。
+        *   移除了程式碼中所有不再需要的 `google.maps.importLibrary("marker")` 呼叫。
+        *   最終確保 `initMap` 中的 `mapId` 維持註解狀態，讓暗色樣式得以生效。
+
 ---
 
 ## 2025年9月13日

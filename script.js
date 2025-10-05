@@ -108,14 +108,18 @@ async function initMap() {
 
     // 如果成功獲取使用者位置，則放置一個特殊標記
     if (initialZoom === 15) { 
-        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-        const userMarkerEl = document.createElement('div');
-        userMarkerEl.className = 'user-location-marker';
-        new AdvancedMarkerElement({
+        new google.maps.Marker({
             map: map,
             position: initialCenter,
             title: "您的目前位置",
-            content: userMarkerEl
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                strokeColor: 'white',
+                strokeWeight: 2
+            }
         });
     }
     
@@ -530,7 +534,6 @@ function clearMapMarkers() {
 async function displayMarkers(stores, openFirst = false) {
     clearMapMarkers();
     if (!stores || stores.length === 0) return;
-    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
     const bounds = new google.maps.LatLngBounds();
     let firstMarkerOpened = false;
     const detailPromises = stores.map(store => {
@@ -551,10 +554,7 @@ async function displayMarkers(stores, openFirst = false) {
         }
     });
     const storesWithDetails = await Promise.all(detailPromises);
-    storesWithDetails.forEach((storeData) => {
-        if (!storeData.location) return;
-        const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
-        const marker = new AdvancedMarkerElement({ map: map, position: position, title: storeData.name || 'N/A' });
+        const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || 'N/A' });
         if (storeData.id) currentMapMarkers[storeData.id] = marker;
         const content = buildInfoWindowContent(storeData);
         marker.addListener('click', () => {
@@ -581,7 +581,6 @@ async function displayMarkers(stores, openFirst = false) {
 async function displayAndFilterStores(stores, filterFn, limit, openFirst) {
     clearMapMarkers();
     if (!stores || stores.length === 0) return [];
-    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
     const bounds = new google.maps.LatLngBounds();
     const detailPromises = stores.map(store => {
         if (store.place_id) {
@@ -614,7 +613,7 @@ async function displayAndFilterStores(stores, filterFn, limit, openFirst) {
     filteredStores.forEach((storeData) => {
         if (!storeData.location) return;
         const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
-        const marker = new AdvancedMarkerElement({ map: map, position: position, title: storeData.name || 'N/A' });
+        const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || 'N/A' });
         if (storeData.id) currentMapMarkers[storeData.id] = marker;
         const content = buildInfoWindowContent(storeData);
         marker.addListener('click', () => {
