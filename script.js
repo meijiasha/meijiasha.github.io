@@ -5,6 +5,7 @@ let infoWindow;
 let autocomplete;
 let currentSelectedDistrict = null;
 let placesService;
+let userCurrentLocation = null; // 用於儲存使用者位置
 
 // --- 深色模式地圖樣式 ---
 const darkModeMapStyles = [
@@ -86,6 +87,8 @@ async function initMap() {
                 lng: position.coords.longitude,
             };
             initialZoom = 15;
+            userCurrentLocation = initialCenter; // 儲存使用者位置
+            document.getElementById('recommendNearbyBtn').disabled = false; // 啟用按鈕
             console.log("成功獲取使用者位置:", initialCenter);
         } catch (error) {
             console.warn("獲取地理位置失敗或被拒絕。將使用預設位置。", error.message);
@@ -193,6 +196,9 @@ function setupSidebarListeners() {
             showRandomStores(currentSelectedDistrict, selectedCategory, true, isOpenNow);
         }
     });
+
+    const recommendNearbyBtn = document.getElementById('recommendNearbyBtn');
+    recommendNearbyBtn.addEventListener('click', recommendNearbyStores);
 }
 
 // --- 資料載入與顯示邏輯 ---
@@ -314,6 +320,63 @@ async function showRandomStores(district, category, openFirst, isOpenNow) {
         } catch (error) {
             console.error("查詢營業中隨機店家時發生錯誤:", error);
             if(resultsDiv) resultsDiv.innerHTML = `<p class="text-danger small p-2 text-center">搜尋時發生錯誤。</p>`;
+        }
+    }
+}
+
+async function recommendNearbyStores() {
+    const resultsDiv = document.getElementById('random-recommendation-result');
+    if (!userCurrentLocation) {
+        alert("無法獲取您的目前位置，請確認已授權定位服務。");
+        return;
+    }
+
+    // Clear other UI elements
+    clearSearchResults();
+    const districtSelect = document.getElementById('districtSelect');
+    if (districtSelect) districtSelect.selectedIndex = 0;
+    const categorySelect = document.getElementById('categorySelect');
+    if (categorySelect) {
+        categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
+        categorySelect.disabled = true;
+    }
+
+    if (resultsDiv) {
+        resultsDiv.innerHTML = `<div class="text-center text-muted p-2"><div class="spinner-border spinner-border-sm" role="status"></div> 搜尋附近店家中...</div>`;
+    }
+
+    try {
+        const snapshot = await db.collection('stores_taipei').get();
+        const allStores = [];
+        snapshot.forEach(doc => allStores.push({ id: doc.id, ...doc.data() }));
+
+        const searchRadiusKm = 2; // Search within 2km
+        const nearbyStores = allStores.map(store => {
+            if (!store.location || typeof store.location.latitude !== 'number' || typeof store.location.longitude !== 'number') {
+                return null;
+            }
+            const distance = getDistance(userCurrentLocation.lat, userCurrentLocation.lng, store.location.latitude, store.location.longitude);
+            return { ...store, distance };
+        }).filter(store => store && store.distance <= searchRadiusKm);
+
+        nearbyStores.sort((a, b) => a.distance - b.distance);
+
+        const top3Results = nearbyStores.slice(0, 3);
+
+        if (top3Results.length > 0) {
+            await displayMarkers(top3Results, true);
+            const title = `<h6>您附近 ${searchRadiusKm} 公里內的店家：</h6>`;
+            displayRecommendationInSidebar(top3Results, null, 0, 0, title);
+        } else {
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `<p class="text-center text-muted p-3">尚未收錄附近店家，我們會盡快收錄讓你知道咩呷啥</p>`;
+            }
+            clearMapMarkers();
+        }
+    } catch (error) {
+        console.error("搜尋附近店家時發生錯誤:", error);
+        if (resultsDiv) {
+            resultsDiv.innerHTML = `<p class="text-danger small p-2 text-center">搜尋時發生錯誤。</p>`;
         }
     }
 }
