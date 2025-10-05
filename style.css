@@ -32,7 +32,7 @@ body {
   border-bottom: 1px solid #dee2e6;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  /* gap: 1rem; */ /* Replaced with margin and flex-grow */
   transition: border-color 0.3s ease;
 }
 
@@ -44,6 +44,8 @@ body {
 .sidebar-title {
   margin-bottom: 0;
   font-size: 1.25rem;
+  margin-left: 1rem; /* Space between logo and title */
+  flex-grow: 1;      /* Push close button to the right */
 }
 
 .sidebar-body {
