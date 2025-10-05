@@ -101,7 +101,7 @@ async function initMap() {
     map = new Map(document.getElementById("map"), {
         center: initialCenter,
         zoom: initialZoom,
-        mapId: "DEMO_MAP_ID",
+        // mapId: "DEMO_MAP_ID", // 註解掉以啟用客戶端樣式，讓深色模式正常運作
         disableDefaultUI: true,
         zoomControl: true
     });
