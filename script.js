@@ -554,6 +554,9 @@ async function displayMarkers(stores, openFirst = false) {
         }
     });
     const storesWithDetails = await Promise.all(detailPromises);
+    storesWithDetails.forEach((storeData) => {
+        if (!storeData.location) return;
+        const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
         const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || 'N/A' });
         if (storeData.id) currentMapMarkers[storeData.id] = marker;
         const content = buildInfoWindowContent(storeData);
