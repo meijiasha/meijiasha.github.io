@@ -43,6 +43,7 @@
             <!-- 隨機按鈕 (ID: randomRecommendBtn) -->
             <div class="d-grid gap-2">
                 <button class="btn btn-outline-success" type="button" id="randomRecommendBtn" disabled><i class="bi bi-shuffle"></i> 隨機推薦店家 (同區域)</button>
+                <button class="btn btn-outline-info mt-2" type="button" id="listAllStoresBtn" disabled><i class="bi bi-card-list"></i> 列出本行政區所有店家</button>
                 <button class="btn btn-outline-primary mt-2" type="button" id="recommendNearbyBtn" disabled><i class="bi bi-geo-alt-fill"></i> 推薦附近店家</button>
             </div>
             <!-- 隨機推薦結果 -->
@@ -101,6 +102,20 @@
         <div id="map">
             <!-- 地圖會載入這裡 -->
         </div>
+    </div>
+
+    <!-- 全行政區店家列表面板 -->
+    <div id="all-stores-panel" class="all-stores-panel">
+      <div class="panel-header">
+        <h5 id="all-stores-panel-title">所有店家</h5>
+        <button type="button" id="close-all-stores-panel" class="btn-close" aria-label="Close"></button>
+      </div>
+      <div id="all-stores-panel-content" class="list-group list-group-flush">
+        <!-- 店家列表將由 JS 動態載入 -->
+      </div>
+      <nav id="all-stores-panel-pagination" class="mt-auto p-2" aria-label="Page navigation">
+        <!-- 分頁控制將由 JS 動態載入 -->
+      </nav>
     </div>
 
     <!-- Modal 區域 -->
