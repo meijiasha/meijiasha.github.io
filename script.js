@@ -7,6 +7,12 @@ let currentSelectedDistrict = null;
 let placesService;
 let userCurrentLocation = null; // 用於儲存使用者位置
 
+// --- 全店家列表面板相關全域變數 ---
+let allStoresForDistrict = [];
+let storeListPage = 1;
+const storesPerPage = 10;
+
+
 // --- 深色模式地圖樣式 ---
 const darkModeMapStyles = [
     { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
@@ -137,6 +143,7 @@ async function initMap() {
     }
     populateDistrictSelect();
     setupSidebarListeners();
+    setupAllStoresPanelListeners(); // 新增：設定新面板的監聽器
 }
 
 // --- UI 清理函式 ---
@@ -169,6 +176,8 @@ function setupSidebarListeners() {
     const districtSelect = document.getElementById('districtSelect');
     const categorySelect = document.getElementById('categorySelect');
     const randomBtn = document.getElementById('randomRecommendBtn');
+    const listAllBtn = document.getElementById('listAllStoresBtn'); // 新增
+
     districtSelect.addEventListener('change', async (event) => {
         currentSelectedDistrict = event.target.value;
         clearRandomRecommendation();
@@ -176,10 +185,12 @@ function setupSidebarListeners() {
         if (currentSelectedDistrict) {
             await loadCategoriesForDistrict(currentSelectedDistrict);
             randomBtn.disabled = false;
+            listAllBtn.disabled = false; // 新增
         } else {
             categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
             categorySelect.disabled = true;
             randomBtn.disabled = true;
+            listAllBtn.disabled = true; // 新增
             clearMapMarkers();
             currentSelectedDistrict = null;
         }
@@ -203,6 +214,13 @@ function setupSidebarListeners() {
 
     const recommendNearbyBtn = document.getElementById('recommendNearbyBtn');
     recommendNearbyBtn.addEventListener('click', recommendNearbyStores);
+
+    // 新增：為「列出所有店家」按鈕新增監聽
+    listAllBtn.addEventListener('click', () => {
+        if (currentSelectedDistrict) {
+            showAllStoresPanel(currentSelectedDistrict);
+        }
+    });
 }
 
 // --- 資料載入與顯示邏輯 ---
@@ -681,6 +699,151 @@ function buildInfoWindowContent(storeData) {
     content += `</div>`;
     return content;
 }
+
+// --- 全店家列表面板邏輯 (新增) ---
+function setupAllStoresPanelListeners() {
+    const panel = document.getElementById('all-stores-panel');
+    const closeBtn = document.getElementById('close-all-stores-panel');
+    const paginationContainer = document.getElementById('all-stores-panel-pagination');
+
+    closeBtn.addEventListener('click', () => {
+        panel.classList.remove('is-visible');
+    });
+
+    paginationContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' && e.target.dataset.page) {
+            e.preventDefault();
+            const page = parseInt(e.target.dataset.page, 10);
+            if (page !== storeListPage) {
+                storeListPage = page;
+                renderStoreListPage();
+            }
+        }
+    });
+}
+
+async function showAllStoresPanel(district) {
+    const panel = document.getElementById('all-stores-panel');
+    const titleEl = document.getElementById('all-stores-panel-title');
+    const contentEl = document.getElementById('all-stores-panel-content');
+
+    titleEl.textContent = '載入中...';
+    contentEl.innerHTML = '<div class="p-5 text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    panel.classList.add('is-visible');
+
+    try {
+        const snapshot = await db.collection('stores_taipei').where('district', '==', district).get();
+        allStoresForDistrict = [];
+        snapshot.forEach(doc => {
+            allStoresForDistrict.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort by category then by name
+        allStoresForDistrict.sort((a, b) => {
+            if (a.category < b.category) return -1;
+            if (a.category > b.category) return 1;
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+        });
+
+        titleEl.textContent = `${district} (${allStoresForDistrict.length} 間)`;
+        storeListPage = 1;
+        renderStoreListPage();
+        displayMarkers(allStoresForDistrict, false);
+
+    } catch (error) {
+        console.error("查詢行政區所有店家時發生錯誤:", error);
+        titleEl.textContent = '讀取錯誤';
+        contentEl.innerHTML = '<div class="p-3 text-center text-danger">無法載入店家資料。</div>';
+    }
+}
+
+function renderStoreListPage() {
+    const contentEl = document.getElementById('all-stores-panel-content');
+    const paginationEl = document.getElementById('all-stores-panel-pagination');
+
+    if (allStoresForDistrict.length === 0) {
+        contentEl.innerHTML = '<div class="p-3 text-center text-muted">此區域尚無店家資料。</div>';
+        paginationEl.innerHTML = '';
+        return;
+    }
+
+    const startIndex = (storeListPage - 1) * storesPerPage;
+    const endIndex = startIndex + storesPerPage;
+    const storesToShow = allStoresForDistrict.slice(startIndex, endIndex);
+
+    let contentHTML = '';
+    storesToShow.forEach(store => {
+        contentHTML += `
+            <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">${store.name}</h6>
+                    <span class="badge bg-secondary rounded-pill">${store.category || '未分類'}</span>
+                </div>
+                <p class="mb-1 small mt-1 text-muted">${store.address || '地址未提供'}</p>
+            </a>
+        `;
+    });
+    contentEl.innerHTML = contentHTML;
+
+    // Add click listeners to new items
+    contentEl.querySelectorAll('.list-group-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const storeId = e.currentTarget.dataset.storeId;
+            const marker = currentMapMarkers[storeId];
+            if (marker) {
+                map.panTo(marker.position);
+                google.maps.event.trigger(marker, 'click');
+            }
+        });
+    });
+
+    renderStoreListPagination();
+}
+
+function renderStoreListPagination() {
+    const paginationEl = document.getElementById('all-stores-panel-pagination');
+    const totalPages = Math.ceil(allStoresForDistrict.length / storesPerPage);
+    if (totalPages <= 1) {
+        paginationEl.innerHTML = '';
+        return;
+    }
+
+    let paginationHTML = '<ul class="pagination">';
+
+    // Previous button
+    paginationHTML += `
+        <li class="page-item ${storeListPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${storeListPage - 1}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+    `;
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        paginationHTML += `
+            <li class="page-item ${i === storeListPage ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+    }
+
+    // Next button
+    paginationHTML += `
+        <li class="page-item ${storeListPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${storeListPage + 1}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    `;
+
+    paginationHTML += '</ul>';
+    paginationEl.innerHTML = paginationHTML;
+}
+
 
 // --- 其他 UI 邏輯 ---
 function setupSearchBarAnimation() {
