@@ -27,6 +27,25 @@
 
 ## 2025年10月10日
 
+### 功能新增：透過 Google Maps 網址自動填入店家資訊
+
+為了加速店家資料的建檔流程，在「新增店家」頁面實作了新功能，允許使用者透過貼上 Google Maps 網址來自動化大部分的資料輸入。
+
+*   **介面修改 (`add-store.html`)**:
+    *   在「店家名稱」下方新增了一個「Google Maps 網址」的輸入欄位。
+    *   為了呼叫 Places API，在頁面中補上了 Google Maps API 的 script 標籤，並啟用 `places` 函式庫。
+
+*   **功能實作 (`add-store-script.js`)**:
+    *   為新的網址輸入框加入 `input` 事件監聽。
+    *   當使用者貼上**完整格式**的 Google Maps 網址時 (例如 `https://www.google.com/maps/place/...`)，腳本會自動解析出店家名稱。
+    *   使用 `google.maps.places.PlacesService` 的 `findPlaceFromQuery` 方法，向 Google Places API 查詢店家詳細資訊。
+    *   成功獲取資料後，會自動將店名、地址、Google Place ID、緯度、經度等資訊填入表單的對應欄位中，並跳出成功提示。
+
+*   **問題修正與使用者引導**:
+    *   **問題**: 初步測試發現，此功能無法處理 `https://maps.app.goo.gl/` 這類的短網址，因為前端腳本因瀏覽器安全限制，無法追蹤短網址的重新導向。
+    *   **解決方案**: 與使用者溝通後，決定不採用需要修改後端的複雜方案，而是在介面上提供更清晰的指引。
+    *   **`add-store.html`**: 修改了網址輸入框下方的提示文字，明確告知使用者需貼上**完整的 Google Maps 網址**，並註明不支援短網址格式，以避免使用者混淆。
+
 ### 介面與字體更新
 
 *   **LINE Bot 互動優化**:

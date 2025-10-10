@@ -40,6 +40,12 @@
         </div>
 
         <div class="mb-3">
+          <label for="googleMapsUrl" class="form-label">Google Maps 網址</label>
+          <input type="url" class="form-control" id="googleMapsUrl" placeholder="貼上 Google Maps 上的店家網址，可自動帶入經緯度等資訊" />
+          <div class="form-text">請貼上**完整**的 Google Maps 網址 (以 <code>https://www.google.com/maps/place/...</code> 開頭)。系統不支援 <code>https://maps.app.goo.gl/...</code> 的短網址。</div>
+        </div>
+
+        <div class="mb-3">
           <label for="addStoreDistrict" class="form-label">行政區 <span class="text-danger">*</span></label>
           <select class="form-select" id="addStoreDistrict" required>
             <option value="">-- 請選擇 --</option>
@@ -150,6 +156,8 @@
         /* ... */
       }
     </script>
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw&libraries=places&callback=initMap" async defer></script>
     <!-- 新增頁面專用 JavaScript -->
     <script src="add-store-script.js"></script>
   </body>

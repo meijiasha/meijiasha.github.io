@@ -2,7 +2,7 @@
 console.log("add-store-script.js: Script loaded.");
 
 // DOM 元素引用
-let addStoreForm, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv;
+let addStoreForm, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv, googleMapsUrlInput;
 
 // 台北市行政區
 const taipeiDistricts = [
@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     storeLngInput = document.getElementById('addStoreLng');
     formErrorDiv = document.getElementById('formError');
     formSuccessDiv = document.getElementById('formSuccess');
+    googleMapsUrlInput = document.getElementById('googleMapsUrl');
 
     if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db) {
         console.error("add-store-script.js: Firebase not ready.");
@@ -110,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (addStoreForm) addStoreForm.querySelector('button[type="submit"]').disabled = false;
         } else {
             console.log("Add Store Page: User not logged in. Redirecting...");
-            showToast("請先登入以新增店家。", "warning", "需要登入");
+            showToast("請先登入以新增店家。","warning", "需要登入");
             setTimeout(() => { window.location.href = 'login.html'; }, 1500);
         }
     });
@@ -170,5 +171,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("add-store-script.js: DOMContentLoaded setup finished.");
 });
+
+// -----------------------------------------------------------------------------
+// Google Maps URL Parsing and Autocomplete
+// -----------------------------------------------------------------------------
+let placesService;
+
+function initMap() {
+    console.log("Google Maps API loaded.");
+    // The PlacesService needs to be attached to a map or a div. 
+    // We can create a dummy div for it if we don't have a map on this page.
+    const dummyDiv = document.createElement('div');
+    placesService = new google.maps.places.PlacesService(dummyDiv);
+
+    const urlInput = document.getElementById('googleMapsUrl');
+    if (urlInput) {
+        urlInput.addEventListener('input', handleUrlInput);
+    }
+}
+
+function handleUrlInput(event) {
+    const url = event.target.value;
+    if (!url || !url.includes('google.com/maps/place')) {
+        return;
+    }
+
+    // Try to extract the place name from the URL.
+    // Example: https://www.google.com/maps/place/Din+Tai+Fung+Xinyi+Store/@[...]
+    const match = url.match(/google\.com\/maps\/place\/([^\/]+)/);
+    if (match && match[1]) {
+        const placeName = decodeURIComponent(match[1].replace(/\+/g, ' '));
+        console.log("Extracted place name:", placeName);
+        findPlaceDetails(placeName);
+    }
+}
+
+function findPlaceDetails(query) {
+    const request = {
+        query: query,
+        fields: ['name', 'place_id', 'formatted_address', 'geometry'],
+    };
+
+    placesService.findPlaceFromQuery(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+            const place = results[0];
+            console.log("Found place:", place);
+
+            // Populate the form fields
+            if (storeNameInput && !storeNameInput.value) {
+                storeNameInput.value = place.name;
+            }
+            if (storeAddressInput) {
+                storeAddressInput.value = place.formatted_address;
+            }
+            if (storePlaceIdInput) {
+                storePlaceIdInput.value = place.place_id;
+            }
+            if (place.geometry && place.geometry.location) {
+                if (storeLatInput) {
+                    storeLatInput.value = place.geometry.location.lat();
+                }
+                if (storeLngInput) {
+                    storeLngInput.value = place.geometry.location.lng();
+                }
+            }
+            
+            // Also try to set the district
+            if (storeDistrictSelect && place.formatted_address) {
+                for (const district of taipeiDistricts) {
+                    if (place.formatted_address.includes(district)) {
+                        storeDistrictSelect.value = district;
+                        break;
+                    }
+                }
+            }
+
+            showToast('已從 Google Maps 網址自動填入店家資訊！', 'success', '自動帶入成功');
+
+        } else {
+            console.warn("Place not found or error:", status);
+            showToast('無法從 Google Maps 網址找到對應的店家。', 'warning', '查無資料');
+        }
+    });
+}
 
 console.log("add-store-script.js: Script parsed completely.");
