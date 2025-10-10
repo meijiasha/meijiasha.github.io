@@ -782,11 +782,36 @@ async function showAllStoresPanel(district, category = null) {
             allStoresForDistrict.sort((a, b) => a.name.localeCompare(b.name));
         }
 
+        // --- Title update logic ---
+        titleEl.innerHTML = ''; 
+        titleEl.style.cssText = ''; 
+
         if (category) {
-            titleEl.textContent = `${district} - ${category} (${allStoresForDistrict.length} 間)`;
+            titleEl.style.display = 'flex';
+            titleEl.style.justifyContent = 'space-between';
+            titleEl.style.alignItems = 'center';
+            titleEl.style.width = '100%';
+
+            const titleText = document.createElement('span');
+            titleText.textContent = `${district} - ${category} (${allStoresForDistrict.length} 間)`;
+            
+            const clearButton = document.createElement('a');
+            clearButton.href = '#';
+            clearButton.className = 'badge rounded-pill bg-light text-dark text-decoration-none';
+            clearButton.textContent = '顯示全部';
+            clearButton.style.fontSize = '0.8em';
+            clearButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                showAllStoresPanel(district, null);
+            });
+
+            titleEl.appendChild(titleText);
+            titleEl.appendChild(clearButton);
+
         } else {
             titleEl.textContent = `${district} (${allStoresForDistrict.length} 間)`;
         }
+        // --- End of title update logic ---
         
         storeListPage = 1;
         renderStoreListPage();
