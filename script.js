@@ -109,6 +109,42 @@ function animateListItems(container) {
     }, 50);
 }
 
+// --- UI Element Creator ---
+/**
+ * Creates the HTML for a single store list item.
+ * @param {object} store The store data object.
+ * @param {object} options Configuration options { isFilterable: boolean }.
+ * @returns {string} The HTML string for the list item.
+ */
+function createStoreListItemHTML(store, options = {}) {
+    const { isFilterable = false } = options;
+
+    const categoryText = store.category || '未分類';
+    const categoryColor = generateCategoryColor(store.category);
+    
+    let categoryBadge;
+    if (isFilterable && store.category) {
+        categoryBadge = `<span class="badge rounded-pill category-filter-trigger" style="background-color: ${categoryColor}; color: #fff; cursor: pointer;" data-category="${store.category}">${categoryText}</span>`;
+    } else {
+        categoryBadge = `<span class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</span>`;
+    }
+
+    const distanceHTML = store.distance !== undefined 
+        ? ` · <span class="fw-bold">${store.distance.toFixed(2)} km</span>`
+        : '';
+
+    return `
+        <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">${store.name}</h6>
+                ${categoryBadge}
+            </div>
+            <p class="mb-1 small mt-1 text-muted">${store.address || '地址未提供'}${distanceHTML}</p>
+        </a>
+    `;
+}
+
+
 // 台北市行政區
 const taipeiDistricts = ["中正區", "大同區", "中山區", "松山區", "大安區", "萬華區", "信義區", "士林區", "北投區", "內湖區", "南港區", "文山區"];
 
@@ -202,8 +238,7 @@ function populateDistrictSelect() {
     selectElement.innerHTML = '<option selected disabled value="">-- 請選擇 --</option>';
     taipeiDistricts.forEach(district => {
         const option = document.createElement('option');
-        option.value = district;
-        option.textContent = district;
+        option.value = district; option.textContent = district;
         selectElement.appendChild(option);
     });
 }
@@ -494,20 +529,7 @@ function renderSearchResults(stores) {
         content += '<div class="list-group-item text-center text-muted">附近 1 公里內找不到店家資料。</div>';
     } else {
         stores.forEach(store => {
-            const categoryText = store.category || '未分類';
-            const categoryColor = generateCategoryColor(store.category);
-            const categoryBadge = `<small class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</small>`;
-
-            content += `
-                <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">${store.name}</h6>
-                        <small class="text-muted">${store.distance.toFixed(2)} km</small>
-                    </div>
-                    <p class="mb-1 small">${store.address || ''}</p>
-                    ${categoryBadge}
-                </a>
-            `;
+            content += createStoreListItemHTML(store);
         });
     }
     content += '</div>';
@@ -560,19 +582,7 @@ function displayRecommendationInSidebar(stores, category, fromCategoryCount, fro
     let content = title;
     content += '<div class="list-group">';
     stores.forEach(store => {
-        const categoryText = store.category || '未分類';
-        const categoryColor = generateCategoryColor(store.category);
-        const categoryBadge = `<span class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</span>`;
-
-        content += `
-            <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
-                <div class="d-flex w-100 justify-content-between align-items-center">
-                    <h6 class="mb-1">${store.name}</h6>
-                    ${categoryBadge}
-                </div>
-                <p class="mb-1 small mt-1">${store.address || '地址未提供'}</p>
-            </a>
-        `;
+        content += createStoreListItemHTML(store);
     });
     content += '</div>';
     resultDiv.innerHTML = content;
@@ -867,22 +877,7 @@ function renderStoreListPage() {
 
     let contentHTML = '';
     storesToShow.forEach(store => {
-        const categoryText = store.category || '未分類';
-        const categoryColor = generateCategoryColor(store.category);
-
-        const categoryBadge = store.category 
-            ? `<span class="badge rounded-pill category-filter-trigger" style="background-color: ${categoryColor}; color: #fff; cursor: pointer;" data-category="${store.category}">${categoryText}</span>`
-            : `<span class="badge rounded-pill bg-light text-dark">${categoryText}</span>`;
-
-        contentHTML += `
-            <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">${store.name}</h6>
-                    ${categoryBadge}
-                </div>
-                <p class="mb-1 small mt-1 text-muted">${store.address || '地址未提供'}</p>
-            </a>
-        `;
+        contentHTML += createStoreListItemHTML(store, { isFilterable: true });
     });
     contentEl.innerHTML = contentHTML;
     animateListItems(contentEl);
