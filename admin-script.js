@@ -59,6 +59,8 @@ async function fetchAllStores() {
     loadingIndicator.style.display = 'block';
     storeListContainer.style.display = 'none';
     paginationContainer.style.display = 'none';
+    searchInput.disabled = true;
+    searchButton.disabled = true;
 
     try {
         const snapshot = await db.collection('stores_taipei').get();
@@ -77,6 +79,8 @@ async function fetchAllStores() {
         showToast("讀取店家資料時發生錯誤。", "danger", "錯誤");
     } finally {
         loadingIndicator.style.display = 'none';
+        searchInput.disabled = false;
+        searchButton.disabled = false;
     }
 }
 
@@ -242,6 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput = document.getElementById('searchInput');
     searchButton = document.getElementById('searchButton');
     clearSearchButton = document.getElementById('clearSearchButton');
+
+    // *** 修正：初始時禁用搜尋框
+    searchInput.disabled = true;
+    searchButton.disabled = true;
 
     // 檢查 Firebase 是否初始化
     if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db) {
