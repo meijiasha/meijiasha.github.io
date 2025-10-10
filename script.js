@@ -722,7 +722,7 @@ function setupAllStoresPanelListeners() {
     });
 }
 
-async function showAllStoresPanel(district) {
+async function showAllStoresPanel(district, category = null) {
     const panel = document.getElementById('all-stores-panel');
     const titleEl = document.getElementById('all-stores-panel-title');
     const contentEl = document.getElementById('all-stores-panel-content');
@@ -732,22 +732,39 @@ async function showAllStoresPanel(district) {
     panel.classList.add('is-visible');
 
     try {
-        const snapshot = await db.collection('stores_taipei').where('district', '==', district).get();
+        let query = db.collection('stores_taipei').where('district', '==', district);
+        if (category) {
+            query = query.where('category', '==', category);
+        }
+        const snapshot = await query.get();
+        
         allStoresForDistrict = [];
         snapshot.forEach(doc => {
             allStoresForDistrict.push({ id: doc.id, ...doc.data() });
         });
 
-        // Sort by category then by name
-        allStoresForDistrict.sort((a, b) => {
-            if (a.category < b.category) return -1;
-            if (a.category > b.category) return 1;
-            if (a.name < b.name) return -1;
-            if (a.name > b.name) return 1;
-            return 0;
-        });
+        // Sort by category then by name if no category filter is applied
+        if (!category) {
+            allStoresForDistrict.sort((a, b) => {
+                const catA = a.category || 'zzz'; // Put uncategorized at the end
+                const catB = b.category || 'zzz';
+                if (catA < catB) return -1;
+                if (catA > catB) return 1;
+                if (a.name < b.name) return -1;
+                if (a.name > b.name) return 1;
+                return 0;
+            });
+        } else {
+            // If filtering by category, just sort by name
+            allStoresForDistrict.sort((a, b) => a.name.localeCompare(b.name));
+        }
 
-        titleEl.textContent = `${district} (${allStoresForDistrict.length} 間)`;
+        if (category) {
+            titleEl.textContent = `${district} - ${category} (${allStoresForDistrict.length} 間)`;
+        } else {
+            titleEl.textContent = `${district} (${allStoresForDistrict.length} 間)`;
+        }
+        
         storeListPage = 1;
         renderStoreListPage();
         displayMarkers(allStoresForDistrict, false);
@@ -764,7 +781,7 @@ function renderStoreListPage() {
     const paginationEl = document.getElementById('all-stores-panel-pagination');
 
     if (allStoresForDistrict.length === 0) {
-        contentEl.innerHTML = '<div class="p-3 text-center text-muted">此區域尚無店家資料。</div>';
+        contentEl.innerHTML = '<div class="p-3 text-center text-muted">此條件下找不到店家。</div>';
         paginationEl.innerHTML = '';
         return;
     }
@@ -775,11 +792,17 @@ function renderStoreListPage() {
 
     let contentHTML = '';
     storesToShow.forEach(store => {
+        const categoryText = store.category || '未分類';
+        // Make the badge clickable only if there is a category
+        const categoryBadge = store.category 
+            ? `<span class="badge bg-secondary rounded-pill category-filter-trigger" style="cursor: pointer;" data-category="${store.category}">${categoryText}</span>`
+            : `<span class="badge bg-light text-dark rounded-pill">${categoryText}</span>`;
+
         contentHTML += `
             <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
                 <div class="d-flex w-100 justify-content-between">
                     <h6 class="mb-1">${store.name}</h6>
-                    <span class="badge bg-secondary rounded-pill">${store.category || '未分類'}</span>
+                    ${categoryBadge}
                 </div>
                 <p class="mb-1 small mt-1 text-muted">${store.address || '地址未提供'}</p>
             </a>
@@ -791,11 +814,26 @@ function renderStoreListPage() {
     contentEl.querySelectorAll('.list-group-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
+            // If the click was on our badge, let the other listener handle it and stop
+            if (e.target.classList.contains('category-filter-trigger')) {
+                return;
+            }
             const storeId = e.currentTarget.dataset.storeId;
             const marker = currentMapMarkers[storeId];
             if (marker) {
                 map.panTo(marker.position);
                 google.maps.event.trigger(marker, 'click');
+            }
+        });
+    });
+
+    // Add separate listener for category badges to handle filtering
+    contentEl.querySelectorAll('.category-filter-trigger').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+            e.stopPropagation(); // IMPORTANT: Stop the event from bubbling to the parent <a>
+            const category = e.target.dataset.category;
+            if (category && currentSelectedDistrict) {
+                showAllStoresPanel(currentSelectedDistrict, category);
             }
         });
     });
