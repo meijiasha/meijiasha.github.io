@@ -11,6 +11,21 @@ const taipeiDistricts = [
 ];
 
 // -----------------------------------------------------------------------------
+// Helper: 顏色產生函式
+// -----------------------------------------------------------------------------
+function generateCategoryColor(str) {
+  if (!str) return 'hsl(0, 0%, 80%)';
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 65%, 45%)`; 
+}
+
+// -----------------------------------------------------------------------------
 // Toast 顯示函數
 // -----------------------------------------------------------------------------
 function showToast(message, type = 'info', title = '通知', delay = 5000) {
@@ -37,6 +52,36 @@ function populateEditDistrictSelect() {
         option.value = district; option.textContent = district;
         storeDistrictSelect.appendChild(option);
     });
+}
+
+// 載入並顯示已存在的分類
+async function loadAndDisplayExistingCategories() {
+    if (!db) return;
+    const container = document.getElementById('existingCategoriesContainer');
+    if (!container) return;
+
+    try {
+        const snapshot = await db.collection('stores_taipei').get();
+        const categories = snapshot.docs.map(doc => doc.data().category).filter(Boolean);
+        const uniqueCategories = [...new Set(categories)].sort();
+
+        if (uniqueCategories.length > 0) {
+            container.innerHTML = '<small class="text-muted">點擊使用現有分類:</small><br>' +
+                uniqueCategories.map(cat => {
+                    const color = generateCategoryColor(cat);
+                    return `<span class="badge rounded-pill me-1 mb-1" style="background-color: ${color}; cursor: pointer;" data-category="${cat}">${cat}</span>`;
+                }).join('');
+
+            container.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.tagName === 'SPAN' && target.dataset.category) {
+                    storeCategoryInput.value = target.dataset.category;
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error loading existing categories:", error);
+    }
 }
 
 function getQueryParam(param) {
@@ -122,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             console.log("Edit Store Page: User is logged in.");
             populateEditDistrictSelect();
+            loadAndDisplayExistingCategories(); // *** 新增：載入現有分類
             const storeIdToEdit = getQueryParam('id');
             if (storeIdToEdit) {
                 loadStoreData(storeIdToEdit);
@@ -207,7 +253,7 @@ let placesService;
 function initMap() {
     console.log("Google Maps API loaded for edit page.");
     const dummyDiv = document.createElement('div');
-    placesService = new google.maps.places.PlacesService(dummyDiv);
+    placesService = new google.maps.places.PlacesService(dummyiv);
 
     if (googleMapsUrlInput) {
         googleMapsUrlInput.addEventListener('input', handleUrlInput);

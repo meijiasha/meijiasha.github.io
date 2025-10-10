@@ -60,6 +60,37 @@ function populateAddDistrictSelect() {
     });
 }
 
+// 載入並顯示已存在的分類
+async function loadAndDisplayExistingCategories() {
+    if (!db) return;
+    const container = document.getElementById('existingCategoriesContainer');
+    if (!container) return;
+
+    try {
+        const snapshot = await db.collection('stores_taipei').get();
+        const categories = snapshot.docs.map(doc => doc.data().category).filter(Boolean);
+        const uniqueCategories = [...new Set(categories)].sort();
+
+        if (uniqueCategories.length > 0) {
+            container.innerHTML = '<small class="text-muted">點擊使用現有分類:</small><br>' + 
+                uniqueCategories.map(cat => {
+                    const color = generateCategoryColor(cat);
+                    return `<span class="badge rounded-pill me-1 mb-1" style="background-color: ${color}; cursor: pointer;" data-category="${cat}">${cat}</span>`;
+                }).join('');
+
+            container.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.tagName === 'SPAN' && target.dataset.category) {
+                    storeCategoryInput.value = target.dataset.category;
+                    storeCategoryInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error loading existing categories:", error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("add-store-script.js: DOMContentLoaded.");
 
@@ -108,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             console.log("Add Store Page: User is logged in.");
             populateAddDistrictSelect();
+            loadAndDisplayExistingCategories(); // *** 新增：載入現有分類
             if (addStoreForm) addStoreForm.querySelector('button[type="submit"]').disabled = false;
         } else {
             console.log("Add Store Page: User not logged in. Redirecting...");
