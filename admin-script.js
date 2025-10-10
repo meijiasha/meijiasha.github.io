@@ -2,55 +2,33 @@
 console.log("admin-script.js: Script loaded and starts parsing.");
 
 // 全域變數宣告
-let storesTableBody, loadingIndicator, noStoresMessage, authMessageDiv, storeListContainer, logoutButton, itemsPerPageSelect, paginationUl, paginationContainer;
+let storesTableBody, loadingIndicator, authMessageDiv, storeListContainer, logoutButton;
+let searchInput, searchButton, clearSearchButton;
+let itemsPerPageSelect, paginationUl, paginationContainer;
 
+// 資料快取與狀態
+let allStores = []; // 儲存從 Firebase 獲取的所有店家資料
+let filteredStores = []; // 儲存篩選和排序後的店家資料
 let currentPage = 1;
 let itemsPerPage = 10;
-let lastFetchedDoc = null;
-let pageCursors = {};
-let totalStores = 0;
-let totalPages = 0;
-const USE_ORDER_BY = false;
 
-let currentSortColumn = null;
-let currentSortDirection = 'asc';
-let tableDataCache = [];
+// 排序狀態
+let currentSortColumn = 'lastEditedAt';
+let currentSortDirection = 'desc';
 
-// Firebase 實例 - 由 HTML 初始化並賦值給全域 var db, var auth
-
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // Toast 顯示函數
-// -----------------------------------------------------------------------------
-/**
- * 顯示 Bootstrap Toast 通知
- * @param {string} message 要顯示的訊息
- * @param {string} type 'success', 'danger', 'warning', 'info' (對應 Bootstrap 背景色)
- * @param {string} title Toast 標題 (可選)
- * @param {number} delay 自動隱藏的延遲時間 (毫秒)，設為 0 或 false 則不自動隱藏
- */
+// ----------------------------------------------------------------------------
 function showToast(message, type = 'info', title = '通知', delay = 5000) {
     const toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
-        console.error("Toast container (.toast-container) not found on the page!");
-        alert(`${title}: ${message}`); // Fallback
+        console.error("Toast container not found!");
+        alert(`${title}: ${message}`);
         return;
     }
-
     const toastId = 'toast-' + new Date().getTime();
-    const toastBgClass = {
-        success: 'bg-success',
-        danger: 'bg-danger',
-        warning: 'bg-warning',
-        info: 'bg-info'
-    }[type] || 'bg-primary'; // 預設使用 primary 或 info
-
-    const iconClass = {
-        success: 'bi-check-circle-fill',
-        danger: 'bi-x-octagon-fill',
-        warning: 'bi-exclamation-triangle-fill',
-        info: 'bi-info-circle-fill'
-    }[type] || 'bi-info-circle-fill';
-
+    const toastBgClass = { success: 'bg-success', danger: 'bg-danger', warning: 'bg-warning', info: 'bg-info' }[type] || 'bg-primary';
+    const iconClass = { success: 'bi-check-circle-fill', danger: 'bi-x-octagon-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' }[type] || 'bi-info-circle-fill';
     const toastHTML = `
         <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
             <div class="toast-header text-white ${toastBgClass}">
@@ -59,350 +37,311 @@ function showToast(message, type = 'info', title = '通知', delay = 5000) {
                 <small class="text-white-50">剛剛</small>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body">
-                ${message}
-            </div>
-        </div>
-    `;
+            <div class="toast-body">${message}</div>
+        </div>`;
     toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-
     const toastElement = document.getElementById(toastId);
-    if (toastElement) {
-        const toast = new bootstrap.Toast(toastElement, {
-            delay: delay && delay > 0 ? delay : undefined,
-            autohide: delay && delay > 0
-        });
-        toastElement.addEventListener('hidden.bs.toast', function () {
-            toastElement.remove();
-        });
-        toast.show();
-    } else {
-        console.error(`Failed to find toast element with id: ${toastId}`);
-        alert(`${title}: ${message}`); // Fallback
-    }
+    const toast = new bootstrap.Toast(toastElement, { delay: delay > 0 ? delay : undefined, autohide: delay > 0 });
+    toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+    toast.show();
 }
 
+// ----------------------------------------------------------------------------
+// 主要資料獲取與渲染邏輯
+// ----------------------------------------------------------------------------
 
-// -----------------------------------------------------------------------------
-// 輔助函數定義
-// -----------------------------------------------------------------------------
-function handleEditStore(storeId) {
-    // console.log(`ACTION: Navigating to edit store ID: ${storeId}`);
-    if (storeId) {
-        window.location.href = `edit-store.html?id=${storeId}`;
-    } else {
-        console.error("handleEditStore: storeId is undefined or null. Cannot navigate.");
-        showToast("無法編輯：店家 ID 缺失。", "danger", "錯誤");
-    }
-}
-
-function addEventListenersToEditButtons() {
-    if (!storesTableBody) return;
-    const editButtons = storesTableBody.querySelectorAll('.edit-store-btn');
-    editButtons.forEach(button => {
-        button.removeEventListener('click', handleEditButtonClick);
-        button.addEventListener('click', handleEditButtonClick);
-    });
-}
-function handleEditButtonClick(event) {
-    const storeId = event.currentTarget.dataset.id;
-    handleEditStore(storeId);
-}
-
-async function handleDeleteStore(storeId, storeName) {
+// 從 Firebase 獲取所有店家資料
+async function fetchAllStores() {
     if (typeof db === 'undefined' || !db) {
-        showToast("資料庫未連接，無法刪除。", "danger", "錯誤");
-        console.error("handleDeleteStore: 'db' instance is not available.");
+        showToast("資料庫連線失敗。", "danger", "錯誤");
         return;
     }
-    if (confirm(`您確定要刪除店家 "${storeName}" 嗎？此操作無法復原。`)) {
-        // console.log(`Attempting to delete store ID: ${storeId}, Name: ${storeName}`);
-        try {
-            await db.collection('stores_taipei').doc(storeId).delete();
-            // console.log(`SUCCESS: Store "${storeName}" (ID: ${storeId}) deleted.`);
-            showToast(`店家 "${storeName}" 已成功刪除。`, "success", "刪除成功");
-
-            totalStores = await fetchTotalStoresCount();
-            if (totalStores > 0 && itemsPerPage > 0) { totalPages = Math.ceil(totalStores / itemsPerPage); }
-            else { totalPages = 0; }
-
-            currentPage = 1; lastFetchedDoc = null; pageCursors = {};
-            currentSortColumn = null; currentSortDirection = 'asc';
-            fetchStoresForPage(currentPage);
-        } catch (error) {
-            console.error("刪除店家失敗:", error);
-            showToast(`刪除店家 "${storeName}" 失敗: ${error.message}`, "danger", "刪除失敗");
-        }
-    }
-}
-function addEventListenersToDeleteButtons() {
-    if (!storesTableBody) return;
-    const deleteButtons = storesTableBody.querySelectorAll('.delete-store-btn');
-    deleteButtons.forEach(button => {
-        button.removeEventListener('click', handleDeleteButtonClick);
-        button.addEventListener('click', handleDeleteButtonClick);
-    });
-}
-function handleDeleteButtonClick(event) {
-    const storeId = event.currentTarget.dataset.id;
-    const storeName = event.currentTarget.dataset.name;
-    handleDeleteStore(storeId, storeName);
-}
-
-async function fetchTotalStoresCount() {
-    if (typeof db === 'undefined' || !db) {
-        console.error("fetchTotalStoresCount: Firestore 'db' is not initialized.");
-        return 0;
-    }
-    try {
-        const query = db.collection('stores_taipei');
-        let count = 0;
-        if (typeof query.count === 'function') {
-            const snapshot = await query.count().get();
-            count = snapshot.data().count;
-        } else {
-            console.warn("query.count() is not a function in fetchTotalStoresCount. Falling back.");
-            const snapshot = await query.select(firebase.firestore.FieldPath.documentId()).get();
-            count = snapshot.size;
-        }
-        // console.log(`Total stores count: ${count}`);
-        return count;
-    } catch (error) {
-        console.error("ERROR in fetchTotalStoresCount:", error);
-        return 0;
-    }
-}
-
-// -----------------------------------------------------------------------------
-// 主要資料獲取與顯示函數
-// -----------------------------------------------------------------------------
-async function fetchStoresForPage(targetPage) {
-    if (typeof db === 'undefined' || !db) { /* ... (錯誤處理) ... */ return; }
-    // console.log(`FETCHING STORES - Target: ${targetPage}, Current: ${currentPage}, Items: ${itemsPerPage}, Sort: ${currentSortColumn || 'FirestoreDefault'}-${currentSortDirection}`);
-    if(loadingIndicator) loadingIndicator.style.display = 'block';
-    if(noStoresMessage) noStoresMessage.style.display = 'none';
-    if(storesTableBody) storesTableBody.innerHTML = '';
-    if(paginationUl) paginationUl.innerHTML = '';
+    loadingIndicator.style.display = 'block';
+    storeListContainer.style.display = 'none';
+    paginationContainer.style.display = 'none';
 
     try {
-        let query = db.collection('stores_taipei');
-        if (USE_ORDER_BY) { query = query.orderBy('lastEditedAt', 'desc'); }
-        else { query = query.orderBy(firebase.firestore.FieldPath.documentId()); }
+        const snapshot = await db.collection('stores_taipei').get();
+        allStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        filteredStores = [...allStores]; // 初始時，篩選列表等於完整列表
+        
+        // 預設排序
+        sortData(filteredStores, currentSortColumn, currentSortDirection);
 
-        if (targetPage > 1) {
-            const cursorDoc = pageCursors[targetPage - 1];
-            if (cursorDoc) { query = query.startAfter(cursorDoc); }
-            else { currentPage = 1; lastFetchedDoc = null; pageCursors = {}; targetPage = 1; }
-        }
-        query = query.limit(itemsPerPage);
-        const documentSnapshots = await query.get();
-
-        if (documentSnapshots.empty) {
-            tableDataCache = [];
-            renderTableFromCache();
-            renderPaginationUI(true);
-            if (targetPage === 1) { lastFetchedDoc = null; pageCursors = {}; }
-            if(loadingIndicator) loadingIndicator.style.display = 'none';
-            return;
-        }
-
-        currentPage = targetPage;
-        lastFetchedDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-        pageCursors[currentPage] = lastFetchedDoc;
-        tableDataCache = documentSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderTableFromCache();
-        renderPaginationUI(documentSnapshots.docs.length < itemsPerPage || currentPage === totalPages);
+        currentPage = 1;
+        renderUI(); // 渲染畫面
+        showToast(`成功載入 ${allStores.length} 筆店家資料。`, 'success', '載入完成');
 
     } catch (error) {
-        console.error("讀取店家資料失敗 (fetchStoresForPage):", error);
-        if (noStoresMessage) { noStoresMessage.textContent = "讀取資料時發生錯誤。"; noStoresMessage.style.display = 'table-row'; }
-        tableDataCache = []; renderTableFromCache(); renderPaginationUI(true);
+        console.error("讀取所有店家資料失敗:", error);
+        showToast("讀取店家資料時發生錯誤。", "danger", "錯誤");
     } finally {
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        loadingIndicator.style.display = 'none';
     }
 }
 
-function renderTableFromCache() {
-    if (!storesTableBody) { return; }
+// 渲染畫面 (表格 + 分頁)
+function renderUI() {
+    storeListContainer.style.display = filteredStores.length > 0 ? 'block' : 'none';
+    paginationContainer.style.display = filteredStores.length > 0 ? 'flex' : 'none';
+    
+    renderTable();
+    renderPagination();
+}
+
+// 渲染表格
+function renderTable() {
     storesTableBody.innerHTML = '';
 
-    if (tableDataCache.length === 0) {
-        if (noStoresMessage) {
-            const isFirstEverLoad = (Object.keys(pageCursors).length === 0 && !lastFetchedDoc && currentPage === 1);
-            noStoresMessage.textContent = isFirstEverLoad ? "目前沒有店家資料。" : "此頁沒有資料。";
-            noStoresMessage.style.display = 'table-row';
-        }
-        updateSortIcons(); return;
-    }
-    if (noStoresMessage) noStoresMessage.style.display = 'none';
-
-    let dataToRender = [...tableDataCache];
-    if (currentSortColumn) { sortDataArray(dataToRender, currentSortColumn, currentSortDirection); }
-
-    dataToRender.forEach((storeData) => {
-        const storeId = storeData.id; const store = storeData; const row = storesTableBody.insertRow();
-        let lastEditedAtFormatted = 'N/A'; if (store.lastEditedAt && store.lastEditedAt.toDate) { try { lastEditedAtFormatted = store.lastEditedAt.toDate().toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }); } catch (e) { lastEditedAtFormatted = '日期錯誤'; } }
-        let editorDisplay = 'N/A'; if (store.lastEditedBy && store.lastEditedBy.email) { editorDisplay = store.lastEditedBy.email; } else if (store.createdBy && store.createdBy.email) { editorDisplay = `${store.createdBy.email} (創建)`;}
-        row.innerHTML = `<td>${store.name || 'N/A'}</td><td>${store.district || 'N/A'}</td><td>${store.category || 'N/A'}</td><td>${store.address || 'N/A'}</td><td>${store.price || 'N/A'}</td><td>${editorDisplay}</td><td>${lastEditedAtFormatted}</td><td><button class="btn btn-sm btn-primary edit-store-btn" data-id="${storeId}">編輯</button><button class="btn btn-sm btn-danger delete-store-btn ms-1" data-id="${storeId}" data-name="${store.name || '該店家'}">刪除</button></td>`;
-    });
-    addEventListenersToEditButtons();
-    addEventListenersToDeleteButtons();
-    updateSortIcons();
-}
-
-// -----------------------------------------------------------------------------
-// 分頁控制項產生函數
-// -----------------------------------------------------------------------------
-function renderPaginationUI(isEffectivelyLastPage) {
-    if (!paginationUl) return;
-    paginationUl.innerHTML = '';
-    if (totalPages <= 0 ) { return; }
-    if (totalPages === 1 && isEffectivelyLastPage && totalStores <= itemsPerPage ) {
-        const currentLi = document.createElement('li'); currentLi.classList.add('page-item', 'active');
-        const currentLink = document.createElement('span'); currentLink.classList.add('page-link'); currentLink.textContent = currentPage;
-        currentLi.appendChild(currentLink); paginationUl.appendChild(currentLi);
+    if (filteredStores.length === 0) {
+        const tr = storesTableBody.insertRow();
+        const td = tr.insertCell(0);
+        td.colSpan = 8; // 表格總欄位數
+        td.textContent = searchInput.value ? '找不到符合條件的店家。' : '目前沒有店家資料。';
+        td.style.textAlign = 'center';
         return;
     }
-    const prevLi = document.createElement('li'); prevLi.classList.add('page-item'); if (currentPage === 1) prevLi.classList.add('disabled');
-    const prevLink = document.createElement('a'); prevLink.classList.add('page-link'); prevLink.href = '#'; prevLink.textContent = '上一頁';
-    prevLink.addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 1) fetchStoresForPage(currentPage - 1); });
-    prevLi.appendChild(prevLink); paginationUl.appendChild(prevLi);
-    const maxPageButtons = 5; let startPage, endPage;
-    if (totalPages <= maxPageButtons) { startPage = 1; endPage = totalPages; }
-    else { const maxPagesBefore = Math.floor(maxPageButtons / 2); const maxPagesAfter = Math.ceil(maxPageButtons / 2) - 1; if (currentPage <= maxPagesBefore) { startPage = 1; endPage = maxPageButtons; } else if (currentPage + maxPagesAfter >= totalPages) { startPage = totalPages - maxPageButtons + 1; endPage = totalPages; } else { startPage = currentPage - maxPagesBefore; endPage = currentPage + maxPagesAfter; }}
-    startPage = Math.max(1, startPage); endPage = Math.min(totalPages, endPage);
-    if (startPage > 1) { const first = document.createElement('li'); first.classList.add('page-item'); const fl = document.createElement('a'); fl.classList.add('page-link'); fl.href='#'; fl.textContent='1'; fl.dataset.page=1; fl.addEventListener('click', handlePageLinkClick); first.appendChild(fl); paginationUl.appendChild(first); if (startPage > 2) { const el = document.createElement('li'); el.classList.add('page-item', 'disabled'); el.innerHTML=`<span class="page-link">...</span>`; paginationUl.appendChild(el);}}
-    for (let i = startPage; i <= endPage; i++) { if (i > 0 && i <= totalPages) { const pl = document.createElement('li'); pl.classList.add('page-item'); if (i === currentPage) {pl.classList.add('active'); pl.setAttribute('aria-current', 'page');} const l = document.createElement('a'); l.classList.add('page-link'); l.href='#'; l.textContent=i; l.dataset.page=i; l.addEventListener('click', handlePageLinkClick); pl.appendChild(l); paginationUl.appendChild(pl);}}
-    if (endPage < totalPages) { if (endPage < totalPages - 1) { const el = document.createElement('li'); el.classList.add('page-item', 'disabled'); el.innerHTML=`<span class="page-link">...</span>`; paginationUl.appendChild(el);} const last = document.createElement('li'); last.classList.add('page-item'); const ll = document.createElement('a'); ll.classList.add('page-link'); ll.href='#'; ll.textContent=totalPages; ll.dataset.page=totalPages; ll.addEventListener('click', handlePageLinkClick); last.appendChild(ll); paginationUl.appendChild(last);}
-    const nextLi = document.createElement('li'); nextLi.classList.add('page-item'); if (currentPage === totalPages || (isEffectivelyLastPage && currentPage >= totalPages) ) nextLi.classList.add('disabled');
-    const nextLink = document.createElement('a'); nextLink.classList.add('page-link'); nextLink.href = '#'; nextLink.textContent = '下一頁';
-    nextLink.addEventListener('click', (e) => { e.preventDefault(); if (currentPage < totalPages) fetchStoresForPage(currentPage + 1); });
-    nextLi.appendChild(nextLink); paginationUl.appendChild(nextLi);
-}
 
-function handlePageLinkClick(e) {
-    e.preventDefault();
-    const targetPage = parseInt(e.target.dataset.page, 10);
-    if (targetPage !== currentPage) {
-        fetchStoresForPage(targetPage);
-    }
-}
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageData = filteredStores.slice(startIndex, endIndex);
 
-// **** 排序相關函數 ****
-function initializeSortableHeaders() {
-    const localTable = document.querySelector('#storeListContainer table');
-    if (!localTable) { return; }
-    const headers = localTable.querySelectorAll('thead th[data-sortable]');
-    if (headers.length === 0) { return; }
-    headers.forEach(header => {
-        header.removeEventListener('click', handleSortHeaderClick);
-        header.addEventListener('click', handleSortHeaderClick);
+    pageData.forEach(store => {
+        const row = storesTableBody.insertRow();
+        const lastEditedAtFormatted = store.lastEditedAt?.toDate ? store.lastEditedAt.toDate().toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : 'N/A';
+        const editorDisplay = store.lastEditedBy?.email || (store.createdBy?.email ? `${store.createdBy.email} (創建)` : 'N/A');
+
+        row.innerHTML = `
+            <td class="col-name">${store.name || 'N/A'}</td>
+            <td>${store.district || 'N/A'}</td>
+            <td>${store.category || 'N/A'}</td>
+            <td class="col-address">${store.address || 'N/A'}</td>
+            <td>${store.price || 'N/A'}</td>
+            <td class="col-editor">${editorDisplay}</td>
+            <td class="col-time">${lastEditedAtFormatted}</td>
+            <td class="col-actions">
+                <button class="btn btn-sm btn-primary edit-store-btn" data-id="${store.id}">編輯</button>
+                <button class="btn btn-sm btn-danger delete-store-btn ms-1" data-id="${store.id}" data-name="${store.name || '該店家'}">刪除</button>
+            </td>
+        `;
     });
 }
 
-function handleSortHeaderClick() {
-    const column = this.dataset.column;
-    if (!column) { return; }
-    if (currentSortColumn === column) {
-        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        currentSortColumn = column;
-        currentSortDirection = 'asc';
+// 渲染分頁
+function renderPagination() {
+    paginationUl.innerHTML = '';
+    const totalPages = Math.ceil(filteredStores.length / itemsPerPage);
+
+    if (totalPages <= 1) return;
+
+    // 上一頁按鈕
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">上一頁</a>`;
+    paginationUl.appendChild(prevLi);
+
+    // 頁碼按鈕
+    for (let i = 1; i <= totalPages; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+        paginationUl.appendChild(pageLi);
     }
-    renderTableFromCache();
+
+    // 下一頁按鈕
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">下一頁</a>`;
+    paginationUl.appendChild(nextLi);
 }
 
-function sortDataArray(dataArray, column, direction) { /* ... (與之前版本相同) ... */ }
-function sortCachedData(column, direction) { sortDataArray(tableDataCache, column, direction); }
-function updateSortIcons() { /* ... (與之前版本相同) ... */ }
+
+// ----------------------------------------------------------------------------
+// 搜尋、排序與過濾
+// ----------------------------------------------------------------------------
+
+// 執行搜尋
+function performSearch() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    if (searchTerm) {
+        filteredStores = allStores.filter(store => {
+            const name = store.name?.toLowerCase() || '';
+            const district = store.district?.toLowerCase() || '';
+            const category = store.category?.toLowerCase() || '';
+            const address = store.address?.toLowerCase() || '';
+            return name.includes(searchTerm) || district.includes(searchTerm) || category.includes(searchTerm) || address.includes(searchTerm);
+        });
+        clearSearchButton.style.display = 'inline-block';
+    } else {
+        filteredStores = [...allStores]; // 重置為完整列表
+        clearSearchButton.style.display = 'none';
+    }
+    
+    // 排序並渲染
+    sortData(filteredStores, currentSortColumn, currentSortDirection);
+    currentPage = 1;
+    renderUI();
+}
+
+// 清除搜尋
+function clearSearch() {
+    searchInput.value = '';
+    performSearch();
+}
+
+// 排序資料
+function sortData(dataArray, column, direction) {
+    dataArray.sort((a, b) => {
+        // Helper to get nested property
+        const getNestedValue = (obj, path) => path.split('.').reduce((o, k) => (o || {})[k], obj);
+
+        let valA = getNestedValue(a, column);
+        let valB = getNestedValue(b, column);
+
+        // Handle timestamp objects
+        if (valA?.toDate) valA = valA.toDate();
+        if (valB?.toDate) valB = valB.toDate();
+
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+// 更新排序圖示
+function updateSortIcons() {
+    document.querySelectorAll('th[data-sortable]').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        const icon = th.querySelector('.sort-icon');
+        icon.className = 'sort-icon bi bi-arrow-down-up';
+
+        if (th.dataset.column === currentSortColumn) {
+            th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+            icon.className = `sort-icon bi ${currentSortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'}`;
+        }
+    });
+}
 
 
-// -----------------------------------------------------------------------------
-// 事件監聽與初始化
-// -----------------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log("admin-script.js: DOMContentLoaded event fired.");
+// ----------------------------------------------------------------------------
+// 事件處理與初始化
+// ----------------------------------------------------------------------------
 
+// DOM載入完成後執行
+document.addEventListener('DOMContentLoaded', () => {
+    // 獲取 DOM 元素
     storesTableBody = document.getElementById('storesTableBody');
     loadingIndicator = document.getElementById('loadingIndicator');
-    noStoresMessage = document.getElementById('noStoresMessage');
     authMessageDiv = document.getElementById('authMessage');
     storeListContainer = document.getElementById('storeListContainer');
     logoutButton = document.getElementById('logoutButton');
     itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
     paginationUl = document.getElementById('paginationUl');
     paginationContainer = document.getElementById('paginationContainer');
-    console.log("admin-script.js: DOM elements obtained.");
+    searchInput = document.getElementById('searchInput');
+    searchButton = document.getElementById('searchButton');
+    clearSearchButton = document.getElementById('clearSearchButton');
 
+    // 檢查 Firebase 是否初始化
     if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db) {
-        console.error("admin-script.js (DOMContentLoaded): Firebase 'auth' or 'db' instance is NOT available. Halting.");
-        if (authMessageDiv) { authMessageDiv.textContent = "Firebase 核心服務初始化失敗。"; authMessageDiv.style.display = 'block'; }
-        if (storeListContainer) storeListContainer.style.display = 'none';
-        // ... (其他UI禁用)
+        console.error("Firebase 'auth' or 'db' instance is NOT available. Halting.");
+        authMessageDiv.textContent = "Firebase 核心服務初始化失敗。";
+        authMessageDiv.style.display = 'block';
         return;
     }
 
-    // SDK 版本和 count 方法檢查
-    if (typeof firebase !== 'undefined' && firebase.SDK_VERSION) {
-        if (db && typeof db.collection('stores_taipei').count === 'function') {
-             console.log("  Firestore 'count' method IS available on 'db' instance.");
-        } else {
-            console.error("  Firestore 'count' method IS NOT available or 'db' instance is not fully ready. Check SDK & cache.");
-        }
-    } else { console.error("  Firebase global object or SDK_VERSION is not available at DOMContentLoaded."); }
-
-    initializeSortableHeaders();
-
-    auth.onAuthStateChanged(async (user) => {
+    // 監聽認證狀態
+    auth.onAuthStateChanged(user => {
         if (user) {
-            if (authMessageDiv) authMessageDiv.style.display = 'none';
-            if (storeListContainer) storeListContainer.style.display = 'block';
-            if (logoutButton) logoutButton.style.display = 'block';
-            if (itemsPerPageSelect) itemsPerPageSelect.disabled = false;
-            if (paginationContainer) paginationContainer.style.display = 'flex';
-
-            if (itemsPerPageSelect) itemsPerPage = parseInt(itemsPerPageSelect.value, 10);
-            else itemsPerPage = 10;
-
-            totalStores = await fetchTotalStoresCount();
-            if (totalStores > 0 && itemsPerPage > 0) { totalPages = Math.ceil(totalStores / itemsPerPage); }
-            else { totalPages = 0; }
-
-            currentPage = 1; lastFetchedDoc = null; pageCursors = {};
-            currentSortColumn = null; currentSortDirection = 'asc';
-            fetchStoresForPage(currentPage);
+            authMessageDiv.style.display = 'none';
+            logoutButton.style.display = 'block';
+            fetchAllStores(); // 登入後載入所有資料
         } else {
-            if(authMessageDiv) { authMessageDiv.textContent = "您需要登入。"; authMessageDiv.style.display = 'block';}
-            if(storeListContainer) storeListContainer.style.display = 'none';
-            if (logoutButton) logoutButton.style.display = 'none';
-            if (itemsPerPageSelect) itemsPerPageSelect.disabled = true;
-            if (paginationContainer) paginationContainer.style.display = 'none';
-            const currentPath = window.location.pathname.toLowerCase();
-            if (!currentPath.endsWith('login.html') && !currentPath.endsWith('login.html/')) {
-                window.location.href = 'login.html';
+            authMessageDiv.textContent = "您需要登入才能查看此頁面。";
+            authMessageDiv.style.display = 'block';
+            storeListContainer.style.display = 'none';
+            paginationContainer.style.display = 'none';
+            logoutButton.style.display = 'none';
+            // 可選：自動跳轉到登入頁
+            if (!window.location.pathname.includes('login.html')) {
+                 window.location.href = 'login.html';
             }
         }
     });
 
-    if (itemsPerPageSelect) {
-        itemsPerPageSelect.addEventListener('change', async (event) => {
-            itemsPerPage = parseInt(event.target.value, 10);
-            totalStores = await fetchTotalStoresCount();
-            if (totalStores > 0 && itemsPerPage > 0) { totalPages = Math.ceil(totalStores / itemsPerPage); }
-            else { totalPages = 0; }
-            currentPage = 1; lastFetchedDoc = null; pageCursors = {};
-            currentSortColumn = null; currentSortDirection = 'asc';
-            fetchStoresForPage(currentPage);
-        });
-    }
+    // 綁定事件監聽器
+    // 登出
+    logoutButton.addEventListener('click', () => {
+        auth.signOut().then(() => showToast("您已成功登出。", "info"));
+    });
 
-    if (logoutButton && auth) {
-        logoutButton.addEventListener('click', () => {
-            auth.signOut().then(() => { console.log('使用者已登出'); showToast("您已成功登出。", "info", "登出通知");})
-            .catch((error) => { console.error('登出失敗:', error); showToast(`登出失敗: ${error.message}`, "danger", "錯誤");});
+    // 搜尋
+    searchButton.addEventListener('click', performSearch);
+    clearSearchButton.addEventListener('click', clearSearch);
+    searchInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    // 表格點擊事件 (編輯/刪除)
+    storesTableBody.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target.classList.contains('edit-store-btn')) {
+            window.location.href = `edit-store.html?id=${target.dataset.id}`;
+        }
+        if (target.classList.contains('delete-store-btn')) {
+            if (confirm(`您確定要刪除店家 "${target.dataset.name}" 嗎？此操作無法復原。`)) {
+                db.collection('stores_taipei').doc(target.dataset.id).delete()
+                    .then(() => {
+                        showToast(`店家 "${target.dataset.name}" 已成功刪除。`, "success");
+                        fetchAllStores(); // 重新載入資料
+                    })
+                    .catch(error => {
+                        console.error("刪除店家失敗:", error);
+                        showToast(`刪除店家失敗: ${error.message}`, "danger");
+                    });
+            }
+        }
+    });
+
+    // 分頁點擊
+    paginationUl.addEventListener('click', (event) => {
+        event.preventDefault();
+        const target = event.target;
+        if (target.tagName === 'A' && target.dataset.page) {
+            const page = parseInt(target.dataset.page, 10);
+            if (page !== currentPage && page > 0 && page <= Math.ceil(filteredStores.length / itemsPerPage)) {
+                currentPage = page;
+                renderUI();
+            }
+        }
+    });
+
+    // 每頁顯示數量變更
+    itemsPerPageSelect.addEventListener('change', (event) => {
+        itemsPerPage = parseInt(event.target.value, 10);
+        currentPage = 1;
+        renderUI();
+    });
+
+    // 排序表頭點擊
+    document.querySelectorAll('th[data-sortable]').forEach(header => {
+        header.addEventListener('click', () => {
+            const column = header.dataset.column;
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortDirection = 'asc';
+            }
+            sortData(filteredStores, currentSortColumn, currentSortDirection);
+            currentPage = 1;
+            renderUI();
+            updateSortIcons();
         });
-    }
-    console.log("admin-script.js: DOMContentLoaded setup finished.");
+    });
+    
+    updateSortIcons(); // 初始設定排序圖示
 });
-
-console.log("admin-script.js: Script parsed completely.");
