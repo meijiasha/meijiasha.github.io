@@ -44,6 +44,12 @@
         </div>
 
         <div class="mb-3">
+          <label for="googleMapsUrl" class="form-label">Google Maps 網址 (自動更新)</label>
+          <input type="url" class="form-control" id="googleMapsUrl" placeholder="貼上新的 Google Maps 網址可覆蓋現有經緯度等資訊" />
+          <div class="form-text">請貼上**完整**的 Google Maps 網址 (以 <code>https://www.google.com/maps/place/...</code> 開頭)。</div>
+        </div>
+
+        <div class="mb-3">
           <label for="editStoreDistrict" class="form-label">行政區 <span class="text-danger">*</span></label>
           <select class="form-select" id="editStoreDistrict" required>
             <option value="">-- 請選擇 --</option>
@@ -147,6 +153,8 @@
         /* ... */
       }
     </script>
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw&libraries=places&callback=initMap" async defer></script>
     <!-- 編輯頁面專用 JavaScript -->
     <script src="edit-store-script.js"></script>
   </body>

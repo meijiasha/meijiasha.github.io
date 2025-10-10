@@ -2,7 +2,7 @@
 console.log("edit-store-script.js: Script loaded.");
 
 // DOM 元素引用
-let editStoreForm, storeDocIdInput, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv, loadingSpinner;
+let editStoreForm, storeDocIdInput, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv, loadingSpinner, googleMapsUrlInput;
 
 // 台北市行政區
 const taipeiDistricts = [
@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formErrorDiv = document.getElementById('formError');
     formSuccessDiv = document.getElementById('formSuccess');
     loadingSpinner = document.getElementById('loadingSpinner');
+    googleMapsUrlInput = document.getElementById('googleMapsUrl'); // 新增的元素
 
     if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db) {
         console.error("edit-store-script.js: Firebase not ready.");
@@ -197,3 +198,77 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log("edit-store-script.js: Script parsed completely.");
+
+// -----------------------------------------------------------------------------
+// Google Maps URL Parsing and Autocomplete
+// -----------------------------------------------------------------------------
+let placesService;
+
+function initMap() {
+    console.log("Google Maps API loaded for edit page.");
+    const dummyDiv = document.createElement('div');
+    placesService = new google.maps.places.PlacesService(dummyDiv);
+
+    if (googleMapsUrlInput) {
+        googleMapsUrlInput.addEventListener('input', handleUrlInput);
+    }
+}
+
+function handleUrlInput(event) {
+    const url = event.target.value;
+    if (!url || !url.includes('google.com/maps/place')) {
+        return;
+    }
+
+    const match = url.match(/google\.com\/maps\/place\/([^\/]+)/);
+    if (match && match[1]) {
+        const placeName = decodeURIComponent(match[1].replace(/\+/g, ' '));
+        findPlaceDetails(placeName);
+    }
+}
+
+function findPlaceDetails(query) {
+    const request = {
+        query: query,
+        fields: ['name', 'place_id', 'formatted_address', 'geometry'],
+    };
+
+    placesService.findPlaceFromQuery(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+            const place = results[0];
+            
+            // Populate the form fields
+            if (storeNameInput) {
+                storeNameInput.value = place.name;
+            }
+            if (storeAddressInput) {
+                storeAddressInput.value = place.formatted_address;
+            }
+            if (storePlaceIdInput) {
+                storePlaceIdInput.value = place.place_id;
+            }
+            if (place.geometry && place.geometry.location) {
+                if (storeLatInput) {
+                    storeLatInput.value = place.geometry.location.lat();
+                }
+                if (storeLngInput) {
+                    storeLngInput.value = place.geometry.location.lng();
+                }
+            }
+            
+            if (storeDistrictSelect && place.formatted_address) {
+                for (const district of taipeiDistricts) {
+                    if (place.formatted_address.includes(district)) {
+                        storeDistrictSelect.value = district;
+                        break;
+                    }
+                }
+            }
+
+            showToast('已從 Google Maps 網址自動填入店家資訊！', 'success', '自動帶入成功');
+
+        } else {
+            showToast('無法從 Google Maps 網址找到對應的店家。', 'warning', '查無資料');
+        }
+    });
+}
