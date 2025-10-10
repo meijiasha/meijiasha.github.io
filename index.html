@@ -4,11 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>咩呷啥 - 今天吃什麼</title>
+    
+    <!-- Google Fonts: Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
     <!-- Bootstrap 圖示 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
-    <!-- 自訂 CSS (確認檔名為 style.css 或您使用的名稱) -->
+    <!-- 自訂 CSS -->
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -20,7 +26,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="sidebar-body">
-            <!-- 行政區選擇 (ID: districtSelect) -->
+            <!-- 行政區選擇 -->
             <div class="mb-3">
                 <label for="districtSelect" class="form-label">選擇行政區:</label>
                 <select class="form-select" id="districtSelect">
@@ -40,7 +46,7 @@
               <input class="form-check-input" type="checkbox" role="switch" id="openNowFilter">
               <label class="form-check-label" for="openNowFilter">僅顯示營業中</label>
             </div>
-            <!-- 隨機按鈕 (ID: randomRecommendBtn) -->
+            <!-- 按鈕區域 -->
             <div class="d-grid gap-2">
                 <button class="btn btn-outline-success" type="button" id="randomRecommendBtn" disabled><i class="bi bi-shuffle"></i> 隨機推薦店家 (同區域)</button>
                 <button class="btn btn-outline-info mt-2" type="button" id="listAllStoresBtn" disabled><i class="bi bi-card-list"></i> 列出本行政區所有店家</button>
@@ -78,7 +84,7 @@
                             <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#techStackModal">技術堆疊</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="https://lin.ee/Qn1ZQIx" target="_blank"><i class="bi bi-line"></i> LINE Bot</a>
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#lineBotModal"><i class="bi bi-line"></i> LINE Bot</a>
                         </li>
                     </ul>
                     <!-- Dark Mode Switch -->
@@ -86,7 +92,7 @@
                         <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch">
                         <label class="form-check-label" for="darkModeSwitch" id="darkModeLabel"><i class="bi bi-moon-stars-fill"></i></label>
                     </div>
-                    <!-- 搜尋框 (可選, ID: searchContainer, searchButton, searchInput) -->
+                    <!-- 搜尋框 -->
                     <div class="search-container">
                         <button class="search-button" id="searchButton"><i class="bi bi-search"></i></button>
                         <input type="search" class="search-input" id="searchInput" placeholder="搜尋地點(全地圖)..." />
@@ -98,10 +104,8 @@
         <!-- 搜尋結果面板 -->
         <div id="search-results-container" style="display: none;"></div>
 
-        <!-- 地圖容器 (ID: map) -->
-        <div id="map">
-            <!-- 地圖會載入這裡 -->
-        </div>
+        <!-- 地圖容器 -->
+        <div id="map"></div>
     </div>
 
     <!-- 全行政區店家列表面板 -->
@@ -110,12 +114,8 @@
         <h5 id="all-stores-panel-title">所有店家</h5>
         <button type="button" id="close-all-stores-panel" class="btn-close" aria-label="Close"></button>
       </div>
-      <div id="all-stores-panel-content" class="list-group list-group-flush">
-        <!-- 店家列表將由 JS 動態載入 -->
-      </div>
-      <nav id="all-stores-panel-pagination" class="mt-auto p-2" aria-label="Page navigation">
-        <!-- 分頁控制將由 JS 動態載入 -->
-      </nav>
+      <div id="all-stores-panel-content" class="list-group list-group-flush"></div>
+      <nav id="all-stores-panel-pagination" class="mt-auto p-2" aria-label="Page navigation"></nav>
     </div>
 
     <!-- Modal 區域 -->
@@ -197,6 +197,25 @@
       </div>
     </div>
 
+    <!-- LINE Bot Modal -->
+    <div class="modal fade" id="lineBotModal" tabindex="-1" aria-labelledby="lineBotModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="lineBotModalLabel"><i class="bi bi-line"></i> 加入我們的 LINE Bot</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <p>掃描下方的 QR Code，或點擊按鈕來加入「咩呷啥」LINE Bot，隨時隨地推薦美食！</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://lin.ee/Qn1ZQIx" alt="LINE Bot QR Code" class="img-fluid my-3">
+            <div class="d-grid">
+                <a href="https://lin.ee/Qn1ZQIx" target="_blank" class="btn btn-success btn-lg"><i class="bi bi-line"></i> 點此加入</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- **腳本載入區 (順序重要)** -->
 
     <!-- 1. Bootstrap JS -->
@@ -221,13 +240,6 @@
         messagingSenderId: "732275424686",
         appId: "1:732275424686:web:9e1349c421503f75da5c3f",
         measurementId: "G-07JZNDTJN7",
-        //apiKey: "YOUR_FIREBASE_API_KEY", // <--- 替換這裡
-        //authDomain: "meijiasha-64de6.firebaseapp.com", // <--- 替換這裡 (PROJECT_ID)
-        //projectId: "meijiasha-64de6", // <--- 替換這裡
-        //storageBucket: "meijiasha-64de6.appspot.com", // <--- 替換這裡 (PROJECT_ID)
-        //messagingSenderId: "YOUR_SENDER_ID", // <--- 替換這裡
-        //appId: "YOUR_APP_ID", // <--- 替換這裡
-        // measurementId: "G-XXXXXXXXXX" // 通常 Firestore 不需要這個
       };
 
       // 初始化 Firebase 並定義全域 db 變數
@@ -238,7 +250,6 @@
       } catch (error) {
         console.error("HTML: Firebase Initialization Failed:", error);
         alert("Firebase 初始化失敗，請檢查設定物件或網路連線。");
-        // 考慮是否讓使用者知道 db 無法使用
         var db = null; // 明確設置為 null，讓 script.js 中的檢查能捕捉到
       }
     </script>
@@ -250,7 +261,6 @@
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw&libraries&callback=initMap&libraries=places,marker&v=beta&language=zh-TW®ion=TW"></script>
 
     <!-- 5. 您的主要自訂 JavaScript 檔案 -->
-    <!-- (確認檔名為 script.js 或您使用的名稱) -->
     <script src="script.js"></script>
   </body>
 </html>

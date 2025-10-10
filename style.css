@@ -8,7 +8,7 @@
 }
 
 /* Ensure body and html take full height */
-html, body { height: 100%; margin: 0; padding: 0; overflow: hidden;font-family: "Noto Sans TC", "IBM Plex Sans KR", sans-serif;font-weight: 400; }
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden;font-family: 'Noto Sans TC', sans-serif;font-weight: 400; }
 
 /* --- New Layout Styles --- */
 body {
