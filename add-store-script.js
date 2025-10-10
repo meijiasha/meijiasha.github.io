@@ -11,6 +11,26 @@ const taipeiDistricts = [
 ];
 
 // -----------------------------------------------------------------------------
+// Helper: 顏色產生函式
+// -----------------------------------------------------------------------------
+/**
+ * Generates a consistent, vibrant color from a string.
+ * @param {string} str The input string (category name).
+ * @returns {string} An HSL color string.
+ */
+function generateCategoryColor(str) {
+  if (!str) return 'hsl(0, 0%, 80%)';
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 65%, 45%)`; 
+}
+
+// -----------------------------------------------------------------------------
 // Toast 顯示函數
 // -----------------------------------------------------------------------------
 function showToast(message, type = 'info', title = '通知', delay = 5000) {
@@ -63,6 +83,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (addStoreForm) addStoreForm.querySelector('button[type="submit"]').disabled = true;
         return;
     }
+
+    // --- Category Preview Logic ---
+    const categoryPreview = document.getElementById('category-color-preview');
+    if (storeCategoryInput && categoryPreview) {
+        storeCategoryInput.addEventListener('input', (e) => {
+            const categoryName = e.target.value.trim();
+            if (categoryName) {
+                const color = generateCategoryColor(categoryName);
+                categoryPreview.style.backgroundColor = color;
+                categoryPreview.style.color = '#fff';
+                categoryPreview.textContent = categoryName;
+            } else {
+                categoryPreview.style.backgroundColor = '#6c757d';
+                categoryPreview.style.color = '#fff';
+                categoryPreview.textContent = '預覽';
+            }
+        });
+    }
+    // --- End of Category Preview Logic ---
 
     auth.onAuthStateChanged(user => {
         if (user) {

@@ -73,6 +73,25 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.asin(Math.sqrt(a));
 }
 
+/**
+ * Generates a consistent, vibrant color from a string.
+ * @param {string} str The input string (category name).
+ * @returns {string} An HSL color string.
+ */
+function generateCategoryColor(str) {
+  if (!str) return 'hsl(0, 0%, 80%)'; // Return a default grey for undefined/null strings
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  const hue = Math.abs(hash % 360);
+  // Using a pleasant, not-too-dark saturation and lightness. White text should be readable.
+  return `hsl(${hue}, 65%, 45%)`; 
+}
+
+
 // --- Animation Helper ---
 function animateListItems(container) {
     if (!container) return;
@@ -475,6 +494,10 @@ function renderSearchResults(stores) {
         content += '<div class="list-group-item text-center text-muted">附近 1 公里內找不到店家資料。</div>';
     } else {
         stores.forEach(store => {
+            const categoryText = store.category || '未分類';
+            const categoryColor = generateCategoryColor(store.category);
+            const categoryBadge = `<small class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</small>`;
+
             content += `
                 <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
                     <div class="d-flex w-100 justify-content-between">
@@ -482,7 +505,7 @@ function renderSearchResults(stores) {
                         <small class="text-muted">${store.distance.toFixed(2)} km</small>
                     </div>
                     <p class="mb-1 small">${store.address || ''}</p>
-                    <small class="badge bg-secondary rounded-pill">${store.category || '未分類'}</small>
+                    ${categoryBadge}
                 </a>
             `;
         });
@@ -537,11 +560,15 @@ function displayRecommendationInSidebar(stores, category, fromCategoryCount, fro
     let content = title;
     content += '<div class="list-group">';
     stores.forEach(store => {
+        const categoryText = store.category || '未分類';
+        const categoryColor = generateCategoryColor(store.category);
+        const categoryBadge = `<span class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</span>`;
+
         content += `
             <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
                 <div class="d-flex w-100 justify-content-between align-items-center">
                     <h6 class="mb-1">${store.name}</h6>
-                    <span class="badge bg-secondary rounded-pill">${store.category || '未分類'}</span>
+                    ${categoryBadge}
                 </div>
                 <p class="mb-1 small mt-1">${store.address || '地址未提供'}</p>
             </a>
@@ -841,10 +868,11 @@ function renderStoreListPage() {
     let contentHTML = '';
     storesToShow.forEach(store => {
         const categoryText = store.category || '未分類';
-        // Make the badge clickable only if there is a category
+        const categoryColor = generateCategoryColor(store.category);
+
         const categoryBadge = store.category 
-            ? `<span class="badge bg-secondary rounded-pill category-filter-trigger" style="cursor: pointer;" data-category="${store.category}">${categoryText}</span>`
-            : `<span class="badge bg-light text-dark rounded-pill">${categoryText}</span>`;
+            ? `<span class="badge rounded-pill category-filter-trigger" style="background-color: ${categoryColor}; color: #fff; cursor: pointer;" data-category="${store.category}">${categoryText}</span>`
+            : `<span class="badge rounded-pill bg-light text-dark">${categoryText}</span>`;
 
         contentHTML += `
             <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
