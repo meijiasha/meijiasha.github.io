@@ -404,3 +404,72 @@ body {
   border-radius: 0;
 
 }
+
+/* --- Micro-interactions & Animations --- */
+
+/* 1. General Transition for buttons and list items */
+.btn, .list-group-item-action, .nav-link {
+  transition: background-color 0.2s ease-out, 
+              color 0.2s ease-out, 
+              border-color 0.2s ease-out, 
+              transform 0.15s ease-out,
+              box-shadow 0.2s ease-out;
+}
+
+/* 2. Hover effect for elevation */
+.list-group-item-action:hover, 
+.sidebar-body .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+/* Dark mode specific hover for list items */
+[data-bs-theme="dark"] .list-group-item-action:hover {
+    background-color: #343a40;
+}
+
+/* 3. Active/Click effect for buttons */
+.sidebar-body .btn:active,
+.navbar .btn:active {
+  transform: scale(0.97);
+  transition-duration: 0.05s;
+  box-shadow: none;
+}
+
+/* 4. Category badge specific interactions */
+.category-filter-trigger {
+    transition: background-color 0.2s ease-out, transform 0.15s ease-out, filter 0.15s ease-out;
+}
+
+.category-filter-trigger:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+.category-filter-trigger:active {
+    transform: scale(0.95);
+    filter: brightness(0.9);
+}
+
+/* 5. Staggered list animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#random-recommendation-result .list-group-item,
+#search-results-container .list-group-item,
+#all-stores-panel-content .list-group-item {
+    opacity: 0; /* Start hidden, ready for animation */
+}
+
+.list-group-item.is-animating {
+  /* The 'forwards' keyword is important to keep the state at 100% */
+  animation: fadeInUp 0.5s ease-out forwards;
+}

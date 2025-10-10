@@ -73,6 +73,23 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.asin(Math.sqrt(a));
 }
 
+// --- Animation Helper ---
+function animateListItems(container) {
+    if (!container) return;
+
+    const listItems = container.querySelectorAll('.list-group-item');
+    if (listItems.length === 0) return;
+
+    // A short delay to ensure the DOM is ready and items are hidden by CSS
+    setTimeout(() => {
+        listItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.classList.add('is-animating');
+            }, index * 50); // Stagger delay
+        });
+    }, 50);
+}
+
 // 台北市行政區
 const taipeiDistricts = ["中正區", "大同區", "中山區", "松山區", "大安區", "萬華區", "信義區", "士林區", "北投區", "內湖區", "南港區", "文山區"];
 
@@ -472,6 +489,7 @@ function renderSearchResults(stores) {
     }
     content += '</div>';
     container.innerHTML = content;
+    animateListItems(container.querySelector('.list-group'));
     container.querySelector('#close-search-results').addEventListener('click', () => {
         clearSearchResults();
         clearMapMarkers();
@@ -483,6 +501,8 @@ function renderSearchResults(stores) {
             const marker = currentMapMarkers[storeId];
             if (marker) {
                 map.panTo(marker.position);
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
                 google.maps.event.trigger(marker, 'click');
             }
         });
@@ -529,6 +549,7 @@ function displayRecommendationInSidebar(stores, category, fromCategoryCount, fro
     });
     content += '</div>';
     resultDiv.innerHTML = content;
+    animateListItems(resultDiv.querySelector('.list-group'));
     resultDiv.querySelectorAll('.list-group-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -536,6 +557,8 @@ function displayRecommendationInSidebar(stores, category, fromCategoryCount, fro
             const marker = currentMapMarkers[storeId];
             if (marker) {
                 map.panTo(marker.position);
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
                 google.maps.event.trigger(marker, 'click');
             }
         });
@@ -809,6 +832,7 @@ function renderStoreListPage() {
         `;
     });
     contentEl.innerHTML = contentHTML;
+    animateListItems(contentEl);
 
     // Add click listeners to new items
     contentEl.querySelectorAll('.list-group-item').forEach(item => {
@@ -822,6 +846,8 @@ function renderStoreListPage() {
             const marker = currentMapMarkers[storeId];
             if (marker) {
                 map.panTo(marker.position);
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
                 google.maps.event.trigger(marker, 'click');
             }
         });
