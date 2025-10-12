@@ -172,51 +172,106 @@ function initGoogleMapsAutofill(urlInput, formElements, shouldOverwriteName = tr
 function handleUrlInput(event, formElements, shouldOverwriteName) {
     const url = event.target.value;
     if (!url || !url.includes('google.com/maps/place')) {
+        console.log("handleUrlInput: URL is not a Google Maps place URL or is empty.");
         return;
     }
 
-    const match = url.match(/google\.com\/maps\/place\/([^\/]+)/);
-    if (match && match[1]) {
-        const placeName = decodeURIComponent(match[1].replace(/\+/g, ' '));
-        findPlaceDetails(placeName, formElements, shouldOverwriteName);
+    let placeId = null;
+    // Attempt to extract Place ID from the URL
+    const placeIdMatch = url.match(/!1s([^!\?]+)/);
+    if (placeIdMatch && placeIdMatch[1]) {
+        placeId = placeIdMatch[1];
+        console.log("handleUrlInput: Extracted Place ID:", placeId);
+        fetchPlaceDetailsById(placeId, url, formElements, shouldOverwriteName);
+    } else {
+        // Fallback to extracting place name if no Place ID is found
+        const nameMatch = url.match(/google\.com\/maps\/place\/([^\/]+)/);
+        if (nameMatch && nameMatch[1]) {
+            const placeName = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+            console.log("handleUrlInput: Extracted Place Name:", placeName);
+            fetchPlaceDetailsByName(placeName, formElements, shouldOverwriteName);
+        } else {
+            console.warn("handleUrlInput: Could not extract Place ID or Name from URL.");
+            showToast('無法從 Google Maps 網址解析店家資訊。', 'warning', '解析失敗');
+        }
     }
 }
 
-function findPlaceDetails(query, formElements, shouldOverwriteName) {
-    const request = {
-        query: query,
-        fields: ['name', 'place_id', 'formatted_address', 'geometry'],
-    };
+async function fetchPlaceDetailsById(placeId, originalUrl, formElements, shouldOverwriteName) {
+    try {
+        const { place } = await google.maps.places.Place.fromPlaceId({
+            placeId: placeId,
+            fields: ['displayName', 'id', 'formattedAddress', 'location'],
+        });
 
-    // Use the new static method on the Place class
-    google.maps.places.Place.findPlaceFromQuery(request, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-            const place = results[0];
-            
-            // Populate form fields
-            if (formElements.name && (shouldOverwriteName || !formElements.name.value)) {
-                formElements.name.value = place.name;
-            }
-            if (formElements.address) formElements.address.value = place.formatted_address;
-            if (formElements.placeId) formElements.placeId.value = place.place_id;
-            if (place.geometry && place.geometry.location) {
-                if (formElements.lat) formElements.lat.value = place.geometry.location.lat();
-                if (formElements.lng) formElements.lng.value = place.geometry.location.lng();
-            }
-            
-            if (formElements.district && place.formatted_address) {
-                for (const district of taipeiDistricts) {
-                    if (place.formatted_address.includes(district)) {
-                        formElements.district.value = district;
-                        break;
-                    }
-                }
-            }
-
+        if (place) {
+            console.log("fetchPlaceDetailsById: Place details fetched successfully:", place);
+            populateFormFields(place, formElements, shouldOverwriteName);
             showToast('已從 Google Maps 網址自動填入店家資訊！', 'success', '自動帶入成功');
         } else {
-            console.warn("Place not found or error:", status);
-            showToast('無法從 Google Maps 網址找到對應的店家。', 'warning', '查無資料');
+            console.warn("fetchPlaceDetailsById: No place found for ID:", placeId);
+            showToast('無法從 Google Maps 網址找到對應的店家 (Place ID 查詢失敗)。', 'warning', '查無資料');
+            // Fallback to name search if ID fails
+            const nameMatch = originalUrl.match(/google\.com\/maps\/place\/([^\/]+)/);
+            if (nameMatch && nameMatch[1]) {
+                const placeName = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+                console.log("fetchPlaceDetailsById: Falling back to name search:", placeName);
+                fetchPlaceDetailsByName(placeName, formElements, shouldOverwriteName);
+            }
         }
-    });
+    } catch (error) {
+        console.error("fetchPlaceDetailsById: Error fetching place details by ID:", error);
+        showToast('無法從 Google Maps 網址找到對應的店家 (Place ID 查詢失敗)。', 'warning', '查無資料');
+        // Fallback to name search on error
+        const nameMatch = originalUrl.match(/google\.com\/maps\/place\/([^\/]+)/);
+        if (nameMatch && nameMatch[1]) {
+            const placeName = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+            console.log("fetchPlaceDetailsById: Falling back to name search on error:", placeName);
+            fetchPlaceDetailsByName(placeName, formElements, shouldOverwriteName);
+        }
+    }
+}
+
+async function fetchPlaceDetailsByName(query, formElements, shouldOverwriteName) {
+    try {
+        const { places } = await google.maps.places.Place.searchByText({
+            textQuery: query,
+            fields: ['displayName', 'id', 'formattedAddress', 'location'],
+        });
+
+        if (places && places.length > 0) {
+            const place = places[0];
+            console.log("fetchPlaceDetailsByName: Place details fetched successfully:", place);
+            populateFormFields(place, formElements, shouldOverwriteName);
+            showToast('已從 Google Maps 網址自動填入店家資訊！', 'success', '自動帶入成功');
+        } else {
+            console.warn("fetchPlaceDetailsByName: No place found for query:", query);
+            showToast('無法從 Google Maps 網址找到對應的店家 (名稱查詢失敗)。', 'warning', '查無資料');
+        }
+    } catch (error) {
+        console.error("fetchPlaceDetailsByName: Error fetching place details by name:", error);
+        showToast('無法從 Google Maps 網址找到對應的店家 (名稱查詢失敗)。', 'warning', '查無資料');
+    }
+}
+
+function populateFormFields(place, formElements, shouldOverwriteName) {
+    // Populate form fields
+    if (formElements.name && (shouldOverwriteName || !formElements.name.value)) {
+        formElements.name.value = place.displayName;
+    }
+    if (formElements.address) formElements.address.value = place.formattedAddress;
+    if (formElements.placeId) formElements.placeId.value = place.id;
+    if (place.location) {
+        if (formElements.lat) formElements.lat.value = place.location.lat;
+        if (formElements.lng) formElements.lng.value = place.location.lng;
+    }
+    
+    if (formElements.district && place.formattedAddress) {
+        for (const district of taipeiDistricts) {
+            if (place.formattedAddress.includes(district)) {
+                formElements.district.value = district;
+                break;
+            }
+        }
+    }
 }

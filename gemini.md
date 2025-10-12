@@ -45,6 +45,15 @@
   - **問題**: `script.js` 中的 `displayMarkers` 和 `displayAndFilterStores` 函式內，`forEach` 迴圈的程式碼格式混亂，多個敘述被壓縮在同一行，嚴重影響可讀性與後續維護。
   - **解決方案**: 重新格式化了這兩個函式中的 `forEach` 迴圈，將每個敘述獨立成行並修正縮排，使程式碼結構更清晰。
 
+- **錯誤修復 (Google Maps 網址自動填入)**:
+  - **問題**: 使用者回報在「新增店家」或「編輯店家」頁面貼上 Google Maps 網址後，無法自動帶入店家資訊。經檢查，發現問題有二：
+    1.  Place ID 提取不完整：用於從網址中提取 Google Place ID 的正規表達式未能完整捕捉到 ID，導致 `PlacesService.getDetails` 呼叫失敗並回傳 `Invalid 'placeid' parameter` 錯誤。
+    2.  API 棄用：Google Maps Places API 的 `PlacesService.getDetails` 和 `Place.findPlaceFromQuery` 方法已被棄用，導致相關功能失效並觸發 `Place.findPlaceFromQuery() is no longer available. Please use Place.searchByText().` 等錯誤訊息。
+  - **解決方案**: 
+    1.  更新 `store-form-common.js` 中的正規表達式，使其能正確提取完整的 Google Place ID。
+    2.  將 `store-form-common.js` 中所有對棄用 API 的呼叫，替換為新的 `google.maps.places.Place.fromPlaceId()` (用於 Place ID 查詢) 和 `google.maps.places.Place.searchByText()` (用於文字查詢) 方法。同時調整了 `populateFormFields` 函式以適應新 API 回傳的屬性名稱。
+  - **結果**: 經使用者測試，Google Maps 網址自動填入店家資訊的功能已恢復正常。
+
 ### 後台權限錯誤修復與管理員設定
 
 - **問題分析與修復 (後台權限)**:
