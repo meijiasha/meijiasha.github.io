@@ -5,6 +5,7 @@ console.log("admin-script.js: Script loaded and starts parsing.");
 let storesTableBody, loadingIndicator, authMessageDiv, storeListContainer, logoutButton;
 let searchInput, searchButton, clearSearchButton;
 let itemsPerPageSelect, paginationUl, paginationContainer;
+let totalStoresCountSpan; // 新增：店家總數顯示元素
 
 // 狀態管理
 let currentPage = 1;
@@ -80,6 +81,9 @@ async function fetchStores(query = '', page = 1, sortBy = currentSortBy, sortOrd
 
         const { stores, total } = result.data;
         totalStores = total;
+        if (totalStoresCountSpan) {
+            totalStoresCountSpan.textContent = `${totalStores} 筆`;
+        }
 
         renderTable(stores);
         renderPagination();
@@ -211,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput = document.getElementById('searchInput');
     searchButton = document.getElementById('searchButton');
     clearSearchButton = document.getElementById('clearSearchButton');
+    totalStoresCountSpan = document.getElementById('totalStoresCount'); // 初始化店家總數顯示元素
 
     // 檢查 Firebase 是否初始化
     if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db || typeof firebase.functions === 'undefined') {
