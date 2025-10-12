@@ -627,21 +627,28 @@ async function displayMarkers(stores, openFirst = false) {
   });
   const storesWithDetails = await Promise.all(detailPromises);
       storesWithDetails.forEach((storeData) => {
-          if (!storeData.location) return;
-          const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
-          const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || "N/A" });
-          if (storeData.id) currentMapMarkers[storeData.id] = marker;    const content = buildInfoWindowContent(storeData);
-    marker.addListener("click", () => {
-      infoWindow.setContent(content);
-      infoWindow.open(map, marker);
-    });
-    if (openFirst && !firstMarkerOpened && marker && content) {
-      infoWindow.setContent(content);
-      infoWindow.open(map, marker);
-      firstMarkerOpened = true;
-    }
-    bounds.extend(position);
-  });
+        if (!storeData.location) return;
+
+        const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
+        const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || "N/A" });
+
+        if (storeData.id) {
+            currentMapMarkers[storeData.id] = marker;
+        }
+
+        const content = buildInfoWindowContent(storeData);
+        marker.addListener("click", () => {
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+        });
+
+        if (openFirst && !firstMarkerOpened && marker && content) {
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+            firstMarkerOpened = true;
+        }
+        bounds.extend(position);
+      });
   if (Object.keys(currentMapMarkers).length > 0) {
     if (stores.length > 1) {
       map.fitBounds(bounds);
@@ -686,20 +693,27 @@ async function displayAndFilterStores(stores, filterFn, limit, openFirst) {
   let firstMarkerOpened = false;
       filteredStores.forEach((storeData) => {
           if (!storeData.location) return;
+
           const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
           const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || "N/A" });
-          if (storeData.id) currentMapMarkers[storeData.id] = marker;    const content = buildInfoWindowContent(storeData);
-    marker.addListener("click", () => {
-      infoWindow.setContent(content);
-      infoWindow.open(map, marker);
-    });
-    if (openFirst && !firstMarkerOpened && marker && content) {
-      infoWindow.setContent(content);
-      infoWindow.open(map, marker);
-      firstMarkerOpened = true;
-    }
-    bounds.extend(position);
-  });
+
+          if (storeData.id) {
+            currentMapMarkers[storeData.id] = marker;
+          }
+
+          const content = buildInfoWindowContent(storeData);
+          marker.addListener("click", () => {
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+          });
+
+          if (openFirst && !firstMarkerOpened && marker && content) {
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+            firstMarkerOpened = true;
+          }
+          bounds.extend(position);
+      });
   if (Object.keys(currentMapMarkers).length > 0) {
     if (filteredStores.length > 1) {
       map.fitBounds(bounds);
