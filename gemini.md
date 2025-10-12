@@ -67,6 +67,14 @@
         *   新增 `updateSortIcons` 函式，用於根據 `currentSortBy` 和 `currentSortOrder` 更新表格標頭的排序圖示 (上箭頭/下箭頭)。
   - **結果**: 經使用者測試，店家列表表格的排序功能已恢復正常。
 
+- **錯誤修復 (Google Maps Autocomplete 輸入框存取)**:
+  - **問題**: `script.js` 在 `setupSearchBarAnimation` 函式中，嘗試透過 `autocompleteElement.input` 存取 `gmp-autocomplete` 元素的內部輸入框，導致 `console script.js:975 Could not find the input element within gmp-autocomplete.` 錯誤。
+  - **原因**: `gmp-autocomplete` 元素本身即為互動式輸入元件，不需透過 `.input` 屬性存取。同時，檢查其內容是否為空應使用 `defaultValue` 屬性而非 `value`。
+  - **解決方案**:
+    1.  將 `script.js` 中 `setupSearchBarAnimation` 函式內的 `const searchInput = autocompleteElement.input;` 修改為 `const searchInput = autocompleteElement;`。
+    2.  將 `searchInput.value === ''` 修改為 `searchInput.defaultValue === ''`。
+  - **結果**: 修正了 `gmp-autocomplete` 輸入框的存取方式，解決了控制台錯誤。
+
 ### 後台權限錯誤修復與管理員設定
 
 - **問題分析與修復 (後台權限)**:
