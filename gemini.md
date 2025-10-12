@@ -26,6 +26,16 @@
 
 此文件記錄了由 Gemini AI 協助完成的開發任務。
 
+## 2025 年 10 月 13 日
+
+### 後端部署錯誤修復
+
+- **錯誤修復 (Cloud Function 部署失敗)**:
+  - **問題**: 執行 `firebase deploy --only functions` 指令時，`searchStores` 函式部署失敗，導致後台搜尋相關功能無法更新。
+  - **原因**: 經檢查 `functions/index.js` 原始碼，發現函式中存在一個邏輯錯誤。當沒有提供搜尋關鍵字 (`query` 為空) 時，程式會試圖存取一個尚未被定義的 `baseQuery` 變數，進而導致 `ReferenceError`，中斷了函式的執行與部署。
+  - **解決方案**: 修改 `functions/index.js`，在沒有搜尋關鍵字的程式路徑中，明確地初始化 `baseQuery` 和 `countQuery` 變數，使其指向 `stores_taipei` 集合的根路徑。同時，修正了一個未宣告的 `total` 變數。
+  - **結果**: 修正錯誤後，Cloud Function 成功部署。
+
 ## 2025 年 10 月 12 日
 
 ### 程式碼分析、安全性建議與修正
@@ -617,3 +627,4 @@ line-bot-server.js`。
   _ **介面修改**:
 
   _ **`admin.html`**: 移除了連結至 `import-csv.html` 的按鈕。
+---

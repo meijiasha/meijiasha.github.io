@@ -108,14 +108,17 @@ exports.searchStores = functions.https.onRequest((request, response) => {
           }
         });
 
-        total = filteredStores.length;
+        let total = filteredStores.length;
         const paginatedStores = filteredStores.slice(offset, offset + perPage);
 
         response.status(200).send({ data: { stores: paginatedStores, total, page, perPage, sortBy, sortOrder } });
         return; // Exit early as we've handled the query
       }
 
-      // Original logic for when no query is present, but still needs sorting and pagination
+      // Original logic for when no query is present
+      let baseQuery = db.collection("stores_taipei");
+      const countQuery = db.collection("stores_taipei");
+
       // Apply sorting
       if (sortBy) {
         baseQuery = baseQuery.orderBy(sortBy, sortOrder);
