@@ -54,6 +54,19 @@
     2.  將 `store-form-common.js` 中所有對棄用 API 的呼叫，替換為新的 `google.maps.places.Place.fromPlaceId()` (用於 Place ID 查詢) 和 `google.maps.places.Place.searchByText()` (用於文字查詢) 方法。同時調整了 `populateFormFields` 函式以適應新 API 回傳的屬性名稱。
   - **結果**: 經使用者測試，Google Maps 網址自動填入店家資訊的功能已恢復正常。
 
+- **錯誤修復 (店家列表表格排序功能)**:
+  - **問題**: 使用者回報在 `admin.html` 的店家列表頁面中，點擊表格標頭的排序圖示會變更，但表格內容並未隨之排序。經檢查，發現問題有二：
+    1.  後端 Cloud Function (`searchStores`) 尚未支援排序參數。
+    2.  前端 `admin-script.js` 中的排序功能被註解掉，且未將排序參數傳遞給後端。
+  - **解決方案**: 
+    1.  修改 `functions/index.js` 中的 `searchStores` Cloud Function，使其能接收 `sortBy` (排序欄位) 和 `sortOrder` (排序方向，asc/desc) 參數，並動態地將這些參數應用於 Firestore 查詢的 `orderBy` 子句。
+    2.  修改 `admin-script.js`：
+        *   新增 `currentSortBy` 和 `currentSortOrder` 狀態變數，用於追蹤目前的排序狀態。
+        *   更新 `fetchStores` 函式，使其能接收 `sortBy` 和 `sortOrder` 參數，並將其傳遞給 `searchStores` Cloud Function。
+        *   為所有 `th[data-sortable]` 的表格標頭添加點擊事件監聽器，當點擊時，根據 `data-column` 屬性更新 `currentSortBy` 和 `currentSortOrder`，然後重新呼叫 `fetchStores` 函式以載入排序後的資料。
+        *   新增 `updateSortIcons` 函式，用於根據 `currentSortBy` 和 `currentSortOrder` 更新表格標頭的排序圖示 (上箭頭/下箭頭)。
+  - **結果**: 經使用者測試，店家列表表格的排序功能已恢復正常。
+
 ### 後台權限錯誤修復與管理員設定
 
 - **問題分析與修復 (後台權限)**:
