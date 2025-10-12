@@ -59,18 +59,18 @@ function setDarkMode(isDark) {
 
 // --- Helper functions ---
 function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
 }
 
 function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 0.5 - Math.cos(dLat) / 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * (1 - Math.cos(dLon)) / 2;
-    return R * 2 * Math.asin(Math.sqrt(a));
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = 0.5 - Math.cos(dLat) / 2 + (Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * (1 - Math.cos(dLon))) / 2;
+  return R * 2 * Math.asin(Math.sqrt(a));
 }
 
 /**
@@ -79,7 +79,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
  * @returns {string} An HSL color string.
  */
 function generateCategoryColor(str) {
-  if (!str) return 'hsl(0, 0%, 80%)'; // Return a default grey for undefined/null strings
+  if (!str) return "hsl(0, 0%, 80%)"; // Return a default grey for undefined/null strings
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
@@ -88,25 +88,24 @@ function generateCategoryColor(str) {
   }
   const hue = Math.abs(hash % 360);
   // Using a pleasant, not-too-dark saturation and lightness. White text should be readable.
-  return `hsl(${hue}, 65%, 45%)`; 
+  return `hsl(${hue}, 65%, 45%)`;
 }
-
 
 // --- Animation Helper ---
 function animateListItems(container) {
-    if (!container) return;
+  if (!container) return;
 
-    const listItems = container.querySelectorAll('.list-group-item');
-    if (listItems.length === 0) return;
+  const listItems = container.querySelectorAll(".list-group-item");
+  if (listItems.length === 0) return;
 
-    // A short delay to ensure the DOM is ready and items are hidden by CSS
-    setTimeout(() => {
-        listItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.classList.add('is-animating');
-            }, index * 50); // Stagger delay
-        });
-    }, 50);
+  // A short delay to ensure the DOM is ready and items are hidden by CSS
+  setTimeout(() => {
+    listItems.forEach((item, index) => {
+      setTimeout(() => {
+        item.classList.add("is-animating");
+      }, index * 50); // Stagger delay
+    });
+  }, 50);
 }
 
 // --- UI Element Creator ---
@@ -117,33 +116,30 @@ function animateListItems(container) {
  * @returns {string} The HTML string for the list item.
  */
 function createStoreListItemHTML(store, options = {}) {
-    const { isFilterable = false } = options;
+  const { isFilterable = false } = options;
 
-    const categoryText = store.category || '未分類';
-    const categoryColor = generateCategoryColor(store.category);
-    
-    let categoryBadge;
-    if (isFilterable && store.category) {
-        categoryBadge = `<span class="badge rounded-pill category-filter-trigger" style="background-color: ${categoryColor}; color: #fff; cursor: pointer;" data-category="${store.category}">${categoryText}</span>`;
-    } else {
-        categoryBadge = `<span class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</span>`;
-    }
+  const categoryText = store.category || "未分類";
+  const categoryColor = generateCategoryColor(store.category);
 
-    const distanceHTML = store.distance !== undefined 
-        ? ` · <span class="fw-bold">${store.distance.toFixed(2)} km</span>`
-        : '';
+  let categoryBadge;
+  if (isFilterable && store.category) {
+    categoryBadge = `<span class="badge rounded-pill category-filter-trigger" style="background-color: ${categoryColor}; color: #fff; cursor: pointer;" data-category="${store.category}">${categoryText}</span>`;
+  } else {
+    categoryBadge = `<span class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</span>`;
+  }
 
-    return `
+  const distanceHTML = store.distance !== undefined ? ` · <span class="fw-bold">${store.distance.toFixed(2)} km</span>` : "";
+
+  return `
         <a href="#" class="list-group-item list-group-item-action" data-store-id="${store.id}">
             <div class="d-flex w-100 justify-content-between">
                 <h6 class="mb-1">${store.name}</h6>
                 ${categoryBadge}
             </div>
-            <p class="mb-1 small mt-1 text-muted">${store.address || '地址未提供'}${distanceHTML}</p>
+            <p class="mb-1 small mt-1 text-muted">${store.address || "地址未提供"}${distanceHTML}</p>
         </a>
     `;
 }
-
 
 // 台北市行政區
 const taipeiDistricts = ["中正區", "大同區", "中山區", "松山區", "大安區", "萬華區", "信義區", "士林區", "北投區", "內湖區", "南港區", "文山區"];
@@ -171,7 +167,8 @@ async function initMap() {
         } catch (error) {
             console.warn("獲取地理位置失敗或被拒絕。將使用預設位置。", error.message);
         }
-    } else {
+    }
+    else {
         console.warn("此瀏覽器不支援地理位置功能。");
     }
 
@@ -179,7 +176,7 @@ async function initMap() {
     map = new Map(document.getElementById("map"), {
         center: initialCenter,
         zoom: initialZoom,
-        // mapId: "DEMO_MAP_ID", // 註解掉以啟用客戶端樣式，讓深色模式正常運作
+        // mapId is removed to allow client-side styling
         disableDefaultUI: true,
         zoomControl: true
     });
@@ -206,775 +203,793 @@ async function initMap() {
 
     infoWindow = new google.maps.InfoWindow();
     placesService = new google.maps.places.PlacesService(map);
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        const autocompleteOptions = { fields: ["geometry", "name"], strictBounds: false };
-        autocomplete = new google.maps.places.Autocomplete(searchInput, autocompleteOptions);
-        autocomplete.addListener("place_changed", handlePlaceSearchSelection);
+    const autocompleteInput = document.getElementById('autocomplete-input');
+    if (autocompleteInput) {
+        autocompleteInput.addEventListener('gmp-placechange', handlePlaceSearchSelection);
         setupSearchBarAnimation();
     }
     populateDistrictSelect();
-    setupSidebarListeners();
-    setupAllStoresPanelListeners(); // 新增：設定新面板的監聽器
+  setupSidebarListeners();
+  setupAllStoresPanelListeners(); // 新增：設定新面板的監聽器
 }
 
 // --- UI 清理函式 ---
 function clearRandomRecommendation() {
-    const resultDiv = document.getElementById('random-recommendation-result');
-    if (resultDiv) resultDiv.innerHTML = '';
+  const resultDiv = document.getElementById("random-recommendation-result");
+  if (resultDiv) resultDiv.innerHTML = "";
 }
 
 function clearSearchResults() {
-    const resultsContainer = document.getElementById('search-results-container');
-    if (resultsContainer) {
-        resultsContainer.innerHTML = '';
-        resultsContainer.style.display = 'none';
-    }
+  const resultsContainer = document.getElementById("search-results-container");
+  if (resultsContainer) {
+    resultsContainer.innerHTML = "";
+    resultsContainer.style.display = "none";
+  }
 }
 
 // --- 側邊欄邏輯 ---
 function populateDistrictSelect() {
-    const selectElement = document.getElementById('districtSelect');
-    selectElement.innerHTML = '<option selected disabled value="">-- 請選擇 --</option>';
-    taipeiDistricts.forEach(district => {
-        const option = document.createElement('option');
-        option.value = district; option.textContent = district;
-        selectElement.appendChild(option);
-    });
+  const selectElement = document.getElementById("districtSelect");
+  selectElement.innerHTML = '<option selected disabled value="">-- 請選擇 --</option>';
+  taipeiDistricts.forEach((district) => {
+    const option = document.createElement("option");
+    option.value = district;
+    option.textContent = district;
+    selectElement.appendChild(option);
+  });
 }
 
 function setupSidebarListeners() {
-    const districtSelect = document.getElementById('districtSelect');
-    const categorySelect = document.getElementById('categorySelect');
-    const randomBtn = document.getElementById('randomRecommendBtn');
-    const listAllBtn = document.getElementById('listAllStoresBtn'); // 新增
+  const districtSelect = document.getElementById("districtSelect");
+  const categorySelect = document.getElementById("categorySelect");
+  const randomBtn = document.getElementById("randomRecommendBtn");
+  const listAllBtn = document.getElementById("listAllStoresBtn"); // 新增
 
-    districtSelect.addEventListener('change', async (event) => {
-        currentSelectedDistrict = event.target.value;
-        clearRandomRecommendation();
-        clearSearchResults();
-        if (currentSelectedDistrict) {
-            await loadCategoriesForDistrict(currentSelectedDistrict);
-            randomBtn.disabled = false;
-            listAllBtn.disabled = false; // 新增
-        } else {
-            categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
-            categorySelect.disabled = true;
-            randomBtn.disabled = true;
-            listAllBtn.disabled = true; // 新增
-            clearMapMarkers();
-            currentSelectedDistrict = null;
-        }
-    });
-    categorySelect.addEventListener('change', (event) => {
-        const category = event.target.value;
-        if (category) {
-            clearRandomRecommendation();
-            clearSearchResults();
-            showStoresByCategory(currentSelectedDistrict, category, true);
-        }
-    });
-    randomBtn.addEventListener('click', () => {
-        if (currentSelectedDistrict) {
-            clearSearchResults();
-            const selectedCategory = categorySelect.value;
-            const isOpenNow = document.getElementById('openNowFilter').checked;
-            showRandomStores(currentSelectedDistrict, selectedCategory, true, isOpenNow);
-        }
-    });
+  districtSelect.addEventListener("change", async (event) => {
+    currentSelectedDistrict = event.target.value;
+    clearRandomRecommendation();
+    clearSearchResults();
+    if (currentSelectedDistrict) {
+      await loadCategoriesForDistrict(currentSelectedDistrict);
+      randomBtn.disabled = false;
+      listAllBtn.disabled = false; // 新增
+    } else {
+      categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
+      categorySelect.disabled = true;
+      randomBtn.disabled = true;
+      listAllBtn.disabled = true; // 新增
+      clearMapMarkers();
+      currentSelectedDistrict = null;
+    }
+  });
+  categorySelect.addEventListener("change", (event) => {
+    const category = event.target.value;
+    if (category) {
+      clearRandomRecommendation();
+      clearSearchResults();
+      showStoresByCategory(currentSelectedDistrict, category, true);
+    }
+  });
+  randomBtn.addEventListener("click", () => {
+    if (currentSelectedDistrict) {
+      clearSearchResults();
+      const selectedCategory = categorySelect.value;
+      const isOpenNow = document.getElementById("openNowFilter").checked;
+      showRandomStores(currentSelectedDistrict, selectedCategory, true, isOpenNow);
+    }
+  });
 
-    const recommendNearbyBtn = document.getElementById('recommendNearbyBtn');
-    recommendNearbyBtn.addEventListener('click', recommendNearbyStores);
+  const recommendNearbyBtn = document.getElementById("recommendNearbyBtn");
+  recommendNearbyBtn.addEventListener("click", recommendNearbyStores);
 
-    // 新增：為「列出所有店家」按鈕新增監聽
-    listAllBtn.addEventListener('click', () => {
-        if (currentSelectedDistrict) {
-            showAllStoresPanel(currentSelectedDistrict);
-        }
-    });
+  // 新增：為「列出所有店家」按鈕新增監聽
+  listAllBtn.addEventListener("click", () => {
+    if (currentSelectedDistrict) {
+      showAllStoresPanel(currentSelectedDistrict);
+    }
+  });
 }
 
 // --- 資料載入與顯示邏輯 ---
 async function loadCategoriesForDistrict(district) {
-    const categorySelect = document.getElementById('categorySelect');
-    categorySelect.innerHTML = '<option>載入中...</option>';
-    categorySelect.disabled = true;
-    try {
-        const snapshot = await db.collection('stores_taipei').where('district', '==', district).get();
-        const categories = new Set();
-        if (!snapshot.empty) {
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.category) categories.add(data.category);
-            });
-        }
-        if (categories.size === 0) {
-             categorySelect.innerHTML = '<option selected disabled value="">-- 無分類資料 --</option>';
-             clearMapMarkers(); 
-             return;
-        }
-        categorySelect.innerHTML = '<option selected disabled value="">-- 請選擇分類 --</option>';
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-        });
-        categorySelect.disabled = false;
-        clearMapMarkers();
-    } catch (error) {
-        console.error("載入分類時發生錯誤:", error);
-        categorySelect.innerHTML = '<option selected disabled value="">-- 讀取失敗 --</option>';
+  const categorySelect = document.getElementById("categorySelect");
+  categorySelect.innerHTML = "<option>載入中...</option>";
+  categorySelect.disabled = true;
+  try {
+    const snapshot = await db.collection("stores_taipei").where("district", "==", district).get();
+    const categories = new Set();
+    if (!snapshot.empty) {
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.category) categories.add(data.category);
+      });
     }
+    if (categories.size === 0) {
+      categorySelect.innerHTML = '<option selected disabled value="">-- 無分類資料 --</option>';
+      clearMapMarkers();
+      return;
+    }
+    categorySelect.innerHTML = '<option selected disabled value="">-- 請選擇分類 --</option>';
+    categories.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categorySelect.appendChild(option);
+    });
+    categorySelect.disabled = false;
+    clearMapMarkers();
+  } catch (error) {
+    console.error("載入分類時發生錯誤:", error);
+    categorySelect.innerHTML = '<option selected disabled value="">-- 讀取失敗 --</option>';
+  }
 }
 
 async function showStoresByCategory(district, category, openFirst = false) {
-    try {
-        const snapshot = await db.collection('stores_taipei').where('district', '==', district).where('category', '==', category).get();
-        const stores = [];
-        snapshot.forEach(doc => stores.push({ id: doc.id, ...doc.data() }));
-        await displayMarkers(stores, openFirst);
-    } catch (error) {
-        console.error("依分類查詢店家時發生錯誤:", error);
-    }
+  try {
+    const snapshot = await db.collection("stores_taipei").where("district", "==", district).where("category", "==", category).get();
+    const stores = [];
+    snapshot.forEach((doc) => stores.push({ id: doc.id, ...doc.data() }));
+    await displayMarkers(stores, openFirst);
+  } catch (error) {
+    console.error("依分類查詢店家時發生錯誤:", error);
+  }
 }
 
 async function showRandomStores(district, category, openFirst, isOpenNow) {
-    const resultsDiv = document.getElementById('random-recommendation-result');
-    const categorySelect = document.getElementById('categorySelect');
-    if (categorySelect) categorySelect.selectedIndex = 0;
+  const resultsDiv = document.getElementById("random-recommendation-result");
+  const categorySelect = document.getElementById("categorySelect");
+  if (categorySelect) categorySelect.selectedIndex = 0;
 
-    if (!isOpenNow) {
-        if (resultsDiv) resultsDiv.innerHTML = '';
-        try {
-            const snapshot = await db.collection('stores_taipei').where('district', '==', district).get();
-            const allStoresInDistrict = [];
-            snapshot.forEach(doc => allStoresInDistrict.push({ id: doc.id, ...doc.data() }));
-            if (allStoresInDistrict.length === 0) {
-                alert("此區域尚無店家資料可供推薦。");
-                return;
-            }
-            let randomStores = [];
-            let fromCategoryCount = 0;
-            let fromOthersCount = 0;
-            const numToRecommend = 3;
-            if (category) {
-                let storesInCategory = allStoresInDistrict.filter(s => s.category === category);
-                let storesInOtherCategories = allStoresInDistrict.filter(s => s.category !== category);
-                shuffleArray(storesInCategory);
-                shuffleArray(storesInOtherCategories);
-                const takeFromCategory = Math.min(storesInCategory.length, numToRecommend);
-                randomStores = storesInCategory.slice(0, takeFromCategory);
-                fromCategoryCount = randomStores.length;
-                const remainingNeeded = numToRecommend - fromCategoryCount;
-                if (remainingNeeded > 0 && storesInOtherCategories.length > 0) {
-                    const takeFromOthers = Math.min(remainingNeeded, storesInOtherCategories.length);
-                    randomStores.push(...storesInOtherCategories.slice(0, takeFromOthers));
-                    fromOthersCount = takeFromOthers;
-                }
-            } else {
-                shuffleArray(allStoresInDistrict);
-                randomStores = allStoresInDistrict.slice(0, numToRecommend);
-            }
-            await displayMarkers(randomStores, openFirst);
-            displayRecommendationInSidebar(randomStores, category, fromCategoryCount, fromOthersCount);
-        } catch (error) {
-            console.error("查詢隨機店家時發生錯誤:", error);
-            alert("讀取隨機店家時發生錯誤，請稍後再試。");
+  if (!isOpenNow) {
+    if (resultsDiv) resultsDiv.innerHTML = "";
+    try {
+      const snapshot = await db.collection("stores_taipei").where("district", "==", district).get();
+      const allStoresInDistrict = [];
+      snapshot.forEach((doc) => allStoresInDistrict.push({ id: doc.id, ...doc.data() }));
+      if (allStoresInDistrict.length === 0) {
+        alert("此區域尚無店家資料可供推薦。");
+        return;
+      }
+      let randomStores = [];
+      let fromCategoryCount = 0;
+      let fromOthersCount = 0;
+      const numToRecommend = 3;
+      if (category) {
+        let storesInCategory = allStoresInDistrict.filter((s) => s.category === category);
+        let storesInOtherCategories = allStoresInDistrict.filter((s) => s.category !== category);
+        shuffleArray(storesInCategory);
+        shuffleArray(storesInOtherCategories);
+        const takeFromCategory = Math.min(storesInCategory.length, numToRecommend);
+        randomStores = storesInCategory.slice(0, takeFromCategory);
+        fromCategoryCount = randomStores.length;
+        const remainingNeeded = numToRecommend - fromCategoryCount;
+        if (remainingNeeded > 0 && storesInOtherCategories.length > 0) {
+          const takeFromOthers = Math.min(remainingNeeded, storesInOtherCategories.length);
+          randomStores.push(...storesInOtherCategories.slice(0, takeFromOthers));
+          fromOthersCount = takeFromOthers;
         }
-    } else {
-        if(resultsDiv) resultsDiv.innerHTML = `<div class="text-center text-muted p-2"><div class="spinner-border spinner-border-sm" role="status"></div> 尋找營業中的店家...</div>`;
-        try {
-            let query = db.collection('stores_taipei').where('district', '==', district);
-            if (category) {
-                query = query.where('category', '==', category);
-            }
-            const snapshot = await query.get();
-            const potentialStores = [];
-            snapshot.forEach(doc => potentialStores.push({ id: doc.id, ...doc.data() }));
-            if (potentialStores.length === 0) {
-                if(resultsDiv) resultsDiv.innerHTML = `<p class="text-muted small p-2 text-center">此條件下找不到任何店家。</p>`;
-                clearMapMarkers();
-                return;
-            }
-            shuffleArray(potentialStores);
-            const openStores = await displayAndFilterStores(
-                potentialStores, 
-                store => store.placeDetails?.opening_hours?.isOpen() === true, 
-                3,
-                openFirst
-            );
-            if (openStores.length === 0) {
-                 if(resultsDiv) resultsDiv.innerHTML = `<p class="text-muted small p-2 text-center">找不到符合條件且在營業中的店家。</p>`;
-            } else {
-                const title = `<h6>營業中隨機推薦：</h6>`;
-                displayRecommendationInSidebar(openStores, null, 0, 0, title);
-            }
-        } catch (error) {
-            console.error("查詢營業中隨機店家時發生錯誤:", error);
-            if(resultsDiv) resultsDiv.innerHTML = `<p class="text-danger small p-2 text-center">搜尋時發生錯誤。</p>`;
-        }
+      } else {
+        shuffleArray(allStoresInDistrict);
+        randomStores = allStoresInDistrict.slice(0, numToRecommend);
+      }
+      await displayMarkers(randomStores, openFirst);
+      displayRecommendationInSidebar(randomStores, category, fromCategoryCount, fromOthersCount);
+    } catch (error) {
+      console.error("查詢隨機店家時發生錯誤:", error);
+      alert("讀取隨機店家時發生錯誤，請稍後再試。");
     }
+  } else {
+    if (resultsDiv) resultsDiv.innerHTML = `<div class="text-center text-muted p-2"><div class="spinner-border spinner-border-sm" role="status"></div> 尋找營業中的店家...</div>`;
+    try {
+      let query = db.collection("stores_taipei").where("district", "==", district);
+      if (category) {
+        query = query.where("category", "==", category);
+      }
+      const snapshot = await query.get();
+      const potentialStores = [];
+      snapshot.forEach((doc) => potentialStores.push({ id: doc.id, ...doc.data() }));
+      if (potentialStores.length === 0) {
+        if (resultsDiv) resultsDiv.innerHTML = `<p class="text-muted small p-2 text-center">此條件下找不到任何店家。</p>`;
+        clearMapMarkers();
+        return;
+      }
+      shuffleArray(potentialStores);
+      const openStores = await displayAndFilterStores(potentialStores, (store) => store.placeDetails?.opening_hours?.isOpen() === true, 3, openFirst);
+      if (openStores.length === 0) {
+        if (resultsDiv) resultsDiv.innerHTML = `<p class="text-muted small p-2 text-center">找不到符合條件且在營業中的店家。</p>`;
+      } else {
+        const title = `<h6>營業中隨機推薦：</h6>`;
+        displayRecommendationInSidebar(openStores, null, 0, 0, title);
+      }
+    } catch (error) {
+      console.error("查詢營業中隨機店家時發生錯誤:", error);
+      if (resultsDiv) resultsDiv.innerHTML = `<p class="text-danger small p-2 text-center">搜尋時發生錯誤。</p>`;
+    }
+  }
 }
 
 async function recommendNearbyStores() {
-    const resultsDiv = document.getElementById('random-recommendation-result');
-    if (!userCurrentLocation) {
-        alert("無法獲取您的目前位置，請確認已授權定位服務。");
-        return;
-    }
+  const resultsDiv = document.getElementById("random-recommendation-result");
+  if (!userCurrentLocation) {
+    alert("無法獲取您的目前位置，請確認已授權定位服務。");
+    return;
+  }
 
-    // Clear other UI elements
-    clearSearchResults();
-    const districtSelect = document.getElementById('districtSelect');
-    if (districtSelect) districtSelect.selectedIndex = 0;
-    const categorySelect = document.getElementById('categorySelect');
-    if (categorySelect) {
-        categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
-        categorySelect.disabled = true;
-    }
+  // Clear other UI elements
+  clearSearchResults();
+  const districtSelect = document.getElementById("districtSelect");
+  if (districtSelect) districtSelect.selectedIndex = 0;
+  const categorySelect = document.getElementById("categorySelect");
+  if (categorySelect) {
+    categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
+    categorySelect.disabled = true;
+  }
 
+  if (resultsDiv) {
+    resultsDiv.innerHTML = `<div class="text-center text-muted p-2"><div class="spinner-border spinner-border-sm" role="status"></div> 搜尋附近店家中...</div>`;
+  }
+
+  try {
+    const snapshot = await db.collection("stores_taipei").get();
+    const allStores = [];
+    snapshot.forEach((doc) => allStores.push({ id: doc.id, ...doc.data() }));
+
+    const searchRadiusKm = 2; // Search within 2km
+    const nearbyStores = allStores
+      .map((store) => {
+        if (!store.location || typeof store.location.latitude !== "number" || typeof store.location.longitude !== "number") {
+          return null;
+        }
+        const distance = getDistance(userCurrentLocation.lat, userCurrentLocation.lng, store.location.latitude, store.location.longitude);
+        return { ...store, distance };
+      })
+      .filter((store) => store && store.distance <= searchRadiusKm);
+
+    nearbyStores.sort((a, b) => a.distance - b.distance);
+
+    const top3Results = nearbyStores.slice(0, 3);
+
+    if (top3Results.length > 0) {
+      await displayMarkers(top3Results, true);
+      const title = `<h6>您附近 ${searchRadiusKm} 公里內的店家：</h6>`;
+      displayRecommendationInSidebar(top3Results, null, 0, 0, title);
+    } else {
+      if (resultsDiv) {
+        resultsDiv.innerHTML = `<p class="text-center text-muted p-3">尚未收錄附近店家，我們會盡快收錄讓你知道咩呷啥</p>`;
+      }
+      clearMapMarkers();
+    }
+  } catch (error) {
+    console.error("搜尋附近店家時發生錯誤:", error);
     if (resultsDiv) {
-        resultsDiv.innerHTML = `<div class="text-center text-muted p-2"><div class="spinner-border spinner-border-sm" role="status"></div> 搜尋附近店家中...</div>`;
+      resultsDiv.innerHTML = `<p class="text-danger small p-2 text-center">搜尋時發生錯誤。</p>`;
     }
-
-    try {
-        const snapshot = await db.collection('stores_taipei').get();
-        const allStores = [];
-        snapshot.forEach(doc => allStores.push({ id: doc.id, ...doc.data() }));
-
-        const searchRadiusKm = 2; // Search within 2km
-        const nearbyStores = allStores.map(store => {
-            if (!store.location || typeof store.location.latitude !== 'number' || typeof store.location.longitude !== 'number') {
-                return null;
-            }
-            const distance = getDistance(userCurrentLocation.lat, userCurrentLocation.lng, store.location.latitude, store.location.longitude);
-            return { ...store, distance };
-        }).filter(store => store && store.distance <= searchRadiusKm);
-
-        nearbyStores.sort((a, b) => a.distance - b.distance);
-
-        const top3Results = nearbyStores.slice(0, 3);
-
-        if (top3Results.length > 0) {
-            await displayMarkers(top3Results, true);
-            const title = `<h6>您附近 ${searchRadiusKm} 公里內的店家：</h6>`;
-            displayRecommendationInSidebar(top3Results, null, 0, 0, title);
-        } else {
-            if (resultsDiv) {
-                resultsDiv.innerHTML = `<p class="text-center text-muted p-3">尚未收錄附近店家，我們會盡快收錄讓你知道咩呷啥</p>`;
-            }
-            clearMapMarkers();
-        }
-    } catch (error) {
-        console.error("搜尋附近店家時發生錯誤:", error);
-        if (resultsDiv) {
-            resultsDiv.innerHTML = `<p class="text-danger small p-2 text-center">搜尋時發生錯誤。</p>`;
-        }
-    }
+  }
 }
 
 // --- 搜尋邏輯 ---
-async function handlePlaceSearchSelection() {
-    const placeResult = autocomplete.getPlace();
-    if (!placeResult || !placeResult.geometry) {
-        window.alert("請從建議列表中選擇一個地點。");
-        return;
-    }
-    clearRandomRecommendation();
-    const districtSelect = document.getElementById('districtSelect');
-    if (districtSelect) districtSelect.selectedIndex = 0;
-    const categorySelect = document.getElementById('categorySelect');
-    if (categorySelect) {
-        categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
-        categorySelect.disabled = true;
-    }
-    const searchLocation = placeResult.geometry.location;
-    map.setCenter(searchLocation);
-    map.setZoom(15);
-    const resultsContainer = document.getElementById('search-results-container');
-    resultsContainer.innerHTML = '<div class="p-3 text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> 搜尋附近店家中...</div>';
-    resultsContainer.style.display = 'block';
-    try {
-        const snapshot = await db.collection('stores_taipei').get();
-        const allStores = [];
-        snapshot.forEach(doc => allStores.push({ id: doc.id, ...doc.data() }));
-        const searchRadiusKm = 1;
-        const nearbyStores = allStores.map(store => {
-            if (!store.location || typeof store.location.latitude !== 'number' || typeof store.location.longitude !== 'number') return null;
-            const distance = getDistance(searchLocation.lat(), searchLocation.lng(), store.location.latitude, store.location.longitude);
-            return { ...store, distance };
-        }).filter(store => store && store.distance <= searchRadiusKm);
-        nearbyStores.sort((a, b) => a.distance - b.distance);
-        const topResults = nearbyStores.slice(0, 20);
-        await displayMarkers(topResults, false);
-        renderSearchResults(topResults);
-    } catch (error) {
-        console.error("搜尋附近店家時發生錯誤:", error);
-        resultsContainer.innerHTML = '<div class="p-3 text-center text-danger">搜尋時發生錯誤。</div>';
-    }
+async function handlePlaceSearchSelection(event) {
+    const placeResult = event.detail.place;  if (!placeResult || !placeResult.geometry) {
+    window.alert("請從建議列表中選擇一個地點。");
+    return;
+  }
+  clearRandomRecommendation();
+  const districtSelect = document.getElementById("districtSelect");
+  if (districtSelect) districtSelect.selectedIndex = 0;
+  const categorySelect = document.getElementById("categorySelect");
+  if (categorySelect) {
+    categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
+    categorySelect.disabled = true;
+  }
+  const searchLocation = placeResult.geometry.location;
+  map.setCenter(searchLocation);
+  map.setZoom(15);
+  const resultsContainer = document.getElementById("search-results-container");
+  resultsContainer.innerHTML = '<div class="p-3 text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> 搜尋附近店家中...</div>';
+  resultsContainer.style.display = "block";
+  try {
+    const snapshot = await db.collection("stores_taipei").get();
+    const allStores = [];
+    snapshot.forEach((doc) => allStores.push({ id: doc.id, ...doc.data() }));
+    const searchRadiusKm = 1;
+    const nearbyStores = allStores
+      .map((store) => {
+        if (!store.location || typeof store.location.latitude !== "number" || typeof store.location.longitude !== "number") return null;
+        const distance = getDistance(searchLocation.lat(), searchLocation.lng(), store.location.latitude, store.location.longitude);
+        return { ...store, distance };
+      })
+      .filter((store) => store && store.distance <= searchRadiusKm);
+    nearbyStores.sort((a, b) => a.distance - b.distance);
+    const topResults = nearbyStores.slice(0, 20);
+    await displayMarkers(topResults, false);
+    renderSearchResults(topResults);
+  } catch (error) {
+    console.error("搜尋附近店家時發生錯誤:", error);
+    resultsContainer.innerHTML = '<div class="p-3 text-center text-danger">搜尋時發生錯誤。</div>';
+  }
 }
 
 function renderSearchResults(stores) {
-    const container = document.getElementById('search-results-container');
-    if (!container) return;
-    let content = `
+  const container = document.getElementById("search-results-container");
+  if (!container) return;
+  let content = `
         <div class="search-results-header">
             <h6>附近店家</h6>
             <button id="close-search-results" type="button" class="btn-close" aria-label="Close"></button>
         </div>
         <div class="list-group list-group-flush">
     `;
-    if (stores.length === 0) {
-        content += '<div class="list-group-item text-center text-muted">附近 1 公里內找不到店家資料。</div>';
-    } else {
-        stores.forEach(store => {
-            content += createStoreListItemHTML(store);
-        });
-    }
-    content += '</div>';
-    container.innerHTML = content;
-    animateListItems(container.querySelector('.list-group'));
-    container.querySelector('#close-search-results').addEventListener('click', () => {
-        clearSearchResults();
-        clearMapMarkers();
+  if (stores.length === 0) {
+    content += '<div class="list-group-item text-center text-muted">附近 1 公里內找不到店家資料。</div>';
+  } else {
+    stores.forEach((store) => {
+      content += createStoreListItemHTML(store);
     });
-    container.querySelectorAll('.list-group-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const storeId = e.currentTarget.dataset.storeId;
-            const marker = currentMapMarkers[storeId];
-            if (marker) {
-                map.panTo(marker.position);
-                marker.setAnimation(google.maps.Animation.BOUNCE);
-                setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
-                google.maps.event.trigger(marker, 'click');
-            }
-        });
+  }
+  content += "</div>";
+  container.innerHTML = content;
+  animateListItems(container.querySelector(".list-group"));
+  container.querySelector("#close-search-results").addEventListener("click", () => {
+    clearSearchResults();
+    clearMapMarkers();
+  });
+  container.querySelectorAll(".list-group-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const storeId = e.currentTarget.dataset.storeId;
+      const marker = currentMapMarkers[storeId];
+      if (marker) {
+        map.panTo(marker.position);
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
+        google.maps.event.trigger(marker, "click");
+      }
     });
+  });
 }
 
 // --- 側邊欄推薦結果顯示 ---
 function displayRecommendationInSidebar(stores, category, fromCategoryCount, fromOthersCount, customTitle = null) {
-    const resultDiv = document.getElementById('random-recommendation-result');
-    if (!resultDiv) return;
-    if (!stores || stores.length === 0) {
-        resultDiv.innerHTML = '<p class="text-muted small p-2 text-center">找不到可推薦的店家。</p>';
-        return;
+  const resultDiv = document.getElementById("random-recommendation-result");
+  if (!resultDiv) return;
+  if (!stores || stores.length === 0) {
+    resultDiv.innerHTML = '<p class="text-muted small p-2 text-center">找不到可推薦的店家。</p>';
+    return;
+  }
+  let title = customTitle || "<h6>隨機推薦結果：</h6>";
+  if (!customTitle && category && fromCategoryCount > 0) {
+    title += `<p class="small text-muted mb-2">從「<strong>${category}</strong>」選出 ${fromCategoryCount} 間`;
+    if (fromOthersCount > 0) {
+      const otherStores = stores.filter((s) => s.category !== category);
+      const otherCategories = [...new Set(otherStores.map((s) => s.category))].filter(Boolean);
+      if (otherCategories.length > 0) {
+        const otherCategoriesText = otherCategories.map((c) => `「${c}」`).join("、");
+        title += `，再從 ${otherCategoriesText} 選出 ${fromOthersCount} 間。`;
+      } else {
+        title += `，再從其他分類選出 ${fromOthersCount} 間。`;
+      }
+    } else {
+      title += `。`;
     }
-    let title = customTitle || '<h6>隨機推薦結果：</h6>';
-    if (!customTitle && category && fromCategoryCount > 0) {
-        title += `<p class="small text-muted mb-2">從「<strong>${category}</strong>」選出 ${fromCategoryCount} 間`;
-        if (fromOthersCount > 0) {
-            const otherStores = stores.filter(s => s.category !== category);
-            const otherCategories = [...new Set(otherStores.map(s => s.category))].filter(Boolean);
-            if (otherCategories.length > 0) {
-                const otherCategoriesText = otherCategories.map(c => `「${c}」`).join('、');
-                title += `，再從 ${otherCategoriesText} 選出 ${fromOthersCount} 間。`;
-            } else {
-                title += `，再從其他分類選出 ${fromOthersCount} 間。`;
-            }
-        } else {
-            title += `。`;
-        }
-        title += `</p>`;
-    }
-    let content = title;
-    content += '<div class="list-group">';
-    stores.forEach(store => {
-        content += createStoreListItemHTML(store);
+    title += `</p>`;
+  }
+  let content = title;
+  content += '<div class="list-group">';
+  stores.forEach((store) => {
+    content += createStoreListItemHTML(store);
+  });
+  content += "</div>";
+  resultDiv.innerHTML = content;
+  animateListItems(resultDiv.querySelector(".list-group"));
+  resultDiv.querySelectorAll(".list-group-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      const storeId = e.currentTarget.dataset.storeId;
+      const marker = currentMapMarkers[storeId];
+      if (marker) {
+        map.panTo(marker.position);
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
+        google.maps.event.trigger(marker, "click");
+      }
     });
-    content += '</div>';
-    resultDiv.innerHTML = content;
-    animateListItems(resultDiv.querySelector('.list-group'));
-    resultDiv.querySelectorAll('.list-group-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const storeId = e.currentTarget.dataset.storeId;
-            const marker = currentMapMarkers[storeId];
-            if (marker) {
-                map.panTo(marker.position);
-                marker.setAnimation(google.maps.Animation.BOUNCE);
-                setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
-                google.maps.event.trigger(marker, 'click');
-            }
-        });
-    });
+  });
 }
 
 // --- 地圖標記與 InfoWindow ---
 function clearMapMarkers() {
-    Object.values(currentMapMarkers).forEach(marker => marker.setMap(null));
-    currentMapMarkers = {};
-    infoWindow.close();
+  Object.values(currentMapMarkers).forEach((marker) => marker.setMap(null));
+  currentMapMarkers = {};
+  infoWindow.close();
 }
 
 async function displayMarkers(stores, openFirst = false) {
-    clearMapMarkers();
-    if (!stores || stores.length === 0) return;
-    const bounds = new google.maps.LatLngBounds();
-    let firstMarkerOpened = false;
-    const detailPromises = stores.map(store => {
-        if (store.placeDetails) return Promise.resolve(store);
-        if (store.place_id && store.location) {
-            const request = { placeId: store.place_id, fields: ['name', 'formatted_address', 'geometry', 'formatted_phone_number', 'opening_hours', 'photos', 'types', 'website', 'rating', 'user_ratings_total', 'business_status', 'utc_offset_minutes'] };
-            return new Promise((resolve) => {
-                placesService.getDetails(request, (place, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                        resolve({ ...store, placeDetails: place });
-                    } else {
-                        resolve(store);
-                    }
-                });
-            });
-        } else {
-            return Promise.resolve(store);
-        }
-    });
-    const storesWithDetails = await Promise.all(detailPromises);
-    storesWithDetails.forEach((storeData) => {
-        if (!storeData.location) return;
-        const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
-        const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || 'N/A' });
-        if (storeData.id) currentMapMarkers[storeData.id] = marker;
-        const content = buildInfoWindowContent(storeData);
-        marker.addListener('click', () => {
-            infoWindow.setContent(content);
-            infoWindow.open(map, marker);
+  clearMapMarkers();
+  if (!stores || stores.length === 0) return;
+  const bounds = new google.maps.LatLngBounds();
+  let firstMarkerOpened = false;
+  const detailPromises = stores.map((store) => {
+    if (store.placeDetails) return Promise.resolve(store);
+    if (store.place_id && store.location) {
+      const request = { placeId: store.place_id, fields: ["name", "formatted_address", "geometry", "formatted_phone_number", "opening_hours", "photos", "types", "website", "rating", "user_ratings_total", "business_status", "utc_offset_minutes"] };
+      return new Promise((resolve) => {
+        placesService.getDetails(request, (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+            resolve({ ...store, placeDetails: place });
+          } else {
+            resolve(store);
+          }
         });
-        if (openFirst && !firstMarkerOpened && marker && content) {
-            infoWindow.setContent(content);
-            infoWindow.open(map, marker);
-            firstMarkerOpened = true;
-        }
-        bounds.extend(position);
-    });
-    if (Object.keys(currentMapMarkers).length > 0) {
-        if (stores.length > 1) {
-            map.fitBounds(bounds);
-        } else {
-            map.setCenter(bounds.getCenter());
-            map.setZoom(17);
-        }
+      });
+    } else {
+      return Promise.resolve(store);
     }
+  });
+  const storesWithDetails = await Promise.all(detailPromises);
+      storesWithDetails.forEach((storeData) => {
+          if (!storeData.location) return;
+          const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
+          const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || "N/A" });
+          if (storeData.id) currentMapMarkers[storeData.id] = marker;    const content = buildInfoWindowContent(storeData);
+    marker.addListener("click", () => {
+      infoWindow.setContent(content);
+      infoWindow.open(map, marker);
+    });
+    if (openFirst && !firstMarkerOpened && marker && content) {
+      infoWindow.setContent(content);
+      infoWindow.open(map, marker);
+      firstMarkerOpened = true;
+    }
+    bounds.extend(position);
+  });
+  if (Object.keys(currentMapMarkers).length > 0) {
+    if (stores.length > 1) {
+      map.fitBounds(bounds);
+    } else {
+      map.setCenter(bounds.getCenter());
+      map.setZoom(17);
+    }
+  }
 }
 
 async function displayAndFilterStores(stores, filterFn, limit, openFirst) {
-    clearMapMarkers();
-    if (!stores || stores.length === 0) return [];
-    const bounds = new google.maps.LatLngBounds();
-    const detailPromises = stores.map(store => {
-        if (store.place_id) {
-            const request = { placeId: store.place_id, fields: ['name', 'formatted_address', 'geometry', 'formatted_phone_number', 'opening_hours', 'photos', 'types', 'website', 'rating', 'user_ratings_total', 'business_status', 'utc_offset_minutes'] };
-            return new Promise((resolve) => {
-                placesService.getDetails(request, (place, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                        resolve({ ...store, placeDetails: place });
-                    } else {
-                        resolve(store);
-                    }
-                });
-            });
-        } else {
-            return Promise.resolve(store);
-        }
-    });
-    const storesWithDetails = await Promise.all(detailPromises);
-    const filteredStores = [];
-    for (const storeData of storesWithDetails) {
-        if (filteredStores.length >= limit) break;
-        if (filterFn(storeData)) {
-            filteredStores.push(storeData);
-        }
-    }
-    if (filteredStores.length === 0) {
-        return [];
-    }
-    let firstMarkerOpened = false;
-    filteredStores.forEach((storeData) => {
-        if (!storeData.location) return;
-        const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
-        const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || 'N/A' });
-        if (storeData.id) currentMapMarkers[storeData.id] = marker;
-        const content = buildInfoWindowContent(storeData);
-        marker.addListener('click', () => {
-            infoWindow.setContent(content);
-            infoWindow.open(map, marker);
+  clearMapMarkers();
+  if (!stores || stores.length === 0) return [];
+  const bounds = new google.maps.LatLngBounds();
+  const detailPromises = stores.map((store) => {
+    if (store.place_id) {
+      const request = { placeId: store.place_id, fields: ["name", "formatted_address", "geometry", "formatted_phone_number", "opening_hours", "photos", "types", "website", "rating", "user_ratings_total", "business_status", "utc_offset_minutes"] };
+      return new Promise((resolve) => {
+        placesService.getDetails(request, (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+            resolve({ ...store, placeDetails: place });
+          } else {
+            resolve(store);
+          }
         });
-        if (openFirst && !firstMarkerOpened && marker && content) {
-            infoWindow.setContent(content);
-            infoWindow.open(map, marker);
-            firstMarkerOpened = true;
-        }
-        bounds.extend(position);
-    });
-    if (Object.keys(currentMapMarkers).length > 0) {
-        if (filteredStores.length > 1) {
-            map.fitBounds(bounds);
-        } else {
-            map.setCenter(bounds.getCenter());
-            map.setZoom(17);
-        }
+      });
+    } else {
+      return Promise.resolve(store);
     }
-    return filteredStores;
+  });
+  const storesWithDetails = await Promise.all(detailPromises);
+  const filteredStores = [];
+  for (const storeData of storesWithDetails) {
+    if (filteredStores.length >= limit) break;
+    if (filterFn(storeData)) {
+      filteredStores.push(storeData);
+    }
+  }
+  if (filteredStores.length === 0) {
+    return [];
+  }
+  let firstMarkerOpened = false;
+      filteredStores.forEach((storeData) => {
+          if (!storeData.location) return;
+          const position = { lat: storeData.location.latitude, lng: storeData.location.longitude };
+          const marker = new google.maps.Marker({ map: map, position: position, title: storeData.name || "N/A" });
+          if (storeData.id) currentMapMarkers[storeData.id] = marker;    const content = buildInfoWindowContent(storeData);
+    marker.addListener("click", () => {
+      infoWindow.setContent(content);
+      infoWindow.open(map, marker);
+    });
+    if (openFirst && !firstMarkerOpened && marker && content) {
+      infoWindow.setContent(content);
+      infoWindow.open(map, marker);
+      firstMarkerOpened = true;
+    }
+    bounds.extend(position);
+  });
+  if (Object.keys(currentMapMarkers).length > 0) {
+    if (filteredStores.length > 1) {
+      map.fitBounds(bounds);
+    } else {
+      map.setCenter(bounds.getCenter());
+      map.setZoom(17);
+    }
+  }
+  return filteredStores;
 }
 
 function buildInfoWindowContent(storeData) {
-    const placeDetails = storeData.placeDetails;
-    let content = `<div style="max-width: 320px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5;">`;
-    if (placeDetails?.photos?.length > 0) {
-        const photoUrl = placeDetails.photos[0].getUrl({ maxWidth: 300, maxHeight: 150 });
-        content += `<img src="${photoUrl}" alt="${storeData.name}" style="width: 100%; height: auto; margin-bottom: 10px; border-radius: 4px;">`;
-    }
-    content += `<h5 style="margin-top: 0; margin-bottom: 8px; font-size: 1.1em; font-weight: 600;">${storeData.name || 'N/A'}</h5>`;
-    if (storeData.price) content += `<p style="margin: 0 0 10px 0; color: #444;"><strong style="color: #333;">每人平均消費約:</strong> ${storeData.price}</p>`;
-    if (placeDetails?.rating) content += `<p style="margin: 0 0 6px 0;"><span style="color: #FBBC05; font-size: 1.1em;">★</span> ${placeDetails.rating.toFixed(1)} <span style="color: #70757a; font-size: 0.85em; margin-left: 6px;">(${placeDetails.user_ratings_total || 0} 則評論)</span></p>`;
-    content += `<p style="margin: 0 0 6px 0;"><strong>分類:</strong> ${storeData.category || '未分類'}`;
-    if (placeDetails?.price_level !== undefined) content += `  •   <span title="價格等級" style="color: #555;">${ '$'.repeat(placeDetails.price_level || 0) || '免費'}</span>`;
-    content += `</p>`;
-    content += `<p style="margin: 0 0 6px 0;"><strong>地址:</strong> ${storeData.address || placeDetails?.formatted_address || 'N/A'}</p>`;
-    if (placeDetails?.formatted_phone_number) content += `<p style="margin: 0 0 6px 0;"><strong>電話:</strong> <a href="tel:${placeDetails.formatted_phone_number}" style="color: #007bff;">${placeDetails.formatted_phone_number}</a></p>`;
-    content += `<div style="margin: 0 0 8px 0;"><strong>營業時間:</strong> `;
-    if (placeDetails?.opening_hours) {
-        const isOpen = placeDetails.opening_hours.isOpen();
-        if (isOpen === true) {
-            content += `<span style="color: #28a745; font-weight: bold;">營業中</span>`;
-        } else if (isOpen === false) {
-            content += `<span style="color: #dc3545; font-weight: bold;">休息中</span>`;
-        } else {
-            content += `<span style="color: #6c757d; font-weight: bold;">營業時間不詳</span>`;
-        }
-        if (placeDetails.opening_hours.weekday_text) {
-            content += `<ul style="padding-left: 18px; font-size: 0.85em; color: #5f6368; list-style-type: none;">`;
-            placeDetails.opening_hours.weekday_text.forEach(t => { content += `<li style="margin-bottom: 2px;">${t}</li>`; });
-            content += `</ul>`;
-        }
+  const placeDetails = storeData.placeDetails;
+  let content = `<div style="max-width: 320px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.5;">`;
+  if (placeDetails?.photos?.length > 0) {
+    const photoUrl = placeDetails.photos[0].getUrl({ maxWidth: 300, maxHeight: 150 });
+    content += `<img src="${photoUrl}" alt="${storeData.name}" style="width: 100%; height: auto; margin-bottom: 10px; border-radius: 4px;">`;
+  }
+  content += `<h5 style="margin-top: 0; margin-bottom: 8px; font-size: 1.1em; font-weight: 600;">${storeData.name || "N/A"}</h5>`;
+  if (storeData.price) content += `<p style="margin: 0 0 10px 0; color: #444;"><strong style="color: #333;">每人平均消費約:</strong> ${storeData.price}</p>`;
+  if (placeDetails?.rating) content += `<p style="margin: 0 0 6px 0;"><span style="color: #FBBC05; font-size: 1.1em;">★</span> ${placeDetails.rating.toFixed(1)} <span style="color: #70757a; font-size: 0.85em; margin-left: 6px;">(${placeDetails.user_ratings_total || 0} 則評論)</span></p>`;
+  content += `<p style="margin: 0 0 6px 0;"><strong>分類:</strong> ${storeData.category || "未分類"}`;
+  if (placeDetails?.price_level !== undefined) content += `  •   <span title="價格等級" style="color: #555;">${"$".repeat(placeDetails.price_level || 0) || "免費"}</span>`;
+  content += `</p>`;
+  content += `<p style="margin: 0 0 6px 0;"><strong>地址:</strong> ${storeData.address || placeDetails?.formatted_address || "N/A"}</p>`;
+  if (placeDetails?.formatted_phone_number) content += `<p style="margin: 0 0 6px 0;"><strong>電話:</strong> <a href="tel:${placeDetails.formatted_phone_number}" style="color: #007bff;">${placeDetails.formatted_phone_number}</a></p>`;
+  content += `<div style="margin: 0 0 8px 0;"><strong>營業時間:</strong> `;
+  if (placeDetails?.opening_hours) {
+    const isOpen = placeDetails.opening_hours.isOpen();
+    if (isOpen === true) {
+      content += `<span style="color: #28a745; font-weight: bold;">營業中</span>`;
+    } else if (isOpen === false) {
+      content += `<span style="color: #dc3545; font-weight: bold;">休息中</span>`;
     } else {
-        content += `<span style="color: #999;">N/A</span>`;
+      content += `<span style="color: #6c757d; font-weight: bold;">營業時間不詳</span>`;
     }
-    content += `</div>`;
-    if (placeDetails?.website) content += `<p style="margin: 0 0 10px 0;"><a href="${placeDetails.website}" target="_blank" style="color: #007bff;">店家網站 <i class="bi bi-box-arrow-up-right" style="font-size: 0.8em;"></i></a></p>`;
-    if (storeData.description) content += `<p style="margin: 0 0 10px 0; color: #555;"><strong style="color: #333;">簡介:</strong> ${storeData.description}</p>`;
-    content += `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeData.address || storeData.name)}&query_place_id=${storeData.place_id || ''}" target="_blank" class="btn btn-sm btn-outline-primary mt-1" style="font-size: 0.85em; padding: 4px 8px;">在 Google 地圖上查看</a>`;
-    content += `</div>`;
-    return content;
+    if (placeDetails.opening_hours.weekday_text) {
+      content += `<ul style="padding-left: 18px; font-size: 0.85em; color: #5f6368; list-style-type: none;">`;
+      placeDetails.opening_hours.weekday_text.forEach((t) => {
+        content += `<li style="margin-bottom: 2px;">${t}</li>`;
+      });
+      content += `</ul>`;
+    }
+  } else {
+    content += `<span style="color: #999;">N/A</span>`;
+  }
+  content += `</div>`;
+  if (placeDetails?.website) content += `<p style="margin: 0 0 10px 0;"><a href="${placeDetails.website}" target="_blank" style="color: #007bff;">店家網站 <i class="bi bi-box-arrow-up-right" style="font-size: 0.8em;"></i></a></p>`;
+  if (storeData.description) content += `<p style="margin: 0 0 10px 0; color: #555;"><strong style="color: #333;">簡介:</strong> ${storeData.description}</p>`;
+  content += `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeData.address || storeData.name)}&query_place_id=${storeData.place_id || ""}" target="_blank" class="btn btn-sm btn-outline-primary mt-1" style="font-size: 0.85em; padding: 4px 8px;">在 Google 地圖上查看</a>`;
+  content += `</div>`;
+  return content;
 }
 
 // --- 全店家列表面板邏輯 (新增) ---
 function setupAllStoresPanelListeners() {
-    const panel = document.getElementById('all-stores-panel');
-    const closeBtn = document.getElementById('close-all-stores-panel');
-    const paginationContainer = document.getElementById('all-stores-panel-pagination');
+  const panel = document.getElementById("all-stores-panel");
+  const closeBtn = document.getElementById("close-all-stores-panel");
+  const paginationContainer = document.getElementById("all-stores-panel-pagination");
 
-    closeBtn.addEventListener('click', () => {
-        panel.classList.remove('is-visible');
-    });
+  closeBtn.addEventListener("click", () => {
+    panel.classList.remove("is-visible");
+  });
 
-    paginationContainer.addEventListener('click', (e) => {
-        if (e.target.tagName === 'A' && e.target.dataset.page) {
-            e.preventDefault();
-            const page = parseInt(e.target.dataset.page, 10);
-            if (page !== storeListPage) {
-                storeListPage = page;
-                renderStoreListPage();
-            }
-        }
-    });
+  paginationContainer.addEventListener("click", (e) => {
+    if (e.target.tagName === "A" && e.target.dataset.page) {
+      e.preventDefault();
+      const page = parseInt(e.target.dataset.page, 10);
+      if (page !== storeListPage) {
+        storeListPage = page;
+        renderStoreListPage();
+      }
+    }
+  });
 }
 
 async function showAllStoresPanel(district, category = null) {
-    const panel = document.getElementById('all-stores-panel');
-    const titleEl = document.getElementById('all-stores-panel-title');
-    const contentEl = document.getElementById('all-stores-panel-content');
+  const panel = document.getElementById("all-stores-panel");
+  const titleEl = document.getElementById("all-stores-panel-title");
+  const contentEl = document.getElementById("all-stores-panel-content");
 
-    titleEl.textContent = '載入中...';
-    contentEl.innerHTML = '<div class="p-5 text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-    panel.classList.add('is-visible');
+  titleEl.textContent = "載入中...";
+  contentEl.innerHTML = '<div class="p-5 text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+  panel.classList.add("is-visible");
 
-    try {
-        let query = db.collection('stores_taipei').where('district', '==', district);
-        if (category) {
-            query = query.where('category', '==', category);
-        }
-        const snapshot = await query.get();
-        
-        allStoresForDistrict = [];
-        snapshot.forEach(doc => {
-            allStoresForDistrict.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Sort by category then by name if no category filter is applied
-        if (!category) {
-            allStoresForDistrict.sort((a, b) => {
-                const catA = a.category || 'zzz'; // Put uncategorized at the end
-                const catB = b.category || 'zzz';
-                if (catA < catB) return -1;
-                if (catA > catB) return 1;
-                if (a.name < b.name) return -1;
-                if (a.name > b.name) return 1;
-                return 0;
-            });
-        } else {
-            // If filtering by category, just sort by name
-            allStoresForDistrict.sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        // --- Title update logic ---
-        titleEl.innerHTML = ''; 
-        titleEl.style.cssText = ''; 
-
-        if (category) {
-            titleEl.style.display = 'flex';
-            titleEl.style.justifyContent = 'space-between';
-            titleEl.style.alignItems = 'center';
-            titleEl.style.width = '100%';
-
-            const titleText = document.createElement('span');
-            titleText.textContent = `${district} - ${category} (${allStoresForDistrict.length} 間)`;
-            
-            const clearButton = document.createElement('a');
-            clearButton.href = '#';
-            clearButton.className = 'badge rounded-pill bg-light text-dark text-decoration-none';
-            clearButton.textContent = '顯示全部';
-            clearButton.style.fontSize = '0.8em';
-            clearButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                showAllStoresPanel(district, null);
-            });
-
-            titleEl.appendChild(titleText);
-            titleEl.appendChild(clearButton);
-
-        } else {
-            titleEl.textContent = `${district} (${allStoresForDistrict.length} 間)`;
-        }
-        // --- End of title update logic ---
-        
-        storeListPage = 1;
-        renderStoreListPage();
-        displayMarkers(allStoresForDistrict, false);
-
-    } catch (error) {
-        console.error("查詢行政區所有店家時發生錯誤:", error);
-        titleEl.textContent = '讀取錯誤';
-        contentEl.innerHTML = '<div class="p-3 text-center text-danger">無法載入店家資料。</div>';
+  try {
+    let query = db.collection("stores_taipei").where("district", "==", district);
+    if (category) {
+      query = query.where("category", "==", category);
     }
+    const snapshot = await query.get();
+
+    allStoresForDistrict = [];
+    snapshot.forEach((doc) => {
+      allStoresForDistrict.push({ id: doc.id, ...doc.data() });
+    });
+
+    // Sort by category then by name if no category filter is applied
+    if (!category) {
+      allStoresForDistrict.sort((a, b) => {
+        const catA = a.category || "zzz"; // Put uncategorized at the end
+        const catB = b.category || "zzz";
+        if (catA < catB) return -1;
+        if (catA > catB) return 1;
+        if (a.name < b.name) return -1;
+        if (a.name > b.name) return 1;
+        return 0;
+      });
+    } else {
+      // If filtering by category, just sort by name
+      allStoresForDistrict.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // --- Title update logic ---
+    titleEl.innerHTML = "";
+    titleEl.style.cssText = "";
+
+    if (category) {
+      titleEl.style.display = "flex";
+      titleEl.style.justifyContent = "space-between";
+      titleEl.style.alignItems = "center";
+      titleEl.style.width = "100%";
+
+      const titleText = document.createElement("span");
+      titleText.textContent = `${district} - ${category} (${allStoresForDistrict.length} 間)`;
+
+      const clearButton = document.createElement("a");
+      clearButton.href = "#";
+      clearButton.className = "badge rounded-pill bg-light text-dark text-decoration-none";
+      clearButton.textContent = "顯示全部";
+      clearButton.style.fontSize = "0.8em";
+      clearButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        showAllStoresPanel(district, null);
+      });
+
+      titleEl.appendChild(titleText);
+      titleEl.appendChild(clearButton);
+    } else {
+      titleEl.textContent = `${district} (${allStoresForDistrict.length} 間)`;
+    }
+    // --- End of title update logic ---
+
+    storeListPage = 1;
+    renderStoreListPage();
+    displayMarkers(allStoresForDistrict, false);
+  } catch (error) {
+    console.error("查詢行政區所有店家時發生錯誤:", error);
+    titleEl.textContent = "讀取錯誤";
+    contentEl.innerHTML = '<div class="p-3 text-center text-danger">無法載入店家資料。</div>';
+  }
 }
 
 function renderStoreListPage() {
-    const contentEl = document.getElementById('all-stores-panel-content');
-    const paginationEl = document.getElementById('all-stores-panel-pagination');
+  const contentEl = document.getElementById("all-stores-panel-content");
+  const paginationEl = document.getElementById("all-stores-panel-pagination");
 
-    if (allStoresForDistrict.length === 0) {
-        contentEl.innerHTML = '<div class="p-3 text-center text-muted">此條件下找不到店家。</div>';
-        paginationEl.innerHTML = '';
+  if (allStoresForDistrict.length === 0) {
+    contentEl.innerHTML = '<div class="p-3 text-center text-muted">此條件下找不到店家。</div>';
+    paginationEl.innerHTML = "";
+    return;
+  }
+
+  const startIndex = (storeListPage - 1) * storesPerPage;
+  const endIndex = startIndex + storesPerPage;
+  const storesToShow = allStoresForDistrict.slice(startIndex, endIndex);
+
+  let contentHTML = "";
+  storesToShow.forEach((store) => {
+    contentHTML += createStoreListItemHTML(store, { isFilterable: true });
+  });
+  contentEl.innerHTML = contentHTML;
+  animateListItems(contentEl);
+
+  // Add click listeners to new items
+  contentEl.querySelectorAll(".list-group-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      // If the click was on our badge, let the other listener handle it and stop
+      if (e.target.classList.contains("category-filter-trigger")) {
         return;
-    }
-
-    const startIndex = (storeListPage - 1) * storesPerPage;
-    const endIndex = startIndex + storesPerPage;
-    const storesToShow = allStoresForDistrict.slice(startIndex, endIndex);
-
-    let contentHTML = '';
-    storesToShow.forEach(store => {
-        contentHTML += createStoreListItemHTML(store, { isFilterable: true });
+      }
+      const storeId = e.currentTarget.dataset.storeId;
+      const marker = currentMapMarkers[storeId];
+      if (marker) {
+        map.panTo(marker.position);
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
+        google.maps.event.trigger(marker, "click");
+      }
     });
-    contentEl.innerHTML = contentHTML;
-    animateListItems(contentEl);
+  });
 
-    // Add click listeners to new items
-    contentEl.querySelectorAll('.list-group-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            // If the click was on our badge, let the other listener handle it and stop
-            if (e.target.classList.contains('category-filter-trigger')) {
-                return;
-            }
-            const storeId = e.currentTarget.dataset.storeId;
-            const marker = currentMapMarkers[storeId];
-            if (marker) {
-                map.panTo(marker.position);
-                marker.setAnimation(google.maps.Animation.BOUNCE);
-                setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
-                google.maps.event.trigger(marker, 'click');
-            }
-        });
+  // Add separate listener for category badges to handle filtering
+  contentEl.querySelectorAll(".category-filter-trigger").forEach((badge) => {
+    badge.addEventListener("click", (e) => {
+      e.stopPropagation(); // IMPORTANT: Stop the event from bubbling to the parent <a>
+      const category = e.target.dataset.category;
+      if (category && currentSelectedDistrict) {
+        showAllStoresPanel(currentSelectedDistrict, category);
+      }
     });
+  });
 
-    // Add separate listener for category badges to handle filtering
-    contentEl.querySelectorAll('.category-filter-trigger').forEach(badge => {
-        badge.addEventListener('click', (e) => {
-            e.stopPropagation(); // IMPORTANT: Stop the event from bubbling to the parent <a>
-            const category = e.target.dataset.category;
-            if (category && currentSelectedDistrict) {
-                showAllStoresPanel(currentSelectedDistrict, category);
-            }
-        });
-    });
-
-    renderStoreListPagination();
+  renderStoreListPagination();
 }
 
 function renderStoreListPagination() {
-    const paginationEl = document.getElementById('all-stores-panel-pagination');
-    const totalPages = Math.ceil(allStoresForDistrict.length / storesPerPage);
-    if (totalPages <= 1) {
-        paginationEl.innerHTML = '';
-        return;
-    }
+  const paginationEl = document.getElementById("all-stores-panel-pagination");
+  const totalPages = Math.ceil(allStoresForDistrict.length / storesPerPage);
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = "";
+    return;
+  }
 
-    let paginationHTML = '<ul class="pagination">';
+  let paginationHTML = '<ul class="pagination">';
 
-    // Previous button
-    paginationHTML += `
-        <li class="page-item ${storeListPage === 1 ? 'disabled' : ''}">
+  // Previous button
+  paginationHTML += `
+        <li class="page-item ${storeListPage === 1 ? "disabled" : ""}">
             <a class="page-link" href="#" data-page="${storeListPage - 1}" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
     `;
 
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        paginationHTML += `
-            <li class="page-item ${i === storeListPage ? 'active' : ''}">
+  // Page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    paginationHTML += `
+            <li class="page-item ${i === storeListPage ? "active" : ""}">
                 <a class="page-link" href="#" data-page="${i}">${i}</a>
             </li>
         `;
-    }
+  }
 
-    // Next button
-    paginationHTML += `
-        <li class="page-item ${storeListPage === totalPages ? 'disabled' : ''}">
+  // Next button
+  paginationHTML += `
+        <li class="page-item ${storeListPage === totalPages ? "disabled" : ""}">
             <a class="page-link" href="#" data-page="${storeListPage + 1}" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
     `;
 
-    paginationHTML += '</ul>';
-    paginationEl.innerHTML = paginationHTML;
+  paginationHTML += "</ul>";
+  paginationEl.innerHTML = paginationHTML;
 }
-
 
 // --- 其他 UI 邏輯 ---
 function setupSearchBarAnimation() {
     const searchButton = document.getElementById('searchButton');
-    const searchInput = document.getElementById('searchInput');
+    const autocompleteElement = document.getElementById('autocomplete-input');
     const searchContainer = document.querySelector('.search-container');
-    if (!searchButton || !searchInput || !searchContainer) return;
-    searchButton.addEventListener('click', (event) => { event.preventDefault(); searchContainer.classList.add('active'); searchInput.focus(); });
-    searchInput.addEventListener('blur', () => { setTimeout(() => { const activeElement = document.activeElement; if ( searchInput.value === '' && (!activeElement || !activeElement.closest('.pac-container'))) { searchContainer.classList.remove('active'); } }, 150); });
-    searchInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault(); });
+    if (!searchButton || !autocompleteElement || !searchContainer) return;
+
+    // The <gmp-autocomplete> element has an 'input' property that gives access to the underlying input.
+    const searchInput = autocompleteElement.input;
+    if (!searchInput) {
+        console.error("Could not find the input element within gmp-autocomplete.");
+        return;
+    }
+
+    searchButton.addEventListener('click', (event) => { 
+        event.preventDefault(); 
+        searchContainer.classList.add('active'); 
+        searchInput.focus(); 
+    });
+    
+    searchInput.addEventListener('blur', () => { 
+        setTimeout(() => { 
+            const activeElement = document.activeElement; 
+            // Check the value of the actual input element
+            if ( searchInput.value === '' && (!activeElement || !activeElement.closest('.pac-container'))) { 
+                searchContainer.classList.remove('active'); 
+            } 
+        }, 150); 
+    });
+
+    searchInput.addEventListener('keydown', (event) => { 
+        if (event.key === 'Enter') event.preventDefault(); 
+    });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    const darkModeSwitch = document.getElementById('darkModeSwitch');
-    setDarkMode(savedTheme === 'dark');
-    if(darkModeSwitch) {
-        darkModeSwitch.addEventListener('change', (event) => {
-            setDarkMode(event.target.checked);
-        });
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme") || "light";
+  const darkModeSwitch = document.getElementById("darkModeSwitch");
+  setDarkMode(savedTheme === "dark");
+  if (darkModeSwitch) {
+    darkModeSwitch.addEventListener("change", (event) => {
+      setDarkMode(event.target.checked);
+    });
+  }
 });

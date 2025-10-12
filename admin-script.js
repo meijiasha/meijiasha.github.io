@@ -1,23 +1,22 @@
-// admin-script.js
+// admin-script.js (Refactored for Server-Side Search)
 console.log("admin-script.js: Script loaded and starts parsing.");
 
-// 全域變數宣告
+// DOM 元素引用
 let storesTableBody, loadingIndicator, authMessageDiv, storeListContainer, logoutButton;
 let searchInput, searchButton, clearSearchButton;
 let itemsPerPageSelect, paginationUl, paginationContainer;
 
-// 資料快取與狀態
-let allStores = []; // 儲存從 Firebase 獲取的所有店家資料
-let filteredStores = []; // 儲存篩選和排序後的店家資料
+// 狀態管理
 let currentPage = 1;
 let itemsPerPage = 10;
+let currentSearchQuery = '';
+let totalStores = 0;
 
-// 排序狀態
-let currentSortColumn = 'lastEditedAt';
-let currentSortDirection = 'desc';
+// Firebase Services
+let callSearchStores;
 
 // ----------------------------------------------------------------------------
-// Toast 顯示函數
+// Toast 顯示函數 (從舊版保留)
 // ----------------------------------------------------------------------------
 function showToast(message, type = 'info', title = '通知', delay = 5000) {
     const toastContainer = document.querySelector('.toast-container');
@@ -47,36 +46,54 @@ function showToast(message, type = 'info', title = '通知', delay = 5000) {
 }
 
 // ----------------------------------------------------------------------------
-// 主要資料獲取與渲染邏輯
+// 主要資料獲取與渲染邏輯 (重構後)
 // ----------------------------------------------------------------------------
 
-// 從 Firebase 獲取所有店家資料
-async function fetchAllStores() {
-    if (typeof db === 'undefined' || !db) {
-        showToast("資料庫連線失敗。", "danger", "錯誤");
+// 統一的資料獲取函式
+async function fetchStores(query = '', page = 1) {
+    if (!callSearchStores) {
+        showToast("後端服務連接失敗。", "danger", "錯誤");
         return;
     }
+
     loadingIndicator.style.display = 'block';
     storeListContainer.style.display = 'none';
     paginationContainer.style.display = 'none';
     searchInput.disabled = true;
     searchButton.disabled = true;
 
-    try {
-        const snapshot = await db.collection('stores_taipei').get();
-        allStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        filteredStores = [...allStores]; // 初始時，篩選列表等於完整列表
-        
-        // 預設排序
-        sortData(filteredStores, currentSortColumn, currentSortDirection);
+    currentSearchQuery = query;
+    currentPage = page;
 
-        currentPage = 1;
-        renderUI(); // 渲染畫面
-        showToast(`成功載入 ${allStores.length} 筆店家資料。`, 'success', '載入完成');
+    try {
+        const result = await callSearchStores({ 
+            query: currentSearchQuery, 
+            page: currentPage, 
+            perPage: itemsPerPage 
+        });
+
+        const { stores, total } = result.data;
+        totalStores = total;
+
+        renderTable(stores);
+        renderPagination();
+
+        storeListContainer.style.display = 'block';
+        if (total > 0) {
+            paginationContainer.style.display = 'flex';
+        }
 
     } catch (error) {
-        console.error("讀取所有店家資料失敗:", error);
-        showToast("讀取店家資料時發生錯誤。", "danger", "錯誤");
+        console.error("搜尋店家時發生錯誤:", error);
+        showToast(`讀取資料時發生錯誤: ${error.message}`, "danger", "錯誤");
+        storesTableBody.innerHTML = '';
+        const tr = storesTableBody.insertRow();
+        const td = tr.insertCell(0);
+        td.colSpan = 8;
+        td.textContent = '讀取資料失敗，請檢查後端函式是否正確部署或查看 Console 錯誤。'
+        td.className = 'text-center text-danger';
+        storeListContainer.style.display = 'block';
+
     } finally {
         loadingIndicator.style.display = 'none';
         searchInput.disabled = false;
@@ -84,35 +101,28 @@ async function fetchAllStores() {
     }
 }
 
-// 渲染畫面 (表格 + 分頁)
-function renderUI() {
-    storeListContainer.style.display = filteredStores.length > 0 ? 'block' : 'none';
-    paginationContainer.style.display = filteredStores.length > 0 ? 'flex' : 'none';
-    
-    renderTable();
-    renderPagination();
-}
-
-// 渲染表格
-function renderTable() {
+// 渲染表格 (現在接收 stores 參數)
+function renderTable(stores) {
     storesTableBody.innerHTML = '';
 
-    if (filteredStores.length === 0) {
+    if (stores.length === 0) {
         const tr = storesTableBody.insertRow();
         const td = tr.insertCell(0);
         td.colSpan = 8; // 表格總欄位數
         td.textContent = searchInput.value ? '找不到符合條件的店家。' : '目前沒有店家資料。';
-        td.style.textAlign = 'center';
+        td.className = 'text-center';
         return;
     }
 
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pageData = filteredStores.slice(startIndex, endIndex);
-
-    pageData.forEach(store => {
+    stores.forEach(store => {
         const row = storesTableBody.insertRow();
-        const lastEditedAtFormatted = store.lastEditedAt?.toDate ? store.lastEditedAt.toDate().toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : 'N/A';
+        // Firestore timestamp might be a string after going through Cloud Function, or an object
+        let lastEditedAtFormatted = 'N/A';
+        if (store.lastEditedAt) {
+            const date = store.lastEditedAt._seconds ? new Date(store.lastEditedAt._seconds * 1000) : new Date(store.lastEditedAt);
+            lastEditedAtFormatted = date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
         const editorDisplay = store.lastEditedBy?.email || (store.createdBy?.email ? `${store.createdBy.email} (創建)` : 'N/A');
 
         row.innerHTML = `
@@ -131,10 +141,10 @@ function renderTable() {
     });
 }
 
-// 渲染分頁
+// 渲染分頁 (現在使用 totalStores)
 function renderPagination() {
     paginationUl.innerHTML = '';
-    const totalPages = Math.ceil(filteredStores.length / itemsPerPage);
+    const totalPages = Math.ceil(totalStores / itemsPerPage);
 
     if (totalPages <= 1) return;
 
@@ -144,7 +154,7 @@ function renderPagination() {
     prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">上一頁</a>`;
     paginationUl.appendChild(prevLi);
 
-    // 頁碼按鈕
+    // 頁碼按鈕 (此處可以加入更複雜的頁碼顯示邏輯，例如 `...`)
     for (let i = 1; i <= totalPages; i++) {
         const pageLi = document.createElement('li');
         pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
@@ -161,78 +171,9 @@ function renderPagination() {
 
 
 // ----------------------------------------------------------------------------
-// 搜尋、排序與過濾
+// 事件處理與初始化 (重構後)
 // ----------------------------------------------------------------------------
 
-// 執行搜尋
-function performSearch() {
-    const searchTerm = searchInput.value.toLowerCase().trim();
-
-    if (searchTerm) {
-        filteredStores = allStores.filter(store => {
-            const name = store.name?.toLowerCase() || '';
-            const district = store.district?.toLowerCase() || '';
-            const category = store.category?.toLowerCase() || '';
-            const address = store.address?.toLowerCase() || '';
-            return name.includes(searchTerm) || district.includes(searchTerm) || category.includes(searchTerm) || address.includes(searchTerm);
-        });
-        clearSearchButton.style.display = 'inline-block';
-    } else {
-        filteredStores = [...allStores]; // 重置為完整列表
-        clearSearchButton.style.display = 'none';
-    }
-    
-    // 排序並渲染
-    sortData(filteredStores, currentSortColumn, currentSortDirection);
-    currentPage = 1;
-    renderUI();
-}
-
-// 清除搜尋
-function clearSearch() {
-    searchInput.value = '';
-    performSearch();
-}
-
-// 排序資料
-function sortData(dataArray, column, direction) {
-    dataArray.sort((a, b) => {
-        // Helper to get nested property
-        const getNestedValue = (obj, path) => path.split('.').reduce((o, k) => (o || {})[k], obj);
-
-        let valA = getNestedValue(a, column);
-        let valB = getNestedValue(b, column);
-
-        // Handle timestamp objects
-        if (valA?.toDate) valA = valA.toDate();
-        if (valB?.toDate) valB = valB.toDate();
-
-        if (valA < valB) return direction === 'asc' ? -1 : 1;
-        if (valA > valB) return direction === 'asc' ? 1 : -1;
-        return 0;
-    });
-}
-
-// 更新排序圖示
-function updateSortIcons() {
-    document.querySelectorAll('th[data-sortable]').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
-        const icon = th.querySelector('.sort-icon');
-        icon.className = 'sort-icon bi bi-arrow-down-up';
-
-        if (th.dataset.column === currentSortColumn) {
-            th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-            icon.className = `sort-icon bi ${currentSortDirection === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'}`;
-        }
-    });
-}
-
-
-// ----------------------------------------------------------------------------
-// 事件處理與初始化
-// ----------------------------------------------------------------------------
-
-// DOM載入完成後執行
 document.addEventListener('DOMContentLoaded', () => {
     // 獲取 DOM 元素
     storesTableBody = document.getElementById('storesTableBody');
@@ -247,31 +188,32 @@ document.addEventListener('DOMContentLoaded', () => {
     searchButton = document.getElementById('searchButton');
     clearSearchButton = document.getElementById('clearSearchButton');
 
-    // *** 修正：初始時禁用搜尋框
-    searchInput.disabled = true;
-    searchButton.disabled = true;
-
     // 檢查 Firebase 是否初始化
-    if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db) {
-        console.error("Firebase 'auth' or 'db' instance is NOT available. Halting.");
+    if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db || typeof firebase.functions === 'undefined') {
+        console.error("Firebase services are NOT available. Halting.");
         authMessageDiv.textContent = "Firebase 核心服務初始化失敗。";
         authMessageDiv.style.display = 'block';
         return;
     }
+
+    // Initialize Firebase Functions explicitly from the app instance and specify the region
+    const functions = firebase.app().functions('us-central1');
+    // 如果您在非 asia-east1 區域部署，請更改這裡
+    // functions.useFunctionsEmulator('http://localhost:5001'); // 開發時使用模擬器
+    callSearchStores = functions.httpsCallable('searchStores');
 
     // 監聽認證狀態
     auth.onAuthStateChanged(user => {
         if (user) {
             authMessageDiv.style.display = 'none';
             logoutButton.style.display = 'block';
-            fetchAllStores(); // 登入後載入所有資料
+            fetchStores(); // 登入後載入第一頁資料
         } else {
             authMessageDiv.textContent = "您需要登入才能查看此頁面。";
             authMessageDiv.style.display = 'block';
             storeListContainer.style.display = 'none';
             paginationContainer.style.display = 'none';
             logoutButton.style.display = 'none';
-            // 可選：自動跳轉到登入頁
             if (!window.location.pathname.includes('login.html')) {
                  window.location.href = 'login.html';
             }
@@ -279,17 +221,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 綁定事件監聽器
-    // 登出
     logoutButton.addEventListener('click', () => {
         auth.signOut().then(() => showToast("您已成功登出。", "info"));
     });
 
     // 搜尋
-    searchButton.addEventListener('click', performSearch);
-    clearSearchButton.addEventListener('click', clearSearch);
+    searchButton.addEventListener('click', () => {
+        const searchTerm = searchInput.value.trim();
+        fetchStores(searchTerm, 1);
+        clearSearchButton.style.display = searchTerm ? 'inline-block' : 'none';
+    });
+    clearSearchButton.addEventListener('click', () => {
+        searchInput.value = '';
+        fetchStores('', 1);
+        clearSearchButton.style.display = 'none';
+    });
     searchInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
-            performSearch();
+            searchButton.click();
         }
     });
 
@@ -304,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 db.collection('stores_taipei').doc(target.dataset.id).delete()
                     .then(() => {
                         showToast(`店家 "${target.dataset.name}" 已成功刪除。`, "success");
-                        fetchAllStores(); // 重新載入資料
+                        fetchStores(currentSearchQuery, currentPage); // 重新載入當前頁
                     })
                     .catch(error => {
                         console.error("刪除店家失敗:", error);
@@ -320,9 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = event.target;
         if (target.tagName === 'A' && target.dataset.page) {
             const page = parseInt(target.dataset.page, 10);
-            if (page !== currentPage && page > 0 && page <= Math.ceil(filteredStores.length / itemsPerPage)) {
-                currentPage = page;
-                renderUI();
+            if (page !== currentPage && page > 0) { // 移除上限檢查，讓後端處理
+                fetchStores(currentSearchQuery, page);
             }
         }
     });
@@ -330,26 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 每頁顯示數量變更
     itemsPerPageSelect.addEventListener('change', (event) => {
         itemsPerPage = parseInt(event.target.value, 10);
-        currentPage = 1;
-        renderUI();
+        fetchStores(currentSearchQuery, 1); // 回到第一頁
     });
 
-    // 排序表頭點擊
+    // 排序功能已被暫時移除，因為需要後端配合
     document.querySelectorAll('th[data-sortable]').forEach(header => {
-        header.addEventListener('click', () => {
-            const column = header.dataset.column;
-            if (currentSortColumn === column) {
-                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSortColumn = column;
-                currentSortDirection = 'asc';
-            }
-            sortData(filteredStores, currentSortColumn, currentSortDirection);
-            currentPage = 1;
-            renderUI();
-            updateSortIcons();
-        });
+        header.style.cursor = 'not-allowed';
+        header.title = '伺服器端排序功能待開發';
     });
-    
-    updateSortIcons(); // 初始設定排序圖示
 });

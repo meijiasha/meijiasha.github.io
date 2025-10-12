@@ -59,7 +59,12 @@
 
         <div class="mb-3">
           <label for="editStoreCategory" class="form-label">分類 <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="editStoreCategory" required />
+          <div class="input-group">
+            <input type="text" class="form-control" id="editStoreCategory" required />
+            <span class="input-group-text">
+              <span class="badge rounded-pill" id="category-color-preview" style="background-color: #6c757d;">預覽</span>
+            </span>
+          </div>
           <div id="existingCategoriesContainer" class="mt-2"></div>
         </div>
 
@@ -156,6 +161,8 @@
     </script>
     <!-- Google Maps Places API -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw&libraries=places&callback=initMap" async defer></script>
+    <!-- Common Form Script -->
+    <script src="store-form-common.js"></script>
     <!-- 編輯頁面專用 JavaScript -->
     <script src="edit-store-script.js"></script>
   </body>
