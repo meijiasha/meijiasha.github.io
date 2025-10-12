@@ -969,12 +969,10 @@ function setupSearchBarAnimation() {
     const searchContainer = document.querySelector('.search-container');
     if (!searchButton || !autocompleteElement || !searchContainer) return;
 
-    // The <gmp-autocomplete> element has an 'input' property that gives access to the underlying input.
-    const searchInput = autocompleteElement.input;
-    if (!searchInput) {
-        console.error("Could not find the input element within gmp-autocomplete.");
-        return;
-    }
+    // The <gmp-autocomplete> element itself acts as the input.
+    const searchInput = autocompleteElement; // Directly use the gmp-autocomplete element as the input
+    // The gmp-autocomplete element does not have a 'value' property directly.
+    // We will rely on its default behavior or check its internal state if needed.
 
     searchButton.addEventListener('click', (event) => { 
         event.preventDefault(); 
@@ -985,8 +983,8 @@ function setupSearchBarAnimation() {
     searchInput.addEventListener('blur', () => { 
         setTimeout(() => { 
             const activeElement = document.activeElement; 
-            // Check the value of the actual input element
-            if ( searchInput.value === '' && (!activeElement || !activeElement.closest('.pac-container'))) { 
+            // Check the value of the actual input element, gmp-autocomplete has a defaultValue property
+            if ( searchInput.defaultValue === '' && (!activeElement || !activeElement.closest('.pac-container'))) { 
                 searchContainer.classList.remove('active'); 
             } 
         }, 150); 
