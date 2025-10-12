@@ -26,6 +26,32 @@
 
 此文件記錄了由 Gemini AI 協助完成的開發任務。
 
+## 2025 年 10 月 12 日
+
+### 後台權限錯誤修復與管理員設定
+
+- **問題分析與修復 (後台權限)**:
+  - **問題**: 使用者回報，即使在登入狀態下，進入「編輯店家」頁面 (`edit-store.html`) 時，仍會因 `FirebaseError: Missing or insufficient permissions` 錯誤而無法載入店家資料。
+  - **初步診斷**: 分析發現，雖然本地的 `firebase安全規則.txt` 檔案中存在 `allow read: if true;` 的寬鬆規則，但部署在 Firebase 雲端上的實際規則可能更為嚴格，導致權限不足。
+  - **規則修正**: 為了統一後台權限並提升安全性，將 Firestore 的安全性規則修改為僅允許具備管理員自訂宣告 (`admin: true`) 的使用者進行讀寫操作。
+    ```
+    // 僅允許 admin 角色的使用者讀寫 stores_taipei 集合
+    match /stores_taipei/{storeId} {
+      allow read, write: if request.auth != null && request.auth.token.admin === true;
+    }
+    ```
+  - **根本原因**: 在更新規則後，問題仍然存在。最終確認根本原因為：使用者的帳號雖然已登入，但尚未被賦予 `admin: true` 的自訂宣告 (Custom Claim)，因此被新的安全性規則阻擋。
+
+- **功能實作 (管理員權限設定)**:
+  - **目標**: 為指定的使用者帳號添加管理員權限。
+  - **實作流程**:
+    1.  **引導使用者取得金鑰**: 指導使用者從 Firebase 專案設定中下載 `serviceAccountKey.json` 私密金鑰，並將其放置在專案中指定的 `firebase-admin-keys/` 資料夾內，以供後端腳本使用。
+    2.  **安裝依賴**: 透過 `npm install` 指令，為專案安裝 `firebase-admin` 套件。
+    3.  **執行授權腳本**: 利用專案中現有的 `setAdmin.js` 腳本，透過 `node setAdmin.js` 指令，為使用者指定的 Email (`seraphwu@gmail.com` 及 `meijiasha.tw@gmail.com`) 添加 `admin: true` 的自訂宣告。
+    4.  **使用者指引**: 明確告知使用者，在權限設定完成後，必須**登出後再重新登入**，新的管理員權限才會生效。
+  - **結果**: 使用者回報，在完成上述步驟後，權限問題已完全解決。
+
+---
 ## 2025 年 10 月 10 日
 
 ### 後台功能擴充與錯誤修復
