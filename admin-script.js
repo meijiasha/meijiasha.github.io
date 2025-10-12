@@ -11,6 +11,8 @@ let currentPage = 1;
 let itemsPerPage = 10;
 let currentSearchQuery = '';
 let totalStores = 0;
+let currentSortBy = 'name'; // Default sort column
+let currentSortOrder = 'asc'; // Default sort order
 
 // Firebase Services
 let callSearchStores;
@@ -50,7 +52,7 @@ function showToast(message, type = 'info', title = '通知', delay = 5000) {
 // ----------------------------------------------------------------------------
 
 // 統一的資料獲取函式
-async function fetchStores(query = '', page = 1) {
+async function fetchStores(query = '', page = 1, sortBy = currentSortBy, sortOrder = currentSortOrder) {
     if (!callSearchStores) {
         showToast("後端服務連接失敗。", "danger", "錯誤");
         return;
@@ -64,12 +66,16 @@ async function fetchStores(query = '', page = 1) {
 
     currentSearchQuery = query;
     currentPage = page;
+    currentSortBy = sortBy;
+    currentSortOrder = sortOrder;
 
     try {
         const result = await callSearchStores({ 
             query: currentSearchQuery, 
             page: currentPage, 
-            perPage: itemsPerPage 
+            perPage: itemsPerPage,
+            sortBy: currentSortBy,
+            sortOrder: currentSortOrder
         });
 
         const { stores, total } = result.data;
@@ -77,6 +83,7 @@ async function fetchStores(query = '', page = 1) {
 
         renderTable(stores);
         renderPagination();
+        updateSortIcons();
 
         storeListContainer.style.display = 'block';
         if (total > 0) {
@@ -169,6 +176,23 @@ function renderPagination() {
     paginationUl.appendChild(nextLi);
 }
 
+// 更新排序圖示
+function updateSortIcons() {
+    document.querySelectorAll('th[data-sortable]').forEach(header => {
+        header.classList.remove('sort-asc', 'sort-desc');
+        const icon = header.querySelector('.sort-icon');
+        if (icon) {
+            icon.className = 'sort-icon bi bi-arrow-down-up'; // Reset to default
+        }
+
+        if (header.dataset.column === currentSortBy) {
+            header.classList.add(`sort-${currentSortOrder}`);
+            if (icon) {
+                icon.className = `sort-icon bi bi-arrow-${currentSortOrder === 'asc' ? 'up' : 'down'}`;
+            }
+        }
+    });
+}
 
 // ----------------------------------------------------------------------------
 // 事件處理與初始化 (重構後)
@@ -281,9 +305,25 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchStores(currentSearchQuery, 1); // 回到第一頁
     });
 
-    // 排序功能已被暫時移除，因為需要後端配合
+    // 排序功能
     document.querySelectorAll('th[data-sortable]').forEach(header => {
-        header.style.cursor = 'not-allowed';
-        header.title = '伺服器端排序功能待開發';
+        header.style.cursor = 'pointer'; // 恢復可點擊游標
+        header.title = '點擊排序';
+        header.addEventListener('click', () => {
+            const column = header.dataset.column;
+            if (column) {
+                if (currentSortBy === column) {
+                    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortBy = column;
+                    currentSortOrder = 'asc'; // Default to asc when changing column
+                }
+                fetchStores(currentSearchQuery, 1, currentSortBy, currentSortOrder); // 回到第一頁並應用排序
+            }
+        });
     });
+
+    // 初始載入後更新排序圖示
+    updateSortIcons();
 });
+

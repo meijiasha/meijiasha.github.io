@@ -36,6 +36,8 @@ exports.searchStores = functions.https.onRequest((request, response) => {
       const query = data.query ? String(data.query).trim() : "";
       const page = data.page && Number.isInteger(data.page) && data.page > 0 ? data.page : 1;
       const perPage = data.perPage && Number.isInteger(data.perPage) && data.perPage > 0 ? data.perPage : 20;
+      const sortBy = data.sortBy ? String(data.sortBy) : "name"; // Default sort by name
+      const sortOrder = data.sortOrder === "desc" ? "desc" : "asc"; // Default asc
       const offset = (page - 1) * perPage;
 
       // 3. Build Firestore queries
@@ -43,9 +45,16 @@ exports.searchStores = functions.https.onRequest((request, response) => {
       let countQuery = db.collection("stores_taipei");
 
       if (query) {
+        // For search, we'll only search by 'name' for simplicity and to avoid complex indexing issues
+        // For more advanced search, a dedicated search service (e.g., Algolia) would be better
         const endQuery = query.replace(/.$/, c => String.fromCharCode(c.charCodeAt(0) + 1));
         baseQuery = baseQuery.where("name", ">=", query).where("name", "<", endQuery);
         countQuery = countQuery.where("name", ">=", query).where("name", "<", endQuery);
+      }
+
+      // Apply sorting
+      if (sortBy) {
+        baseQuery = baseQuery.orderBy(sortBy, sortOrder);
       }
 
       // 4. Get total count
@@ -54,7 +63,6 @@ exports.searchStores = functions.https.onRequest((request, response) => {
 
       // 5. Get store documents with pagination
       const storesSnapshot = await baseQuery
-        .orderBy("name")
         .offset(offset)
         .limit(perPage)
         .get();
@@ -65,7 +73,7 @@ exports.searchStores = functions.https.onRequest((request, response) => {
       }));
 
       // 6. Send successful response. Wrap it in a `data` object to match client SDK expectations.
-      response.status(200).send({ data: { stores, total, page, perPage } });
+      response.status(200).send({ data: { stores, total, page, perPage, sortBy, sortOrder } });
 
     } catch (error) {
       console.error("Internal error searching stores:", error);
