@@ -75,6 +75,24 @@
     2.  將 `searchInput.value === ''` 修改為 `searchInput.defaultValue === ''`。
   - **結果**: 修正了 `gmp-autocomplete` 輸入框的存取方式，解決了控制台錯誤。
 
+- **錯誤修復 (多欄位搜尋功能與 Google Maps 經緯度帶入問題)**:
+  - **問題**:
+    1.  使用者回報搜尋分類時沒有符合的結果，且 `admin.html` 的搜尋功能出現 "An internal error occurred" 錯誤。
+    2.  Google Maps 網址自動填入功能無法正確帶入經緯度。
+  - **原因**:
+    1.  `searchStores` Cloud Function 在有搜尋條件 (`query`) 時，原先只對 `name` 欄位進行搜尋，導致搜尋分類、行政區或地址時無效。同時，Firestore 查詢的索引限制也可能導致內部錯誤。
+    2.  `store-form-common.js` 中的 Place ID 提取正規表達式不夠完善，且 `populateFormFields` 函式在處理 Google Maps Places API 返回的 `LatLng` 物件時，錯誤地將 `place.location.lat` 和 `place.location.lng` 當作屬性直接存取，而沒有呼叫其方法 (`lat()` 和 `lng()`)。
+  - **解決方案**:
+    1.  **多欄位搜尋實作 (functions/index.js)**: 修改 `functions/index.js` 中的 `searchStores` Cloud Function。當 `query` 存在時，不再僅限於 `name` 欄位，而是同時對 `name`、`category`、`district` 和 `address` 進行搜尋。
+        *   對於 `name`、`category` 和 `address`，使用「開頭是...」的範圍查詢 (`>=` 和 `< endQuery`)。
+        *   對於 `district`，使用精確匹配查詢 (`==`)，並檢查 `query` 是否為有效的行政區名稱。
+        *   執行多個非同步查詢，並將所有結果合併到一個 `Map` 中以確保唯一性。
+        *   在合併後的結果陣列上，再進行排序 (`sortBy`, `sortOrder`) 和分頁 (`offset`, `perPage`)。
+    2.  **Google Maps 網址解析與經緯度帶入修正 (store-form-common.js)**:
+        *   更新 `handleUrlInput` 函式中的正規表達式 `/(?:placeid\/|!1s)([^&/?]+)/`，使其能更完整地捕捉 Google Maps URL 中的 Place ID，以支援更多 URL 格式。
+        *   修正 `populateFormFields` 函式中經緯度 (latitude and longitude) 的存取方式，將 `place.location.lat` 和 `place.location.lng` 修改為 `place.location.lat()` 和 `place.location.lng()`，以符合 Google Maps Places API `LatLng` 物件的正確方法。
+  - **結果**: 修正了 `admin.html` 的多欄位搜尋功能，並解決了 Google Maps 網址自動填入經緯度不正確的問題。
+
 ### 後台權限錯誤修復與管理員設定
 
 - **問題分析與修復 (後台權限)**:
