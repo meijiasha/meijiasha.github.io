@@ -41,17 +41,81 @@ exports.searchStores = functions.https.onRequest((request, response) => {
       const offset = (page - 1) * perPage;
 
       // 3. Build Firestore queries
-      let baseQuery = db.collection("stores_taipei");
-      let countQuery = db.collection("stores_taipei");
+      let queryPromises = [];
+      let allMatchingDocs = new Map(); // Use a Map to store unique documents by ID
+
+      // Define taipeiDistricts within the function for use in search logic
+      const taipeiDistricts = [
+          "中正區", "大同區", "中山區", "松山區", "大安區", "萬華區",
+          "信義區", "士林區", "北投區", "內湖區", "南港區", "文山區"
+      ];
 
       if (query) {
-        // For search, we'll only search by 'name' for simplicity and to avoid complex indexing issues
-        // For more advanced search, a dedicated search service (e.g., Algolia) would be better
         const endQuery = query.replace(/.$/, c => String.fromCharCode(c.charCodeAt(0) + 1));
-        baseQuery = baseQuery.where("name", ">=", query).where("name", "<", endQuery);
-        countQuery = countQuery.where("name", ">=", query).where("name", "<", endQuery);
+
+        // Search by name (starts with)
+        queryPromises.push(
+          db.collection("stores_taipei")
+            .where("name", ">=", query)
+            .where("name", "<", endQuery)
+            .get()
+        );
+
+        // Search by category (starts with)
+        queryPromises.push(
+          db.collection("stores_taipei")
+            .where("category", ">=", query)
+            .where("category", "<", endQuery)
+            .get()
+        );
+
+        // Search by district (exact match)
+        if (taipeiDistricts.includes(query)) {
+            queryPromises.push(
+                db.collection("stores_taipei")
+                    .where("district", "==", query)
+                    .get()
+            );
+        }
+
+        // Search by address (starts with)
+        queryPromises.push(
+          db.collection("stores_taipei")
+            .where("address", ">=", query)
+            .where("address", "<", endQuery)
+            .get()
+        );
+
+        const snapshots = await Promise.all(queryPromises);
+        snapshots.forEach(snapshot => {
+          snapshot.docs.forEach(doc => {
+            allMatchingDocs.set(doc.id, { id: doc.id, ...doc.data() });
+          });
+        });
+
+        // Convert Map values to an array for sorting and pagination
+        let filteredStores = Array.from(allMatchingDocs.values());
+
+        // Apply sorting on the merged results (client-side in Cloud Function)
+        filteredStores.sort((a, b) => {
+          const aValue = a[sortBy] || "";
+          const bValue = b[sortBy] || "";
+
+          if (sortOrder === "asc") {
+            return String(aValue).localeCompare(String(bValue));
+          } else {
+            return String(bValue).localeCompare(String(aValue));
+          }
+        });
+
+        total = filteredStores.length;
+        const paginatedStores = filteredStores.slice(offset, offset + perPage);
+
+        response.status(200).send({ data: { stores: paginatedStores, total, page, perPage, sortBy, sortOrder } });
+        return; // Exit early as we've handled the query
       }
 
+      // Original logic for when no query is present, but still needs sorting and pagination
       // Apply sorting
       if (sortBy) {
         baseQuery = baseQuery.orderBy(sortBy, sortOrder);

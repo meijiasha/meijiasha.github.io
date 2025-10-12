@@ -178,7 +178,9 @@ function handleUrlInput(event, formElements, shouldOverwriteName) {
 
     let placeId = null;
     // Attempt to extract Place ID from the URL
-    const placeIdMatch = url.match(/!1s([^!\?]+)/);
+    // Updated regex to capture Place ID from various Google Maps URL formats
+    // It looks for either 'placeid/' or '!1s' followed by the ID.
+    const placeIdMatch = url.match(/(?:placeid\/|!1s)([^&/?]+)/);
     if (placeIdMatch && placeIdMatch[1]) {
         placeId = placeIdMatch[1];
         console.log("handleUrlInput: Extracted Place ID:", placeId);
@@ -262,8 +264,8 @@ function populateFormFields(place, formElements, shouldOverwriteName) {
     if (formElements.address) formElements.address.value = place.formattedAddress;
     if (formElements.placeId) formElements.placeId.value = place.id;
     if (place.location) {
-        if (formElements.lat) formElements.lat.value = place.location.lat;
-        if (formElements.lng) formElements.lng.value = place.location.lng;
+        if (formElements.lat) formElements.lat.value = place.location.lat();
+        if (formElements.lng) formElements.lng.value = place.location.lng();
     }
     
     if (formElements.district && place.formattedAddress) {
