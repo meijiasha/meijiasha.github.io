@@ -1,104 +1,18 @@
+
 // edit-store-script.js
 console.log("edit-store-script.js: Script loaded.");
-
-// DOM 元素引用
-let editStoreForm, storeDocIdInput, storeNameInput, storeDistrictSelect, storeCategoryInput, storeAddressInput, storePriceInput, storeDescriptionTextarea, storeDishesInput, storePlaceIdInput, storeLatInput, storeLngInput, formErrorDiv, formSuccessDiv, loadingSpinner, googleMapsUrlInput;
-
-// 台北市行政區
-const taipeiDistricts = [
-    "中正區", "大同區", "中山區", "松山區", "大安區", "萬華區",
-    "信義區", "士林區", "北投區", "內湖區", "南港區", "文山區"
-];
-
-// -----------------------------------------------------------------------------
-// Helper: 顏色產生函式
-// -----------------------------------------------------------------------------
-function generateCategoryColor(str) {
-  if (!str) return 'hsl(0, 0%, 80%)';
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32bit integer
-  }
-  const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 65%, 45%)`; 
-}
-
-// -----------------------------------------------------------------------------
-// Toast 顯示函數
-// -----------------------------------------------------------------------------
-function showToast(message, type = 'info', title = '通知', delay = 5000) {
-    const toastContainer = document.querySelector('.toast-container');
-    if (!toastContainer) { console.error("Toast container not found!"); alert(`${title}: ${message}`); return; }
-    const toastId = 'toast-' + new Date().getTime();
-    const toastBgClass = { success: 'bg-success', danger: 'bg-danger', warning: 'bg-warning', info: 'bg-info' }[type] || 'bg-primary';
-    const iconClass = { success: 'bi-check-circle-fill', danger: 'bi-x-octagon-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' }[type] || 'bi-info-circle-fill';
-    const toastHTML = `<div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}"><div class="toast-header text-white ${toastBgClass}"><i class="bi ${iconClass} me-2"></i><strong class="me-auto">${title}</strong><small class="text-white-50">剛剛</small><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button></div><div class="toast-body">${message}</div></div>`;
-    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-    const toastElement = document.getElementById(toastId);
-    if (toastElement) {
-        const toast = new bootstrap.Toast(toastElement, { delay: delay && delay > 0 ? delay : undefined, autohide: delay && delay > 0 });
-        toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
-        toast.show();
-    } else { alert(`${title}: ${message}`); }
-}
-
-function populateEditDistrictSelect() {
-    if (!storeDistrictSelect) return;
-    while (storeDistrictSelect.options.length > 1) { storeDistrictSelect.remove(1); }
-    taipeiDistricts.forEach(district => {
-        const option = document.createElement('option');
-        option.value = district; option.textContent = district;
-        storeDistrictSelect.appendChild(option);
-    });
-}
-
-// 載入並顯示已存在的分類
-async function loadAndDisplayExistingCategories() {
-    if (!db) return;
-    const container = document.getElementById('existingCategoriesContainer');
-    if (!container) return;
-
-    try {
-        const snapshot = await db.collection('stores_taipei').get();
-        const categories = snapshot.docs.map(doc => doc.data().category).filter(Boolean);
-        const uniqueCategories = [...new Set(categories)].sort();
-
-        if (uniqueCategories.length > 0) {
-            container.innerHTML = '<small class="text-muted">點擊使用現有分類:</small><br>' +
-                uniqueCategories.map(cat => {
-                    const color = generateCategoryColor(cat);
-                    return `<span class="badge rounded-pill me-1 mb-1" style="background-color: ${color}; cursor: pointer;" data-category="${cat}">${cat}</span>`;
-                }).join('');
-
-            container.addEventListener('click', (event) => {
-                const target = event.target;
-                if (target.tagName === 'SPAN' && target.dataset.category) {
-                    storeCategoryInput.value = target.dataset.category;
-                }
-            });
-        }
-    } catch (error) {
-        console.error("Error loading existing categories:", error);
-    }
-}
 
 function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
 }
 
-async function loadStoreData(docId) {
+async function loadStoreData(docId, formElements) {
+    const { db, formErrorDiv, loadingSpinner, editStoreForm, name, district, category, address, price, description, dishes, placeId, lat, lng, docIdInput } = formElements;
+
     if (!db) {
         if(formErrorDiv) { formErrorDiv.textContent = "資料庫連接失敗。"; formErrorDiv.style.display = 'block'; }
         if(loadingSpinner) loadingSpinner.style.display = 'none';
-        return;
-    }
-    if (!docId) {
-        if(formErrorDiv) { formErrorDiv.textContent = "錯誤：未指定店家。"; formErrorDiv.style.display = 'block'; }
-        if(loadingSpinner) loadingSpinner.style.display = 'none';
-        if(editStoreForm) editStoreForm.style.display = 'none';
         return;
     }
 
@@ -110,18 +24,21 @@ async function loadStoreData(docId) {
         const docSnap = await docRef.get();
         if (docSnap.exists) {
             const storeData = docSnap.data();
-            if(storeDocIdInput) storeDocIdInput.value = docId;
-            if(storeNameInput) storeNameInput.value = storeData.name || '';
-            if(storeDistrictSelect) storeDistrictSelect.value = storeData.district || '';
-            if(storeCategoryInput) storeCategoryInput.value = storeData.category || '';
-            if(storeAddressInput) storeAddressInput.value = storeData.address || '';
-            if(storePriceInput) storePriceInput.value = storeData.price || '';
-            if(storeDescriptionTextarea) storeDescriptionTextarea.value = storeData.description || '';
-            if(storeDishesInput) storeDishesInput.value = storeData.dishes || '';
-            if(storePlaceIdInput) storePlaceIdInput.value = storeData.place_id || '';
+            if(docIdInput) docIdInput.value = docId;
+            if(name) name.value = storeData.name || '';
+            if(district) district.value = storeData.district || '';
+            if(category) {
+                category.value = storeData.category || '';
+                category.dispatchEvent(new Event('input', { bubbles: true })); // Trigger preview
+            }
+            if(address) address.value = storeData.address || '';
+            if(price) price.value = storeData.price || '';
+            if(description) description.value = storeData.description || '';
+            if(dishes) dishes.value = storeData.dishes || '';
+            if(placeId) placeId.value = storeData.place_id || '';
             if (storeData.location) {
-                if(storeLatInput) storeLatInput.value = storeData.location.latitude || '';
-                if(storeLngInput) storeLngInput.value = storeData.location.longitude || '';
+                if(lat) lat.value = storeData.location.latitude || '';
+                if(lng) lng.value = storeData.location.longitude || '';
             }
             if(editStoreForm) editStoreForm.style.display = 'block';
         } else {
@@ -138,43 +55,52 @@ async function loadStoreData(docId) {
 document.addEventListener('DOMContentLoaded', () => {
     console.log("edit-store-script.js: DOMContentLoaded.");
 
-    editStoreForm = document.getElementById('editStoreForm');
-    storeDocIdInput = document.getElementById('storeDocId');
-    storeNameInput = document.getElementById('editStoreName');
-    storeDistrictSelect = document.getElementById('editStoreDistrict');
-    storeCategoryInput = document.getElementById('editStoreCategory');
-    storeAddressInput = document.getElementById('editStoreAddress');
-    storePriceInput = document.getElementById('editStorePrice');
-    storeDescriptionTextarea = document.getElementById('editStoreDescription');
-    storeDishesInput = document.getElementById('editStoreDishes');
-    storePlaceIdInput = document.getElementById('editStorePlaceId');
-    storeLatInput = document.getElementById('editStoreLat');
-    storeLngInput = document.getElementById('editStoreLng');
-    formErrorDiv = document.getElementById('formError');
-    formSuccessDiv = document.getElementById('formSuccess');
-    loadingSpinner = document.getElementById('loadingSpinner');
-    googleMapsUrlInput = document.getElementById('googleMapsUrl'); // 新增的元素
+    // --- 1. DOM Element References ---
+    const formElements = {
+        editStoreForm: document.getElementById('editStoreForm'),
+        docIdInput: document.getElementById('storeDocId'),
+        name: document.getElementById('editStoreName'),
+        district: document.getElementById('editStoreDistrict'),
+        category: document.getElementById('editStoreCategory'),
+        address: document.getElementById('editStoreAddress'),
+        price: document.getElementById('editStorePrice'),
+        description: document.getElementById('editStoreDescription'),
+        dishes: document.getElementById('editStoreDishes'),
+        placeId: document.getElementById('editStorePlaceId'),
+        lat: document.getElementById('editStoreLat'),
+        lng: document.getElementById('editStoreLng'),
+        formErrorDiv: document.getElementById('formError'),
+        loadingSpinner: document.getElementById('loadingSpinner'),
+        googleMapsUrlInput: document.getElementById('googleMapsUrl'),
+        existingCategoriesContainer: document.getElementById('existingCategoriesContainer'),
+        categoryPreview: document.getElementById('category-color-preview')
+    };
 
+    // --- 2. Firebase Readiness Check ---
     if (typeof auth === 'undefined' || !auth || typeof db === 'undefined' || !db) {
         console.error("edit-store-script.js: Firebase not ready.");
-        if (formErrorDiv) { formErrorDiv.textContent = "Firebase 初始化失敗。"; formErrorDiv.style.display = 'block'; }
-        if (editStoreForm) editStoreForm.style.display = 'none'; // 隱藏表單
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (formElements.formErrorDiv) { formElements.formErrorDiv.textContent = "Firebase 初始化失敗。"; formElements.formErrorDiv.style.display = 'block'; }
+        if (formElements.editStoreForm) formElements.editStoreForm.style.display = 'none';
+        if (formElements.loadingSpinner) formElements.loadingSpinner.style.display = 'none';
         return;
     }
+    formElements.db = db; // Add db to formElements for loadStoreData
 
+    // --- 3. Authentication and Initialization ---
     auth.onAuthStateChanged(user => {
         if (user) {
             console.log("Edit Store Page: User is logged in.");
-            populateEditDistrictSelect();
-            loadAndDisplayExistingCategories(); // *** 新增：載入現有分類
+            populateDistrictSelect(formElements.district);
+            loadAndDisplayExistingCategories(db, formElements.existingCategoriesContainer, formElements.category);
+            initCategoryPreview(formElements.category, formElements.categoryPreview);
+
             const storeIdToEdit = getQueryParam('id');
             if (storeIdToEdit) {
-                loadStoreData(storeIdToEdit);
+                loadStoreData(storeIdToEdit, formElements);
             } else {
-                if(formErrorDiv) { formErrorDiv.textContent = "錯誤：未指定店家。"; formErrorDiv.style.display = 'block'; }
-                if(loadingSpinner) loadingSpinner.style.display = 'none';
-                if(editStoreForm) editStoreForm.style.display = 'none';
+                if(formElements.formErrorDiv) { formElements.formErrorDiv.textContent = "錯誤：未指定店家。"; formElements.formErrorDiv.style.display = 'block'; }
+                if(formElements.loadingSpinner) formElements.loadingSpinner.style.display = 'none';
+                if(formElements.editStoreForm) formElements.editStoreForm.style.display = 'none';
             }
         } else {
             console.log("Edit Store Page: User not logged in. Redirecting...");
@@ -183,47 +109,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if (editStoreForm) {
-        editStoreForm.addEventListener('submit', async (event) => {
+    // --- 4. Form Submission Logic ---
+    if (formElements.editStoreForm) {
+        formElements.editStoreForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            if (!db || !auth) { showToast("服務連接失敗。", "danger", "錯誤"); return; }
             const currentUser = auth.currentUser;
             if (!currentUser) { showToast("請重新登入。", "warning", "需要認證"); return; }
 
-            const submitButton = editStoreForm.querySelector('button[type="submit"]');
-            if(formErrorDiv) formErrorDiv.style.display = 'none';
-            if(formSuccessDiv) formSuccessDiv.style.display = 'none';
+            const submitButton = formElements.editStoreForm.querySelector('button[type="submit"]');
+            if(formElements.formErrorDiv) formElements.formErrorDiv.style.display = 'none';
             if(submitButton) { submitButton.disabled = true; submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 儲存中...';}
 
-            const docId = storeDocIdInput ? storeDocIdInput.value : null;
+            const docId = formElements.docIdInput ? formElements.docIdInput.value : null;
             if (!docId) {
-                if(formErrorDiv) { formErrorDiv.textContent = "錯誤：店家 ID 遺失。"; formErrorDiv.style.display = 'block';}
+                if(formElements.formErrorDiv) { formElements.formErrorDiv.textContent = "錯誤：店家 ID 遺失。"; formElements.formErrorDiv.style.display = 'block';}
                 if(submitButton) { submitButton.disabled = false; submitButton.textContent = '儲存變更';}
                 return;
             }
 
             const updatedData = {
-                name: storeNameInput ? storeNameInput.value.trim() : '',
-                district: storeDistrictSelect ? storeDistrictSelect.value : '',
-                category: storeCategoryInput ? storeCategoryInput.value.trim() : '',
-                address: storeAddressInput ? storeAddressInput.value.trim() : '',
-                price: storePriceInput ? storePriceInput.value.trim() : '',
-                description: storeDescriptionTextarea ? storeDescriptionTextarea.value.trim() : '',
-                dishes: storeDishesInput ? storeDishesInput.value.trim() : '',
-                place_id: storePlaceIdInput ? storePlaceIdInput.value.trim() : '',
+                name: formElements.name ? formElements.name.value.trim() : '',
+                district: formElements.district ? formElements.district.value : '',
+                category: formElements.category ? formElements.category.value.trim() : '',
+                address: formElements.address ? formElements.address.value.trim() : '',
+                price: formElements.price ? formElements.price.value.trim() : '',
+                description: formElements.description ? formElements.description.value.trim() : '',
+                dishes: formElements.dishes ? formElements.dishes.value.trim() : '',
+                place_id: formElements.placeId ? formElements.placeId.value.trim() : '',
                 lastEditedBy: { uid: currentUser.uid, email: currentUser.email },
                 lastEditedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-            const lat = storeLatInput ? parseFloat(storeLatInput.value) : NaN;
-            const lng = storeLngInput ? parseFloat(storeLngInput.value) : NaN;
+            const lat = formElements.lat ? parseFloat(formElements.lat.value) : NaN;
+            const lng = formElements.lng ? parseFloat(formElements.lng.value) : NaN;
             if (!isNaN(lat) && !isNaN(lng)) { updatedData.location = new firebase.firestore.GeoPoint(lat, lng); }
-            else if ((storeLatInput && storeLatInput.value.trim() !== '') || (storeLngInput && storeLngInput.value.trim() !== '')) {
-                if(formErrorDiv) { formErrorDiv.textContent = "緯度和經度需有效數字或都留空。"; formErrorDiv.style.display = 'block';}
-                if(submitButton) { submitButton.disabled = false; submitButton.textContent = '儲存變更';}
-                return;
-            }
+
             if (!updatedData.name || !updatedData.district || !updatedData.category) {
-                if(formErrorDiv) { formErrorDiv.textContent = "店家名稱、行政區和分類為必填。"; formErrorDiv.style.display = 'block';}
+                if(formElements.formErrorDiv) { formElements.formErrorDiv.textContent = "店家名稱、行政區和分類為必填。"; formElements.formErrorDiv.style.display = 'block';}
                 if(submitButton) { submitButton.disabled = false; submitButton.textContent = '儲存變更';}
                 return;
             }
@@ -243,78 +164,21 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("edit-store-script.js: DOMContentLoaded setup finished.");
 });
 
-console.log("edit-store-script.js: Script parsed completely.");
-
-// -----------------------------------------------------------------------------
-// Google Maps URL Parsing and Autocomplete
-// -----------------------------------------------------------------------------
-let placesService;
-
+// --- 5. Google Maps API Integration ---
 function initMap() {
-    console.log("Google Maps API loaded for edit page.");
-    const dummyDiv = document.createElement('div');
-    placesService = new google.maps.places.PlacesService(dummyiv);
-
-    if (googleMapsUrlInput) {
-        googleMapsUrlInput.addEventListener('input', handleUrlInput);
-    }
-}
-
-function handleUrlInput(event) {
-    const url = event.target.value;
-    if (!url || !url.includes('google.com/maps/place')) {
-        return;
-    }
-
-    const match = url.match(/google\.com\/maps\/place\/([^\/]+)/);
-    if (match && match[1]) {
-        const placeName = decodeURIComponent(match[1].replace(/\+/g, ' '));
-        findPlaceDetails(placeName);
-    }
-}
-
-function findPlaceDetails(query) {
-    const request = {
-        query: query,
-        fields: ['name', 'place_id', 'formatted_address', 'geometry'],
+    console.log("Google Maps API loaded, initializing autofill for Edit page.");
+    const formElements = {
+        name: document.getElementById('editStoreName'),
+        address: document.getElementById('editStoreAddress'),
+        placeId: document.getElementById('editStorePlaceId'),
+        lat: document.getElementById('editStoreLat'),
+        lng: document.getElementById('editStoreLng'),
+        district: document.getElementById('editStoreDistrict')
     };
-
-    placesService.findPlaceFromQuery(request, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-            const place = results[0];
-            
-            // Populate the form fields
-            if (storeNameInput) {
-                storeNameInput.value = place.name;
-            }
-            if (storeAddressInput) {
-                storeAddressInput.value = place.formatted_address;
-            }
-            if (storePlaceIdInput) {
-                storePlaceIdInput.value = place.place_id;
-            }
-            if (place.geometry && place.geometry.location) {
-                if (storeLatInput) {
-                    storeLatInput.value = place.geometry.location.lat();
-                }
-                if (storeLngInput) {
-                    storeLngInput.value = place.geometry.location.lng();
-                }
-            }
-            
-            if (storeDistrictSelect && place.formatted_address) {
-                for (const district of taipeiDistricts) {
-                    if (place.formatted_address.includes(district)) {
-                        storeDistrictSelect.value = district;
-                        break;
-                    }
-                }
-            }
-
-            showToast('已從 Google Maps 網址自動填入店家資訊！', 'success', '自動帶入成功');
-
-        } else {
-            showToast('無法從 Google Maps 網址找到對應的店家。', 'warning', '查無資料');
-        }
-    });
+    const googleMapsUrlInput = document.getElementById('googleMapsUrl');
+    
+    // In edit mode, we still allow overwriting fields as the user might want to refresh data from Google Maps.
+    initGoogleMapsAutofill(googleMapsUrlInput, formElements, true);
 }
+
+console.log("edit-store-script.js: Script parsed completely.");
