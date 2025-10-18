@@ -33,6 +33,58 @@
 
 ---
 
+### 未來功能規劃：擴充多縣市支援
+
+目前的系統架構是針對「台北市」客製的，所有資料都存放在 `stores_taipei` 資料庫集合中。要支援多縣市，我們需要將這個硬編碼的限制解除，改為一個更有彈性的動態架構。
+
+核心策略是：**將「縣市」參數化**。從前端的使用者介面到後端的資料庫查詢，都必須能夠動態地根據使用者選擇的縣市來運作。
+
+#### **第一階段：前端介面與資料讀取**
+
+此階段專注於讓使用者能在主畫面上選擇不同縣市，並看到對應的資料。
+
+1.  **新增「縣市」下拉選單 (`index.html`)**:
+    *   在現有的「行政區」選單旁，新增一個「縣市」下拉選單 (`<select id="citySelect">`)
+    *   預設選項為「台北市」，並可新增「新北市」、「台中市」等其他選項。
+
+2.  **修改前端腳本 (`script.js`)**:
+    *   **管理當前縣市**：建立一個新的 JavaScript 變數 (例如 `currentCity`) 來儲存使用者當前選擇的縣市代碼 (例如 `taipei`)
+    *   **連動行政區**：監聽「縣市」選單的變動。當使用者切換縣市時，動態更新「行政區」下拉選單的內容。這需要一個新的資料結構來儲存每個縣市對應的行政區列表。
+    *   **動態資料庫查詢**：修改所有 `script.js` 中對 Firestore 的查詢。將原本寫死的 `db.collection("stores_taipei")` 修改為動態組合的 `db.collection(\`stores_${currentCity}\`)
+。這會影響到地圖標記顯示、店家列表、隨機推薦等所有功能。
+    *   **更新介面文字**：側邊欄標題等地方，需根據選擇的縣市動態顯示，例如「店家篩選 (新北市)」。
+
+---#### **第二階段：後端服務與資料庫**
+
+此階段專注於後端 Cloud Function 和資料庫結構的對應調整。
+
+1.  **建立新縣市的資料庫 (`Firestore`)**:
+    *   為新的縣市建立獨立的資料集合。遵循現有命名規則，例如為「新北市」建立一個 `stores_new_taipei_city` 集合。
+    *   *(長期方案考量：未來也可以考慮將所有店家放在同一個 `stores` 集合，並在每筆資料中新增一個 `city` 欄位來區分。但初期使用獨立集合的方式，改動範圍較小。)*
+
+2.  **修改後端 Cloud Function (`functions/index.js`)**:
+    *   **API 規格調整**：修改 `searchStores` 等後端函式，使其能接收一個 `city` 參數。
+    *   **動態存取資料**：函式內部需根據傳入的 `city` 參數，來決定要查詢 `stores_taipei` 還是 `stores_new_taipei_city`。
+    *   **行政區資料調整**：目前寫死的 `taipeiDistricts` 陣列也需要被移除，改為根據傳入的 `city` 參數動態載入對應的行政區資料。
+
+---
+
+#### **第三階段：後台管理功能**
+
+此階段確保後台管理者可以新增、修改、刪除不同縣市的店家。
+
+1.  **修改新增/編輯頁面 (`add-store.html`, `edit-store.html`)**:
+    *   在表單中新增一個「縣市」的下拉選單，讓管理者可以指定店家屬於哪個縣市。
+
+2.  **修改後台腳本 (`add-store-script.js`, `edit-store-script.js`)**:
+    *   更新儲存和更新的邏輯，使其能將店家資料寫入管理者所選擇的正確縣市集合中。
+
+3.  **修改店家列表頁面 (`admin.html`, `admin-script.js`)**:
+    *   在店家列表的表格中，新增一欄「縣市」，以方便管理者區分。
+    *   搜尋功能也需要能夠根據「縣市」進行篩選。
+
+---
+
 # Gemini AI 開發紀錄
 
 此文件記錄了由 Gemini AI 協助完成的開發任務。
@@ -68,7 +120,7 @@
 
 - **錯誤修復 (Google Maps 網址自動填入)**:
   - **問題**: 使用者回報在「新增店家」或「編輯店家」頁面貼上 Google Maps 網址後，無法自動帶入店家資訊。經檢查，發現問題有二：
-    1.  Place ID 提取不完整：用於從網址中提取 Google Place ID 的正規表達式未能完整捕捉到 ID，導致 `PlacesService.getDetails` 呼叫失敗並回傳 `Invalid 'placeid' parameter` 錯誤。
+    1.  Place ID 提取不完整：用於從網址中提取 Google Place ID 的正規表達式未能完整捕捉到 ID，導致 `PlacesService.getDetails` 呼叫失敗並回傳 `Invalid \'placeid\' parameter` 錯誤。
     2.  API 棄用：Google Maps Places API 的 `PlacesService.getDetails` 和 `Place.findPlaceFromQuery` 方法已被棄用，導致相關功能失效並觸發 `Place.findPlaceFromQuery() is no longer available. Please use Place.searchByText().` 等錯誤訊息。
   - **解決方案**: 
     1.  更新 `store-form-common.js` 中的正規表達式，使其能正確提取完整的 Google Place ID。
@@ -93,7 +145,9 @@
   - **原因**: `gmp-autocomplete` 元素本身即為互動式輸入元件，不需透過 `.input` 屬性存取。同時，檢查其內容是否為空應使用 `defaultValue` 屬性而非 `value`。
   - **解決方案**:
     1.  將 `script.js` 中 `setupSearchBarAnimation` 函式內的 `const searchInput = autocompleteElement.input;` 修改為 `const searchInput = autocompleteElement;`。
-    2.  將 `searchInput.value === ''` 修改為 `searchInput.defaultValue === ''`。
+    2.  將 `searchInput.value === 
+''` 修改為 `searchInput.defaultValue === 
+''`。
   - **結果**: 修正了 `gmp-autocomplete` 輸入框的存取方式，解決了控制台錯誤。
 
 - **錯誤修復 (多欄位搜尋功能與 Google Maps 經緯度帶入問題)**:
@@ -337,7 +391,7 @@ class="btn-close" ...>`)。
 
 - **`style.css`**: 調整了 `sidebar-header` 的 CSS，使用 Flexbox 屬性 (`flex-grow: 1`)
 
-  確保新加入的關閉按鈕能正確靠右對齊，而不會與標題重疊。
+確保新加入的關閉按鈕能正確靠右對齊，而不會與標題重疊。
 
 ### 功能新增：啟動時自動定位
 
@@ -459,7 +513,6 @@ class="btn-close" ...>`)。
     _ **側邊欄結果顯示**:
 
     現在點擊「隨機推薦店家」後，推薦結果除了顯示在地圖上，也會同步列表在側邊欄中。列表中的店家是可點擊的，點擊後會將地圖平移至店家位
-
     置並打開資訊視窗。
 
     _ **智慧推薦邏輯**:
@@ -507,7 +560,7 @@ class="btn-close" ...>`)。
 
   - Firebase Key: `apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4"`
 
-  - Google Maps Key: `...src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw&..."`
+  - Google Maps Key: `...src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtd5KFPQASnh_nOmkACetkvgkyATSWEuw&...`
 
 ### 風險評估
 
@@ -567,7 +620,9 @@ class="btn-close" ...>`)。
 
     `CHANNEL_SECRET`, `FIREBASE_SERVICE_ACCOUNT`)。
 
-    _ 解決了 `Error: Cannot find module '/src/index.js'` 的啟動錯誤，透過明確設定 Zeabur 的「Start Command」為 `node
+    _ 解決了 `Error: Cannot find module 
+'/src/index.js
+'` 的啟動錯誤，透過明確設定 Zeabur 的「Start Command」為 `node
 
 line-bot-server.js`。
 
