@@ -54,7 +54,8 @@
 。這會影響到地圖標記顯示、店家列表、隨機推薦等所有功能。
     *   **更新介面文字**：側邊欄標題等地方，需根據選擇的縣市動態顯示，例如「店家篩選 (新北市)」。
 
----#### **第二階段：後端服務與資料庫**
+---
+#### **第二階段：後端服務與資料庫**
 
 此階段專注於後端 Cloud Function 和資料庫結構的對應調整。
 
@@ -105,10 +106,10 @@
 
 - **背景**: 由於無法在當前環境啟動 Chrome DevTools 進行即時檢查，故轉為對本地原始碼 (`index.html`, `script.js`) 進行靜態分析。
 
-- **重大安全風險 (API 金鑰外洩)**:
+~~- **重大安全風險 (API 金鑰外洩)**:
   - **問題**: 在 `index.html` 中發現 Firebase 和 Google Maps 的 API 金鑰被直接硬編碼在前端程式碼中，任何訪客都可以輕易取得。
   - **風險**: 可能導致金鑰被濫用，產生非預期費用或服務中斷。
-  - **建議**: 強烈建議使用者為 Google Maps API 金鑰設定 HTTP 參照網址限制，並確保 Firebase 資料庫有嚴格的安全規則。
+  - **建議**: 強烈建議使用者為 Google Maps API 金鑰設定 HTTP 參照網址限制，並確保 Firebase 資料庫有嚴格的安全規則。~~
 
 - **錯誤修復 (Google Maps API)**:
   - **問題**: `index.html` 中載入 Google Maps API 的 `<script>` 標籤包含了重複的 `libraries` 參數，可能導致函式庫載入失敗或產生控制台警告。
@@ -208,9 +209,9 @@
   _ 將獲取的分類渲染為可點擊的 Bootstrap 標籤，並加入事件監聽，點擊後會自動填入分類輸入框。
   _ 在 `auth.onAuthStateChanged` 認證成功後呼叫此函式。
   _ **錯誤修復**:
-  _ **問題**: 初版實作時，`loadAndDisplayExistingCategories` 函式因使用 `db.collection(...).select('category')`
+  _ **問題**: 初版實作時，`loadAndDisplayExistingCategories` 函式因使用 `db.collection(...).select(\'category\')`
   語法，在當前 Firebase SDK 環境下觸發 `TypeError: db.collection(...).select is not function` 錯誤，導致分類標籤無法顯示。
-  _ **解決方案**: 移除 `.select('category')`，改為獲取完整文件後再提取 `category` 欄位。此修正解決了功能無法載入的問題。 * **偵錯訊息清理**: 移除了為偵錯而加入的 `console.log` 訊息。
+  _ **解決方案**: 移除 `.select(\'category\')`，改為獲取完整文件後再提取 `category` 欄位。此修正解決了功能無法載入的問題。 * **偵錯訊息清理**: 移除了為偵錯而加入的 `console.log` 訊息。
 
 - **錯誤修復 (後台搜尋)**:
   _ **問題**: `admin.html` 的搜尋功能在特定情況下無效。經查，此問題由兩個原因造成： 1. **競爭條件 (Race Condition)**: 使用者可以在所有店家資料從 Firebase
