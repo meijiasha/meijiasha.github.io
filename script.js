@@ -203,11 +203,6 @@ async function initMap() {
 
     infoWindow = new google.maps.InfoWindow();
     placesService = new google.maps.places.PlacesService(map);
-    const autocompleteInput = document.getElementById('autocomplete-input');
-    if (autocompleteInput) {
-        autocompleteInput.addEventListener('gmp-placechange', handlePlaceSearchSelection);
-        setupSearchBarAnimation();
-    }
     populateDistrictSelect();
   setupSidebarListeners();
   setupAllStoresPanelListeners(); // 新增：設定新面板的監聽器
@@ -510,86 +505,7 @@ async function recommendNearbyStores() {
   }
 }
 
-// --- 搜尋邏輯 ---
-async function handlePlaceSearchSelection(event) {
-    const placeResult = event.detail.place;  if (!placeResult || !placeResult.geometry) {
-    window.alert("請從建議列表中選擇一個地點。");
-    return;
-  }
-  clearRandomRecommendation();
-  const districtSelect = document.getElementById("districtSelect");
-  if (districtSelect) districtSelect.selectedIndex = 0;
-  const categorySelect = document.getElementById("categorySelect");
-  if (categorySelect) {
-    categorySelect.innerHTML = '<option selected disabled value="">-- 請先選擇行政區 --</option>';
-    categorySelect.disabled = true;
-  }
-  const searchLocation = placeResult.geometry.location;
-  map.setCenter(searchLocation);
-  map.setZoom(15);
-  const resultsContainer = document.getElementById("search-results-container");
-  resultsContainer.innerHTML = '<div class="p-3 text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> 搜尋附近店家中...</div>';
-  resultsContainer.style.display = "block";
-  try {
-    const snapshot = await db.collection("stores_taipei").get();
-    const allStores = [];
-    snapshot.forEach((doc) => allStores.push({ id: doc.id, ...doc.data() }));
-    const searchRadiusKm = 1;
-    const nearbyStores = allStores
-      .map((store) => {
-        if (!store.location || typeof store.location.latitude !== "number" || typeof store.location.longitude !== "number") return null;
-        const distance = getDistance(searchLocation.lat(), searchLocation.lng(), store.location.latitude, store.location.longitude);
-        return { ...store, distance };
-      })
-      .filter((store) => store && store.distance <= searchRadiusKm);
-    nearbyStores.sort((a, b) => a.distance - b.distance);
-    const topResults = nearbyStores.slice(0, 20);
-    await displayMarkers(topResults, false);
-    renderSearchResults(topResults);
-  } catch (error) {
-    console.error("搜尋附近店家時發生錯誤:", error);
-    resultsContainer.innerHTML = '<div class="p-3 text-center text-danger">搜尋時發生錯誤。</div>';
-  }
-}
-
-function renderSearchResults(stores) {
-  const container = document.getElementById("search-results-container");
-  if (!container) return;
-  let content = `
-        <div class="search-results-header">
-            <h6>附近店家</h6>
-            <button id="close-search-results" type="button" class="btn-close" aria-label="Close"></button>
-        </div>
-        <div class="list-group list-group-flush">
-    `;
-  if (stores.length === 0) {
-    content += '<div class="list-group-item text-center text-muted">附近 1 公里內找不到店家資料。</div>';
-  } else {
-    stores.forEach((store) => {
-      content += createStoreListItemHTML(store);
-    });
-  }
-  content += "</div>";
-  container.innerHTML = content;
-  animateListItems(container.querySelector(".list-group"));
-  container.querySelector("#close-search-results").addEventListener("click", () => {
-    clearSearchResults();
-    clearMapMarkers();
-  });
-  container.querySelectorAll(".list-group-item").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
-      const storeId = e.currentTarget.dataset.storeId;
-      const marker = currentMapMarkers[storeId];
-      if (marker) {
-        map.panTo(marker.position);
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
-        google.maps.event.trigger(marker, "click");
-      }
-    });
-  });
-}
+// --- 搜尋邏輯 (已移除) ---
 
 // --- 側邊欄推薦結果顯示 ---
 async function displayRecommendationInSidebar(stores, category, fromCategoryCount, fromOthersCount, customTitle = null, isOpenNow = false) {
@@ -1086,37 +1002,6 @@ function renderStoreListPagination() {
 }
 
 // --- 其他 UI 邏輯 ---
-function setupSearchBarAnimation() {
-    const searchButton = document.getElementById('searchButton');
-    const autocompleteElement = document.getElementById('autocomplete-input');
-    const searchContainer = document.querySelector('.search-container');
-    if (!searchButton || !autocompleteElement || !searchContainer) return;
-
-    // The <gmp-autocomplete> element itself acts as the input.
-    const searchInput = autocompleteElement; // Directly use the gmp-autocomplete element as the input
-    // The gmp-autocomplete element does not have a 'value' property directly.
-    // We will rely on its default behavior or check its internal state if needed.
-
-    searchButton.addEventListener('click', (event) => { 
-        event.preventDefault(); 
-        searchContainer.classList.add('active'); 
-        searchInput.focus(); 
-    });
-    
-    searchInput.addEventListener('blur', () => { 
-        setTimeout(() => { 
-            const activeElement = document.activeElement; 
-            // Check the value of the actual input element, gmp-autocomplete has a defaultValue property
-            if ( searchInput.defaultValue === '' && (!activeElement || !activeElement.closest('.pac-container'))) { 
-                searchContainer.classList.remove('active'); 
-            } 
-        }, 150); 
-    });
-
-    searchInput.addEventListener('keydown', (event) => { 
-        if (event.key === 'Enter') event.preventDefault(); 
-    });
-}
 
 document.addEventListener("DOMContentLoaded", () => {
   const savedTheme = localStorage.getItem("theme") || "light";
