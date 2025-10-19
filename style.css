@@ -452,6 +452,7 @@ body {
 }
 
 /* 5. Staggered list animation */
+/* --- Staggered list animation --- */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -462,6 +463,159 @@ body {
     transform: translateY(0);
   }
 }
+
+/* --- New Recommendation Cards Styles --- */
+.recommendation-tray {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    padding: 0 1rem;
+    /* Animate the whole tray */
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.recommendation-tray.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1024px; /* Match the cards width */
+    padding: 0.5rem 1rem;
+    background-color: rgba(var(--bs-body-bg-rgb), 0.8);
+    backdrop-filter: blur(5px);
+    border-radius: 8px 8px 0 0;
+    pointer-events: auto;
+    /* The header itself no longer animates, the parent tray does */
+}
+
+.recommendation-summary {
+    font-size: 0.9rem;
+    color: var(--bs-body-color); /* Changed for better visibility */
+    flex-grow: 1; /* Allow text to take available space */
+    padding-right: 1rem; /* Space between text and button */
+}
+
+#recommendation-toggle-btn {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#recommendation-toggle-btn i {
+    transition: transform 0.3s ease-out;
+}
+
+.recommendation-tray.is-collapsed #recommendation-toggle-btn i {
+    transform: rotate(180deg);
+}
+
+.recommendation-cards-container {
+    display: flex;
+    gap: 1rem;
+    pointer-events: none; /* Pass clicks through the container */
+    transition: max-height 0.35s ease-in-out, opacity 0.3s ease-in-out;
+    max-height: 300px; /* Set a max-height for transition */
+    opacity: 1;
+}
+
+.recommendation-tray.is-collapsed .recommendation-cards-container {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.recommendation-card {
+    width: 320px;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    opacity: 0; /* Initially hidden for animation */
+    transform: translateY(20px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    pointer-events: auto; /* Enable clicks on the card itself */
+    cursor: pointer;
+    flex-shrink: 0; /* Prevent cards from shrinking */
+}
+
+.recommendation-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+}
+
+.recommendation-card .card-img-container {
+    position: relative;
+}
+
+.recommendation-card .card-img-top {
+    height: 180px; /* Increased height for better look */
+    object-fit: cover;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+/* Gradient overlay for text readability */
+.recommendation-card .card-img-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+}
+
+.recommendation-card .card-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    font-size: 1.2rem; /* Larger font size */
+    font-weight: 700;
+    color: #fff;
+    z-index: 2; /* Above the gradient */
+    margin-bottom: 0;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.recommendation-card .card-body {
+    padding: 1rem;
+}
+
+.recommendation-card .card-text {
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.75rem;
+}
+
+.recommendation-card .badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+}
+/* --- End of New Styles --- */
 
 #random-recommendation-result .list-group-item,
 #search-results-container .list-group-item,

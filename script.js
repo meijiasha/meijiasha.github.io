@@ -211,12 +211,35 @@ async function initMap() {
     populateDistrictSelect();
   setupSidebarListeners();
   setupAllStoresPanelListeners(); // 新增：設定新面板的監聽器
+  setupRecommendationTray(); // 設定推薦卡片收合功能
+}
+
+function setupRecommendationTray() {
+  const toggleBtn = document.getElementById("recommendation-toggle-btn");
+  const tray = document.getElementById("recommendation-tray");
+
+  if (toggleBtn && tray) {
+    toggleBtn.addEventListener("click", () => {
+      tray.classList.toggle("is-collapsed");
+    });
+  }
 }
 
 // --- UI 清理函式 ---
 function clearRandomRecommendation() {
-  const resultDiv = document.getElementById("random-recommendation-result");
-  if (resultDiv) resultDiv.innerHTML = "";
+  const tray = document.getElementById("recommendation-tray");
+  if (tray) {
+    tray.classList.remove("is-visible");
+  }
+  // It's also good practice to clear the content for the next run
+  const cardsContainer = document.getElementById("recommendation-cards-container");
+  if (cardsContainer) {
+      cardsContainer.innerHTML = "";
+  }
+  const summary = document.getElementById("recommendation-summary");
+  if (summary) {
+      summary.innerHTML = "";
+  }
 }
 
 function clearSearchResults() {
@@ -549,47 +572,110 @@ function renderSearchResults(stores) {
 }
 
 // --- 側邊欄推薦結果顯示 ---
-function displayRecommendationInSidebar(stores, category, fromCategoryCount, fromOthersCount, customTitle = null) {
-  const resultDiv = document.getElementById("random-recommendation-result");
-  if (!resultDiv) return;
+async function displayRecommendationInSidebar(stores, category, fromCategoryCount, fromOthersCount, customTitle = null) {
+  const tray = document.getElementById("recommendation-tray");
+  const cardsContainer = document.getElementById("recommendation-cards-container");
+  const summaryContainer = document.getElementById("recommendation-summary");
+
+  if (!tray || !cardsContainer || !summaryContainer) return;
+
+  // Always clear previous state
+  clearRandomRecommendation();
+
   if (!stores || stores.length === 0) {
-    resultDiv.innerHTML = '<p class="text-muted small p-2 text-center">找不到可推薦的店家。</p>';
+    // Keep the tray hidden
     return;
   }
-  let title = customTitle || "<h6>隨機推薦結果：</h6>";
-  if (!customTitle && category && fromCategoryCount > 0) {
-    title += `<p class="small text-muted mb-2">從「<strong>${category}</strong>」選出 ${fromCategoryCount} 間`;
-    if (fromOthersCount > 0) {
-      const otherStores = stores.filter((s) => s.category !== category);
-      const otherCategories = [...new Set(otherStores.map((s) => s.category))].filter(Boolean);
-      if (otherCategories.length > 0) {
-        const otherCategoriesText = otherCategories.map((c) => `「${c}」`).join("、");
-        title += `，再從 ${otherCategoriesText} 選出 ${fromOthersCount} 間。`;
+
+  // 1. Generate and display the summary text
+  let summaryHTML = "";
+  if (customTitle) {
+      summaryHTML = customTitle.replace('<h6>', '').replace('</h6>', '');
+  } else if (category && fromCategoryCount > 0) {
+      summaryHTML = `從「<strong>${category}</strong>」選出 ${fromCategoryCount} 間`;
+      if (fromOthersCount > 0) {
+          summaryHTML += `，因該分類店家不足，再從`;
+          const otherStores = stores.filter((s) => s.category !== category);
+          const otherCategories = [...new Set(otherStores.map((s) => s.category))].filter(Boolean);
+          if (otherCategories.length > 0) {
+              const otherCategoriesText = otherCategories.map((c) => `「${c}」`).join("、");
+              summaryHTML += ` ${otherCategoriesText} 選出 ${fromOthersCount} 間。`;
+          } else {
+              summaryHTML += `其他分類選出 ${fromOthersCount} 間。`;
+          }
       } else {
-        title += `，再從其他分類選出 ${fromOthersCount} 間。`;
+          summaryHTML += `。`;
       }
-    } else {
-      title += `。`;
-    }
-    title += `</p>`;
+  } else {
+      summaryHTML = `為您隨機推薦 ${stores.length} 間店舖。`;
   }
-  let content = title;
-  content += '<div class="list-group">';
-  stores.forEach((store) => {
-    content += createStoreListItemHTML(store);
+  summaryContainer.innerHTML = summaryHTML;
+
+  // 2. Fetch details and generate cards (as before)
+  const detailPromises = stores.map((store) => {
+    if (store.placeDetails?.photos) return Promise.resolve(store);
+    if (store.place_id) {
+      const request = { placeId: store.place_id, fields: ["photos"] };
+      return new Promise((resolve) => {
+        placesService.getDetails(request, (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+            resolve({ ...store, placeDetails: { ...store.placeDetails, ...place } });
+          } else {
+            resolve(store);
+          }
+        });
+      });
+    } else {
+      return Promise.resolve(store);
+    }
   });
-  content += "</div>";
-  resultDiv.innerHTML = content;
-  animateListItems(resultDiv.querySelector(".list-group"));
-  resultDiv.querySelectorAll(".list-group-item").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
+
+  const storesWithDetails = await Promise.all(detailPromises);
+
+  let cardsHTML = "";
+  storesWithDetails.forEach(store => {
+    const photoUrl = store.placeDetails?.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 300 }) || 'https://via.placeholder.com/400x300.png?text=咩呷啥';
+    const categoryText = store.category || "未分類";
+    const categoryColor = generateCategoryColor(store.category);
+    const distanceHTML = store.distance !== undefined ? `· ${store.distance.toFixed(2)} km` : "";
+
+    cardsHTML += `
+      <div class="recommendation-card" data-store-id="${store.id}">
+        <div class="card-img-container">
+          <img src="${photoUrl}" class="card-img-top" alt="${store.name}">
+          <h5 class="card-title">${store.name}</h5>
+        </div>
+        <div class="card-body">
+          <p class="card-text">${store.address || '地址未提供'} ${distanceHTML}</p>
+          <span class="badge rounded-pill" style="background-color: ${categoryColor}; color: #fff;">${categoryText}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  cardsContainer.innerHTML = cardsHTML;
+
+  // 3. Show the tray and animate cards
+  tray.classList.add("is-visible");
+  tray.classList.remove("is-collapsed");
+
+  setTimeout(() => {
+    cardsContainer.querySelectorAll('.recommendation-card').forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('is-visible');
+        }, index * 100);
+    });
+  }, 50);
+
+  // 4. Add click listeners
+  cardsContainer.querySelectorAll(".recommendation-card").forEach(card => {
+    card.addEventListener("click", (e) => {
       const storeId = e.currentTarget.dataset.storeId;
       const marker = currentMapMarkers[storeId];
       if (marker) {
-        map.panTo(marker.position);
+        map.panTo(marker.getPosition());
         marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(() => marker.setAnimation(null), 750); // Stop bounce after 1 cycle
+        setTimeout(() => marker.setAnimation(null), 750);
         google.maps.event.trigger(marker, "click");
       }
     });
