@@ -359,9 +359,8 @@ async function showStoresByCategory(district, category, openFirst = false) {
 }
 
 async function showRandomStores(district, category, openFirst, isOpenNow) {
+  const originalCategory = category; // Defensively save the category value.
   const resultsDiv = document.getElementById("random-recommendation-result");
-  const categorySelect = document.getElementById("categorySelect");
-  if (categorySelect) categorySelect.selectedIndex = 0;
 
   if (!isOpenNow) {
     if (resultsDiv) resultsDiv.innerHTML = "";
@@ -377,9 +376,9 @@ async function showRandomStores(district, category, openFirst, isOpenNow) {
       let fromCategoryCount = 0;
       let fromOthersCount = 0;
       const numToRecommend = 3;
-      if (category) {
-        let storesInCategory = allStoresInDistrict.filter((s) => s.category === category);
-        let storesInOtherCategories = allStoresInDistrict.filter((s) => s.category !== category);
+      if (originalCategory) {
+        let storesInCategory = allStoresInDistrict.filter((s) => s.category === originalCategory);
+        let storesInOtherCategories = allStoresInDistrict.filter((s) => s.category !== originalCategory);
         shuffleArray(storesInCategory);
         shuffleArray(storesInOtherCategories);
         const takeFromCategory = Math.min(storesInCategory.length, numToRecommend);
@@ -396,7 +395,7 @@ async function showRandomStores(district, category, openFirst, isOpenNow) {
         randomStores = allStoresInDistrict.slice(0, numToRecommend);
       }
       await displayMarkers(randomStores, openFirst);
-      displayRecommendationInSidebar(randomStores, category, fromCategoryCount, fromOthersCount);
+      displayRecommendationInSidebar(randomStores, originalCategory, fromCategoryCount, fromOthersCount);
     } catch (error) {
       console.error("查詢隨機店家時發生錯誤:", error);
       alert("讀取隨機店家時發生錯誤，請稍後再試。");
@@ -405,8 +404,8 @@ async function showRandomStores(district, category, openFirst, isOpenNow) {
     if (resultsDiv) resultsDiv.innerHTML = `<div class="text-center text-muted p-2"><div class="spinner-border spinner-border-sm" role="status"></div> 尋找營業中的店家...</div>`;
     try {
       let query = db.collection("stores_taipei").where("district", "==", district);
-      if (category) {
-        query = query.where("category", "==", category);
+      if (originalCategory) {
+        query = query.where("category", "==", originalCategory);
       }
       const snapshot = await query.get();
       const potentialStores = [];
@@ -607,7 +606,21 @@ async function displayRecommendationInSidebar(stores, category, fromCategoryCoun
           summaryHTML += `。`;
       }
   } else {
-      summaryHTML = `為您隨機推薦 ${stores.length} 間店舖。`;
+    const categoryCounts = stores.reduce((acc, store) => {
+        const category = store.category || '未分類';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+    }, {});
+
+    const summaryParts = Object.entries(categoryCounts).map(([category, count]) => {
+        return `「<strong>${category}</strong>」選出 ${count} 間`;
+    });
+
+    if (summaryParts.length > 0) {
+        summaryHTML = `從 ${summaryParts.join('，再從 ')}。`;
+    } else {
+        summaryHTML = `為您隨機推薦 ${stores.length} 間店舖。`; // Fallback
+    }
   }
   summaryContainer.innerHTML = summaryHTML;
 
