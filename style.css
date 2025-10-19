@@ -466,24 +466,32 @@ body {
 
 /* --- New Recommendation Cards Styles --- */
 .recommendation-tray {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: fixed; 
+    bottom: 1rem;
+    left: calc(380px + 1rem); /* Position next to the sidebar */
     z-index: 10;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Align items to the left */
     pointer-events: none;
-    padding: 0 1rem;
-    /* Animate the whole tray */
-    transform: translateY(100%);
+    /* Animate the whole tray from the bottom */
+    transform: translateY(calc(100% + 1rem));
     opacity: 0;
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    transition: transform 0.5s ease-out, opacity 0.4s ease-out;
 }
 
+/* On mobile, sidebar is hidden, so position from the edge of the screen */
+@media (max-width: 767.98px) {
+    .recommendation-tray {
+        left: 1rem;
+        right: 1rem; /* Allow it to take full width on small screens */
+        align-items: center; /* Center items on mobile */
+    }
+}
+
+
 .recommendation-tray.is-visible {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
 }
 
@@ -491,21 +499,28 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
-    max-width: 1024px; /* Match the cards width */
+    width: 340px; /* A bit wider to accommodate padding and button */
     padding: 0.5rem 1rem;
     background-color: rgba(var(--bs-body-bg-rgb), 0.8);
     backdrop-filter: blur(5px);
     border-radius: 8px 8px 0 0;
     pointer-events: auto;
-    /* The header itself no longer animates, the parent tray does */
 }
 
 .recommendation-summary {
     font-size: 0.9rem;
-    color: var(--bs-body-color); /* Changed for better visibility */
-    flex-grow: 1; /* Allow text to take available space */
-    padding-right: 1rem; /* Space between text and button */
+    color: var(--bs-body-color);
+    flex-grow: 1;
+    padding-right: 1rem;
+    /* Animation for summary text */
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.4s 0.3s ease-out, transform 0.4s 0.3s ease-out; /* 0.3s delay */
+}
+
+.recommendation-tray.is-visible .recommendation-summary {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 #recommendation-toggle-btn {
@@ -516,6 +531,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0; /* Prevent button from shrinking */
 }
 
 #recommendation-toggle-btn i {
@@ -530,15 +546,22 @@ body {
     display: flex;
     gap: 1rem;
     pointer-events: none; /* Pass clicks through the container */
-    transition: max-height 0.35s ease-in-out, opacity 0.3s ease-in-out;
+    transition: max-height 0.35s ease-in-out, opacity 0.3s ease-in-out, padding 0.35s ease-in-out;
     max-height: 300px; /* Set a max-height for transition */
     opacity: 1;
+    padding: 1rem; /* Add padding for spacing */
+    background-color: rgba(var(--bs-body-bg-rgb), 0.6);
+    backdrop-filter: blur(5px);
+    border-radius: 0 0 8px 8px;
+    width: auto; /* Let it be sized by its content */
 }
 
 .recommendation-tray.is-collapsed .recommendation-cards-container {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .recommendation-card {
