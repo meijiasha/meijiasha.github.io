@@ -418,10 +418,31 @@ async function showRandomStores(district, category, openFirst, isOpenNow) {
       shuffleArray(potentialStores);
       const openStores = await displayAndFilterStores(potentialStores, (store) => store.placeDetails?.opening_hours?.isOpen() === true, 3, openFirst);
       if (openStores.length === 0) {
-        if (resultsDiv) resultsDiv.innerHTML = `<p class="text-muted small p-2 text-center">找不到符合條件且在營業中的店家。</p>`;
+        if (resultsDiv) resultsDiv.innerHTML = ''; // Clear spinner
+        
+        const summaryContainer = document.getElementById("recommendation-summary");
+        const cardsContainer = document.getElementById("recommendation-cards-container");
+        const tray = document.getElementById("recommendation-tray");
+
+        if (summaryContainer) {
+            summaryContainer.innerHTML = `
+<div class="alert alert-warning d-flex align-items-center m-0" role="alert">
+  <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+  <div>
+    找不到符合條件且在營業中的店家。
+  </div>
+</div>
+`;
+        }
+        if (cardsContainer) {
+            cardsContainer.innerHTML = ""; // Ensure no cards are shown
+        }
+        if (tray) {
+            tray.classList.add("is-visible");
+            tray.classList.add("is-collapsed"); // Keep it collapsed, just show the summary
+        }
       } else {
-        const title = `<h6>營業中隨機推薦：</h6>`;
-        displayRecommendationInSidebar(openStores, null, 0, 0, title);
+        displayRecommendationInSidebar(openStores, null, 0, 0, null, true);
       }
     } catch (error) {
       console.error("查詢營業中隨機店家時發生錯誤:", error);
@@ -571,7 +592,7 @@ function renderSearchResults(stores) {
 }
 
 // --- 側邊欄推薦結果顯示 ---
-async function displayRecommendationInSidebar(stores, category, fromCategoryCount, fromOthersCount, customTitle = null) {
+async function displayRecommendationInSidebar(stores, category, fromCategoryCount, fromOthersCount, customTitle = null, isOpenNow = false) {
   const tray = document.getElementById("recommendation-tray");
   const cardsContainer = document.getElementById("recommendation-cards-container");
   const summaryContainer = document.getElementById("recommendation-summary");
@@ -621,6 +642,9 @@ async function displayRecommendationInSidebar(stores, category, fromCategoryCoun
     } else {
         summaryHTML = `為您隨機推薦 ${stores.length} 間店舖。`; // Fallback
     }
+  }
+  if (isOpenNow) {
+    summaryHTML = "在營業中的收錄店家裡，" + summaryHTML;
   }
   summaryContainer.innerHTML = summaryHTML;
 
