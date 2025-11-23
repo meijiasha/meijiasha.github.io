@@ -1,4 +1,3 @@
-
 // store-form-common.js
 console.log("store-form-common.js: Script loaded.");
 
@@ -304,3 +303,6 @@ function populateFormFields(place, formElements, shouldOverwriteName) {
         }
     }
 }
+
+
+console.log("store-form-common.js: Script parsed completely.");

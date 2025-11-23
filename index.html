@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>咩呷啥 - 今天吃什麼</title>
 
+  <script src="config.js"></script>
+
   <!-- Google Fonts: Noto Sans TC -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -253,7 +255,7 @@
     // == 重要：請務必填入您真實的 Firebase 設定 ==
     // ========================================================
     const firebaseConfig = {
-      apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
+      apiKey: FIREBASE_API_KEY,
       authDomain: "meijiasha-64de6.firebaseapp.com",
       projectId: "meijiasha-64de6",
       storageBucket: "meijiasha-64de6.firebasestorage.app",
@@ -275,7 +277,6 @@
   </script>
 
   <!-- 4. 您的主要自訂 JavaScript 檔案 -->
-  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 

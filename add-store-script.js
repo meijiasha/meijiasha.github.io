@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 3. Authentication and Initialization ---
+    // --- 3. Authentication and Initialization ---
     auth.onAuthStateChanged(user => {
         if (user) {
             console.log("Add Store Page: User is logged in.");

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>編輯店家資料</title>
+    <script src="config.js"></script>
     <!-- Favicon -->
     <link rel="shortcut icon" href="LOGO.svg" type="image/x-icon" />
     <!-- Bootstrap CSS -->
@@ -141,7 +142,7 @@
     <!-- Firebase 初始化 -->
     <script>
       const firebaseConfig = {
-        apiKey: "AIzaSyA4sQav5EeZowQKRya14xeG9Lj3TyMQdM4",
+        apiKey: FIREBASE_API_KEY,
         authDomain: "meijiasha-64de6.firebaseapp.com",
         projectId: "meijiasha-64de6",
         storageBucket: "meijiasha-64de6.firebasestorage.app",
@@ -160,7 +161,6 @@
       }
     </script>
     <!-- Google Maps Places API -->
-    <script src="config.js"></script>
     <!-- Common Form Script -->
     <script src="store-form-common.js"></script>
     <!-- 編輯頁面專用 JavaScript -->

@@ -195,7 +195,6 @@ async function loadMap(center, zoom) {
 
     placesService = new PlacesService(map); // 確保在使用前初始化
 
-
     // 如果成功獲取使用者位置，則放置一個特殊標記
     if (zoom === 15) {
         new google.maps.Marker({
@@ -217,7 +216,6 @@ async function loadMap(center, zoom) {
     setDarkMode(isCurrentlyDark);
 
     infoWindow = new google.maps.InfoWindow();
-    placesService = new google.maps.places.PlacesService(map);
     populateDistrictSelect();
     setupSidebarListeners();
     setupAllStoresPanelListeners();
@@ -238,7 +236,6 @@ function loadGoogleMapsScript() {
     script.defer = true;
     document.head.appendChild(script);
 }
-
 
 function setupRecommendationTray() {
   const toggleBtn = document.getElementById("recommendation-toggle-btn");
@@ -1046,3 +1043,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // 動態載入 Google Maps API
   loadGoogleMapsScript();
 });
+
+
+// --- Service Worker ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        console.log("ServiceWorker registration successful with scope: ", registration.scope);
+      })
+      .catch((error) => {
+        console.log("ServiceWorker registration failed: ", error);
+      });
+  });
+}
