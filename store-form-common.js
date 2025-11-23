@@ -153,6 +153,33 @@ function initCategoryPreview(categoryInput, previewElement) {
 // -----------------------------------------------------------------------------
 
 /**
+ * Dynamically loads the Google Maps script.
+ */
+function loadGoogleMapsScript() {
+    // Check if the script is already loaded or being loaded
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        console.log("Google Maps script already loading or loaded.");
+        return;
+    }
+
+    if (typeof GOOGLE_MAPS_API_KEY === 'undefined') {
+        console.error("Google Maps API Key not found. Please check config.js");
+        showToast("無法載入地圖資源，請聯繫網站管理員。", "danger", "設定錯誤");
+        return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&language=zh-TW®ion=TW`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+        console.error("Google Maps script failed to load.");
+        showToast("Google Maps 服務載入失敗，請檢查網路連線或 API 金鑰設定。", "danger", "載入失敗");
+    };
+    document.head.appendChild(script);
+}
+
+/**
  * Initializes the Google Maps Places service and sets up the URL input listener.
  * @param {HTMLInputElement} urlInput The input for the Google Maps URL.
  * @param {object} formElements A map of form elements to populate.

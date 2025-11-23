@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayExistingCategories(db, existingCategoriesContainer, storeCategoryInput);
             initCategoryPreview(storeCategoryInput, categoryPreview);
             
+            // 動態載入 Google Maps API
+            loadGoogleMapsScript();
+
             if (addStoreForm) addStoreForm.querySelector('button[type="submit"]').disabled = false;
         } else {
             console.log("Add Store Page: User not logged in. Redirecting...");

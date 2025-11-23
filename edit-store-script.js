@@ -94,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayExistingCategories(db, formElements.existingCategoriesContainer, formElements.category);
             initCategoryPreview(formElements.category, formElements.categoryPreview);
 
+            // 動態載入 Google Maps API
+            loadGoogleMapsScript();
+
             const storeIdToEdit = getQueryParam('id');
             if (storeIdToEdit) {
                 loadStoreData(storeIdToEdit, formElements);
