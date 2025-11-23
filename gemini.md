@@ -1,3 +1,50 @@
+## 📅 2025-11-23: 架構重構計畫 - 遷移至 React + Shadcn UI
+
+### 1. 決策與動機
+目前的專案使用 Vanilla JS + Bootstrap，隨著功能增加，大量的 DOM 操作 (`document.getElementById`, `innerHTML`) 導致程式碼難以維護且擴充性受限。為了提升開發效率、型別安全及使用者體驗，決定將專案遷移至現代化前端架構。
+
+### 2. 選定技術堆疊 (Tech Stack)
+*   **Build Tool:** Vite (React + TypeScript)
+*   **Styling:** Tailwind CSS
+*   **UI Library:** **Shadcn UI** (基於 Radix UI，提供高度客製化與優異的無障礙體驗)
+*   **State Management:** Zustand (處理全域狀態如：選中的行政區、使用者資訊)
+*   **Data Fetching:** TanStack Query (React Query) - 用於管理 Firebase 的非同步資料與快取
+*   **Maps Integration:** `@vis.gl/react-google-maps` (Google 官方推薦的 React Wrapper)
+
+### 3. 功能遷移對照表
+
+| 原有檔案 (Vanilla JS) | 新架構 (React Component) | Shadcn UI 對應組件 |
+| :--- | :--- | :--- |
+| `index.html` (側邊欄) | `<Sidebar />` | `Sheet` (抽屜) 或 `ScrollArea` |
+| `index.html` (推薦卡片) | `<StoreCard />` | `Card`, `Badge`, `Button` |
+| `admin.html` (店家列表) | `<AdminPage />` | **Data Table** (支援排序、分頁、過濾) |
+| `add-store.html` (表單) | `<AddStoreForm />` | `Form` (react-hook-form + zod), `Input`, `Select` |
+| `login.html` | `<LoginPage />` | `Card`, `Form`, `Input` |
+| `script.js` (Map Logic) | `useMapStore` (Hook) | 無 (使用 Maps Library) |
+
+### 4. 實作路線圖 (Roadmap)
+
+1.  **專案初始化 (Setup):**
+    *   使用 Vite 建立 React + TypeScript 專案。
+    *   安裝 Tailwind CSS 與 Shadcn UI (`npx shadcn-ui@latest init`)。
+    *   遷移 Firebase Config 至 `src/lib/firebase.ts` 並加入 Type 定義。
+
+2.  **第一階段：後台系統 (Admin System):**
+    *   優先重寫 **Admin 後台**。這部分邏輯相對獨立（資料表格 CRUD），適合作為熟悉新架構的起點。
+    *   使用 Shadcn `Data Table` 重構店家列表。
+    *   使用 `React Hook Form` + `Zod` 重構新增/編輯店家表單。
+
+3.  **第二階段：前台地圖 (Frontend Map):**
+    *   整合 `@vis.gl/react-google-maps`。
+    *   將地圖標記 (Markers) 與 InfoWindow 改寫為 React Components。
+    *   實作側邊欄篩選邏輯與 Zustand 狀態管理。
+
+### 5. 技術挑戰與解決方案
+*   **地圖重繪 (Re-renders):** Google Maps 在 React 中若 State 更新太頻繁會導致效能問題。需善用 `useMemo`, `useCallback` 以及 `Ref` 來保存地圖實例，避免不必要的重新渲染。
+*   **Places Autocomplete:** 原本的 DOM 操作需改為 React `useRef` 綁定 input 元素。
+
+---
+
 ## 2025年10月19日
 
 ### UI/UX 優化：重構店家推薦功能
