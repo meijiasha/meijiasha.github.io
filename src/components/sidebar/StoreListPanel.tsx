@@ -64,7 +64,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
 
     const glassStyle = {
         background: 'rgba(255, 137, 0, 0.2)',
-        borderRadius: '16px',
+        borderRadius: '16px 0 0 16px',
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(5px)',
         WebkitBackdropFilter: 'blur(5px)',
