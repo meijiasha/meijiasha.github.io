@@ -51,7 +51,7 @@ export const RecommendationCards = () => {
                 {recommendationResults.map((store, index) => (
                     <Card
                         key={store.id}
-                        className="w-72 shrink-0 snap-center shadow-xl border-2 border-white/50 bg-white/90 backdrop-blur-md hover:bg-white transition-colors cursor-pointer animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards"
+                        className="w-72 h-[360px] shrink-0 snap-center shadow-xl border-2 border-white/50 bg-white/90 backdrop-blur-md hover:bg-white transition-colors cursor-pointer animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards flex flex-col"
                         style={{ animationDelay: `${index * 150}ms` }}
                         onClick={() => handleStoreClick(store)}
                     >
