@@ -57,7 +57,7 @@ export function useRecommendation() {
 
             // Helper to fetch details (photo)
             const fetchDetails = (store: Store): Promise<Store> => {
-                if (!service || !store.place_id) {
+                if (!service || !store.place_id || !placesLib) {
                     console.log(`useRecommendation: Skipping photo fetch for ${store.name} (No service or place_id)`);
                     return Promise.resolve(store);
                 }
@@ -66,24 +66,6 @@ export function useRecommendation() {
                         { placeId: store.place_id, fields: ['photos'] },
                         (place: any, status: any) => {
                             if (status === placesLib.PlacesServiceStatus.OK && place?.photos && place.photos.length > 0) {
-                                // place.photos[0].getUrl() gives a URL, but we need reference for our component
-                                // Actually our component uses reference to build URL.
-                                // Let's store the reference.
-                                // The Places API JS library photo object has getUrl(), but maybe not raw reference property exposed easily in types?
-                                // Usually place.photos[0] is an object.
-                                // Let's check if we can get the reference.
-                                // If not, we might need to use getUrl() and store that as a direct URL.
-                                // But our Store type has photo_reference.
-                                // Let's assume we can get it or use the URL.
-                                // Actually, for the JS API, we should use getUrl().
-                                // But our component expects photo_reference to build a URL via HTTP API.
-                                // Mixing JS API and HTTP API is tricky.
-                                // If we use JS API here, we should probably store the full URL in a new field 'photo_url'.
-                                // Or just use the reference if available.
-                                // Inspecting the object: place.photos[0] usually has 'getUrl'.
-                                // It might not have 'photo_reference' property publicly.
-                                // However, we can try to use the HTTP API URL format if we have the reference.
-                                // Let's try to see if we can just get the photo URL directly and use that.
                                 const photoUrl = place.photos[0].getUrl({ maxWidth: 400 });
                                 console.log(`useRecommendation: Fetched photo for ${store.name}`);
                                 resolve({ ...store, photo_url: photoUrl });
@@ -96,7 +78,7 @@ export function useRecommendation() {
                 });
             };
 
-            if (isOpenNow && service) {
+            if (isOpenNow && service && placesLib) {
                 console.log("useRecommendation: Checking Open Now and fetching photos...");
                 // Check open status AND fetch photo
                 for (const store of candidates) {
@@ -200,7 +182,7 @@ export function useRecommendation() {
                 const results: Store[] = [];
                 const service = (map && placesLib) ? new placesLib.PlacesService(map) : null;
 
-                if (service) {
+                if (service && placesLib) {
                     for (const store of nearbyStores) {
                         try {
                             const photoUrl = await new Promise<string | undefined>((resolve) => {
