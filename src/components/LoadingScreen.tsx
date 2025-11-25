@@ -42,8 +42,21 @@ export const LoadingScreen = ({ isLoading }: LoadingScreenProps) => {
     if (!isVisible) return null;
 
     return (
-        <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${!isLoading && progress === 100 ? 'opacity-0' : 'opacity-100'}`}>
-            <div className="flex flex-col items-center space-y-8 w-full max-w-md px-8">
+        <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${!isLoading && progress === 100 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+
+            {/* Bowl Fill Effect */}
+            <div
+                className="absolute bottom-0 left-0 w-full transition-all duration-300 ease-out opacity-20 pointer-events-none"
+                style={{
+                    height: `${progress}%`,
+                    backgroundImage: "url('/bowl.svg')",
+                    backgroundRepeat: "repeat",
+                    backgroundSize: "60px 60px", // Adjust size as needed
+                    backgroundPosition: "bottom center"
+                }}
+            />
+
+            <div className="flex flex-col items-center space-y-8 w-full max-w-md px-8 z-10 relative">
                 <img src="/logo.svg" alt="咩呷啥 Logo" className="h-24 w-auto animate-bounce" />
                 <div className="space-y-2 text-center w-full">
                     <h1 className="text-2xl font-bold text-primary">咩呷啥</h1>
