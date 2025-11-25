@@ -81,7 +81,7 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
                 zoom={mapZoom}
                 onCenterChanged={(ev) => setMapCenter(ev.detail.center)}
                 onZoomChanged={(ev) => setMapZoom(ev.detail.zoom)}
-                disableDefaultUI={false}
+                disableDefaultUI={true}
                 mapId={"bf51a910020fa25a"} // Required for AdvancedMarker. Using a demo ID or user should provide one.
                 style={{ width: '100%', height: '100%' }}
                 gestureHandling={'greedy'}
