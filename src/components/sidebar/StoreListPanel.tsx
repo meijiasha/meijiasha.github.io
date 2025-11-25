@@ -3,8 +3,7 @@ import { cn, getCategoryColor } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, ExternalLink, ChevronRight, ChevronLeft } from "lucide-react";
+import { MapPin, ExternalLink } from "lucide-react";
 import {
     Pagination,
     PaginationContent,
@@ -30,9 +29,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         setSelectedStore,
         setMapCenter,
         selectedDistrict,
-        selectedCategory,
-        isStoreListPanelOpen,
-        setStoreListPanelOpen
+        selectedCategory
     } = useAppStore();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -74,31 +71,6 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         border: '1px solid rgba(255, 137, 0, 0.3)',
     };
 
-    if (!isStoreListPanelOpen) {
-        return (
-            <div
-                className="h-full relative w-full flex flex-col items-center py-4 transition-all duration-300"
-                style={glassStyle}
-            >
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setStoreListPanelOpen(true)}
-                    title="展開店家列表"
-                    className="hover:bg-white/20"
-                >
-                    <ChevronLeft className="h-4 w-4 text-orange-900" />
-                </Button>
-                <div
-                    className="text-orange-900 font-bold mt-4 tracking-widest"
-                    style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}
-                >
-                    店家列表
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div
             className="h-full flex flex-col w-full relative overflow-hidden transition-all duration-300"
@@ -109,9 +81,6 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                     <h1 className="text-xl font-bold text-orange-950">店家列表</h1>
                     <Badge variant="outline" className="bg-white/30 border-orange-200 text-orange-900">{filteredStores.length} 間</Badge>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setStoreListPanelOpen(false)} className="hover:bg-white/20">
-                    <ChevronRight className="h-4 w-4 text-orange-900" />
-                </Button>
             </div>
 
             <ScrollArea className="flex-1 bg-transparent">

@@ -94,7 +94,7 @@ export default function MainLayout() {
                     </div>
 
                     {/* Desktop Store List Panel (Absolute Overlay) */}
-                    <div className={`hidden md:block absolute top-0 right-0 bottom-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96' : 'w-20'}`}>
+                    <div className={`hidden md:block absolute top-0 right-0 bottom-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96 translate-x-0 opacity-100' : 'w-0 translate-x-full opacity-0 pointer-events-none'}`}>
                         <StoreListPanel stores={stores} />
                     </div>
                 </div>

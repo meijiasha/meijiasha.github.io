@@ -1,6 +1,11 @@
 import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
+import { PanelRightOpen, PanelRightClose } from "lucide-react";
+import { useAppStore } from "@/store/useAppStore";
 
 export const Navbar = () => {
+    const { isStoreListPanelOpen, setStoreListPanelOpen } = useAppStore();
+
     return (
         <div className="h-16 border-b bg-white dark:bg-gray-950 px-4 flex items-center justify-between shrink-0 z-20 relative shadow-sm">
             <div className="flex items-center gap-3">
@@ -11,6 +16,15 @@ export const Navbar = () => {
                 </div>
             </div>
             <div className="flex items-center gap-2">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setStoreListPanelOpen(!isStoreListPanelOpen)}
+                    title={isStoreListPanelOpen ? "關閉店家列表" : "開啟店家列表"}
+                    className="hidden md:flex" // Only show on desktop as mobile has its own sheet
+                >
+                    {isStoreListPanelOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
+                </Button>
                 <ModeToggle />
             </div>
         </div>
