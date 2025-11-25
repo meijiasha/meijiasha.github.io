@@ -14,6 +14,8 @@ import {
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
 
+import { DEFAULT_CITY } from "@/lib/locations";
+
 interface StoreListPanelProps {
     stores: Store[];
 }
@@ -22,6 +24,7 @@ const ITEMS_PER_PAGE = 10;
 
 export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
     const {
+        selectedCity,
         selectedStore,
         setSelectedStore,
         setMapCenter,
@@ -36,11 +39,13 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
     // Filter stores based on selection
     const filteredStores = useMemo(() => {
         return stores.filter((store) => {
+            const storeCity = store.city || DEFAULT_CITY;
+            const matchCity = storeCity === selectedCity;
             const matchDistrict = selectedDistrict === '全部' || store.district === selectedDistrict;
             const matchCategory = selectedCategory === '全部' || store.category === selectedCategory;
-            return matchDistrict && matchCategory;
+            return matchCity && matchDistrict && matchCategory;
         });
-    }, [stores, selectedDistrict, selectedCategory]);
+    }, [stores, selectedCity, selectedDistrict, selectedCategory]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
