@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { cn, getCategoryColor } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -194,7 +195,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <div className="font-bold">{store.name}</div>
-                                                <Badge variant="secondary" className="mt-1 text-xs bg-blue-100 text-blue-800 hover:bg-blue-200">
+                                                <Badge variant="secondary" className={cn("mt-1 text-xs", getCategoryColor(store.category))}>
                                                     {store.category}
                                                 </Badge>
                                             </div>

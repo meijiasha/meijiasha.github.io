@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { cn, getCategoryColor } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -129,7 +130,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                 <CardHeader className="p-4 pb-2">
                                     <div className="flex justify-between items-start">
                                         <CardTitle className="text-base font-bold text-gray-900">{store.name}</CardTitle>
-                                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 hover:bg-orange-200">{store.category}</Badge>
+                                        <Badge variant="secondary" className={cn("bg-orange-100 text-orange-800 hover:bg-orange-200", getCategoryColor(store.category))}>{store.category}</Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-4 pt-0">
