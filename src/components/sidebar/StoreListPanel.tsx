@@ -96,7 +96,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                 className={`cursor-pointer transition-all hover:shadow-md bg-white/60 hover:bg-white/80 border-orange-100 ${selectedStore?.id === store.id ? 'border-orange-500 ring-1 ring-orange-500' : ''}`}
                                 onClick={() => handleStoreClick(store)}
                             >
-                                <CardHeader className="p-4 pb-2">
+                                <CardHeader className="p-3 md:p-4 pb-2 md:pb-2">
                                     <div className="flex flex-col items-start gap-1">
                                         <div className="h-12 flex items-center w-full">
                                             <CardTitle className="text-base font-bold text-gray-900 line-clamp-2 leading-tight">{store.name}</CardTitle>
@@ -104,13 +104,13 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                         <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="p-4 pt-0">
+                                <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
                                     <div className="text-sm text-gray-700 space-y-1">
                                         <div className="flex items-center">
                                             <MapPin className="w-3 h-3 mr-1 text-orange-600" />
                                             {store.district}
                                         </div>
-                                        <div className="truncate">{store.address}</div>
+                                        <div className="line-clamp-2 h-10 flex items-center">{store.address}</div>
                                         {store.google_maps_url && (
                                             <a
                                                 href={store.google_maps_url}
