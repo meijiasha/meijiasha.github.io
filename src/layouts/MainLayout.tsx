@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
+import { Navbar } from '@/components/Navbar';
 
 export default function MainLayout() {
     const { stores, loading, error } = useStores();
@@ -16,49 +17,53 @@ export default function MainLayout() {
     if (error) return <div className="flex items-center justify-center h-screen text-red-500">Error: {error}</div>;
 
     return (
-        <div className="flex h-screen w-full overflow-hidden relative">
-            {/* Left Panel: Control Panel (Desktop) */}
-            <div className="hidden md:block h-full w-80 shrink-0 z-10 shadow-xl">
-                <ControlPanel stores={stores} />
-            </div>
+        <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+            <Navbar />
 
-            {/* Center: Map Area */}
-            <div className="flex-1 h-full relative">
-                <MapContainer stores={stores} />
-            </div>
+            <div className="flex flex-1 w-full overflow-hidden relative">
+                {/* Left Panel: Control Panel (Desktop) */}
+                <div className="hidden md:block h-full w-80 shrink-0 z-10 shadow-xl border-r">
+                    <ControlPanel stores={stores} />
+                </div>
 
-            {/* Right Panel: Store List (Desktop) */}
-            <div className={`hidden md:block h-full shrink-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96' : 'w-20'}`}>
-                <StoreListPanel stores={stores} />
-            </div>
+                {/* Center: Map Area */}
+                <div className="flex-1 h-full relative">
+                    <MapContainer stores={stores} />
 
-            {/* Mobile Controls (Floating Buttons) */}
-            <div className="md:hidden absolute top-4 left-4 z-50 flex gap-2">
-                {/* Left Sheet: Control Panel */}
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="secondary" size="icon" className="shadow-md">
-                            <Filter className="h-6 w-6" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-80">
-                        <ControlPanel stores={stores} />
-                    </SheetContent>
-                </Sheet>
-            </div>
+                    {/* Mobile Controls (Floating Buttons) - Positioned relative to map area */}
+                    <div className="md:hidden absolute top-4 left-4 z-50 flex gap-2">
+                        {/* Left Sheet: Control Panel */}
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="secondary" size="icon" className="shadow-md">
+                                    <Filter className="h-6 w-6" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="p-0 w-80">
+                                <ControlPanel stores={stores} />
+                            </SheetContent>
+                        </Sheet>
+                    </div>
 
-            <div className="md:hidden absolute top-4 right-4 z-50">
-                {/* Right Sheet: Store List */}
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="secondary" size="icon" className="shadow-md">
-                            <Menu className="h-6 w-6" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right" className="p-0 w-80">
-                        <StoreListPanel stores={stores} />
-                    </SheetContent>
-                </Sheet>
+                    <div className="md:hidden absolute top-4 right-4 z-50">
+                        {/* Right Sheet: Store List */}
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="secondary" size="icon" className="shadow-md">
+                                    <Menu className="h-6 w-6" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="p-0 w-80">
+                                <StoreListPanel stores={stores} />
+                            </SheetContent>
+                        </Sheet>
+                    </div>
+                </div>
+
+                {/* Right Panel: Store List (Desktop) */}
+                <div className={`hidden md:block h-full shrink-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96' : 'w-20'}`}>
+                    <StoreListPanel stores={stores} />
+                </div>
             </div>
         </div>
     );

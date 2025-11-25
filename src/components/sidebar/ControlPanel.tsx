@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { ModeToggle } from "@/components/mode-toggle";
 import { cn, getCategoryColor } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,16 +88,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
 
     return (
         <div className="h-full flex flex-col bg-white border-r w-full md:w-80 relative overflow-y-auto">
-            <div className="absolute top-4 right-4">
-                <ModeToggle />
-            </div>
             <div className="p-4 space-y-6">
-                <div className="flex flex-col items-center mb-4">
-                    <img src="/logo.svg" alt="咩呷啥 Logo" className="h-16 w-auto mb-2" />
-                    <h1 className="text-xl font-bold text-primary">咩呷啥</h1>
-                    <p className="text-sm text-gray-500">今天吃什麼？</p>
-                </div>
-
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label>縣市</Label>
