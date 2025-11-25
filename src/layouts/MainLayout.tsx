@@ -3,9 +3,9 @@ import { ControlPanel } from '@/components/sidebar/ControlPanel';
 import { StoreListPanel } from '@/components/sidebar/StoreListPanel';
 import { MapContainer } from '@/components/map/MapContainer';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
 import { Navbar } from '@/components/Navbar';
 
