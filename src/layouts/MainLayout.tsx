@@ -8,16 +8,18 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
 import { Navbar } from '@/components/Navbar';
 
+import { LoadingScreen } from '@/components/LoadingScreen';
+
 export default function MainLayout() {
     const { stores, loading, error } = useStores();
     const { isStoreListPanelOpen } = useAppStore();
 
-    // Handle loading and error states if needed, for now just render
-    if (loading) return <div className="flex items-center justify-center h-screen">Loading map data...</div>;
+    // Handle error state
     if (error) return <div className="flex items-center justify-center h-screen text-red-500">Error: {error}</div>;
 
     return (
         <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+            <LoadingScreen isLoading={loading} />
             <Navbar />
 
             <div className="flex flex-1 w-full overflow-hidden relative">
