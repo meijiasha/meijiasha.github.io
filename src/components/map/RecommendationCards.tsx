@@ -5,6 +5,7 @@ import { MapPin, Phone, X } from "lucide-react";
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
 import { GOOGLE_MAPS_API_KEY } from "@/lib/config";
+import { cn, getCategoryColor } from "@/lib/utils";
 
 export const RecommendationCards = () => {
     const {
@@ -55,6 +56,8 @@ export const RecommendationCards = () => {
                         style={{ animationDelay: `${index * 150}ms` }}
                         onClick={() => handleStoreClick(store)}
                     >
+
+
                         <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-gray-100">
                             <img
                                 src={getPhotoUrl(store)}
@@ -70,9 +73,7 @@ export const RecommendationCards = () => {
                                     }
                                 }}
                             />
-                            <Badge className="absolute top-2 left-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white border-none">
-                                {store.category}
-                            </Badge>
+                            {/* Category Badge Removed from here */}
                             {store.distance !== undefined && (
                                 <Badge variant="secondary" className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm text-black shadow-sm">
                                     {store.distance.toFixed(1)} km
@@ -80,8 +81,13 @@ export const RecommendationCards = () => {
                             )}
                         </div>
                         <CardContent className="p-4">
-                            <div className="h-14 flex items-center mb-1">
-                                <h3 className="font-bold text-lg line-clamp-2 leading-tight w-full">{store.name}</h3>
+                            <div className="flex flex-col items-start gap-1 mb-2">
+                                <div className="h-14 flex items-center w-full">
+                                    <h3 className="font-bold text-lg line-clamp-2 leading-tight w-full">{store.name}</h3>
+                                </div>
+                                <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>
+                                    {store.category}
+                                </Badge>
                             </div>
                             <div className="space-y-1 text-sm text-gray-600">
                                 <div className="flex items-start gap-2">
