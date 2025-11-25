@@ -47,11 +47,12 @@ export const RecommendationCards = () => {
     console.log("RecommendationCards: Rendering cards for", recommendationResults.length, "stores");
     return (
         <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center items-end pointer-events-none px-4 pb-4">
-            <div className="flex gap-4 overflow-x-auto max-w-full pb-2 pointer-events-auto snap-x snap-mandatory">
-                {recommendationResults.map((store) => (
+            <div className="flex gap-4 overflow-x-auto max-w-full pb-2 pointer-events-auto snap-x snap-mandatory px-4">
+                {recommendationResults.map((store, index) => (
                     <Card
                         key={store.id}
-                        className="w-72 shrink-0 snap-center shadow-xl border-2 border-white/50 bg-white/90 backdrop-blur-md hover:bg-white transition-colors cursor-pointer"
+                        className="w-72 shrink-0 snap-center shadow-xl border-2 border-white/50 bg-white/90 backdrop-blur-md hover:bg-white transition-colors cursor-pointer animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards"
+                        style={{ animationDelay: `${index * 150}ms` }}
                         onClick={() => handleStoreClick(store)}
                     >
                         <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-gray-100">
