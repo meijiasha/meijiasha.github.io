@@ -3,7 +3,8 @@ import { ControlPanel } from '@/components/sidebar/ControlPanel';
 import { StoreListPanel } from '@/components/sidebar/StoreListPanel';
 import { MapContainer } from '@/components/map/MapContainer';
 import { Button } from '@/components/ui/button';
-import { Menu, Filter } from 'lucide-react';
+import { Menu } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
 import { Navbar } from '@/components/Navbar';
@@ -32,14 +33,27 @@ export default function MainLayout() {
                 <div className="flex-1 h-full relative">
                     <MapContainer stores={stores} />
 
+
+
                     {/* Mobile Controls (Floating Buttons) - Positioned relative to map area */}
                     <div className="md:hidden absolute top-4 left-4 z-50 flex gap-2">
                         {/* Left Sheet: Control Panel */}
                         <Sheet>
                             <SheetTrigger asChild>
-                                <Button variant="secondary" size="icon" className="shadow-md">
-                                    <Filter className="h-6 w-6" />
-                                </Button>
+                                <div className="relative"> {/* Wrapper for TooltipTrigger if needed, but Button is fine */}
+                                    <TooltipProvider>
+                                        <Tooltip delayDuration={0}>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="secondary" size="icon" className="shadow-md w-12 h-12 rounded-full p-2 bg-white/90 backdrop-blur-sm hover:bg-white border-2 border-primary/20">
+                                                    <img src="/bowl.svg" alt="開啟篩選" className="w-full h-full object-contain" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right">
+                                                <p>請按此</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
                             </SheetTrigger>
                             <SheetContent side="left" className="p-0 w-80">
                                 <ControlPanel stores={stores} />
