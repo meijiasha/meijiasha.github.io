@@ -12,7 +12,8 @@ export function useRecommendation() {
     const {
         userLocation,
         setRecommendationResults,
-        setRecommendationPanelOpen
+        setRecommendationPanelOpen,
+        setMapCenter
     } = useAppStore();
 
     const [isRecommending, setIsRecommending] = useState(false);
@@ -138,9 +139,13 @@ export function useRecommendation() {
             } else {
                 setRecommendationResults(results);
                 setRecommendationPanelOpen(true);
-                // On mobile, we might want to ensure the sheet is open? 
-                // But Sidebar handles its own visibility. 
-                // Maybe we don't need to force sidebar open if it's a sheet.
+
+                // Center and zoom map on the first result (the random pick)
+                if (results.length > 0) {
+                    const targetStore = results[0];
+                    setMapCenter({ lat: targetStore.lat, lng: targetStore.lng });
+                    useAppStore.getState().setMapZoom(16); // Access store directly or add setMapZoom to destructuring
+                }
             }
 
         } catch (error) {
