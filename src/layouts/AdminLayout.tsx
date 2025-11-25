@@ -4,10 +4,13 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { LogOut, Store } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 
 export default function AdminLayout() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
+
+    const { theme } = useTheme();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -19,6 +22,30 @@ export default function AdminLayout() {
 
         return () => unsubscribe();
     }, [navigate]);
+
+    // Force light mode in Admin
+    useEffect(() => {
+        const root = window.document.documentElement;
+        // Save current class list to restore later? 
+        // Actually we can just rely on theme state to restore.
+
+        // Force light
+        root.classList.remove("dark");
+        root.classList.add("light");
+
+        return () => {
+            // Restore based on theme state
+            root.classList.remove("light", "dark");
+            if (theme === "system") {
+                const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+                    ? "dark"
+                    : "light";
+                root.classList.add(systemTheme);
+            } else {
+                root.classList.add(theme);
+            }
+        };
+    }, [theme]);
 
     const handleLogout = async () => {
         await signOut(auth);
