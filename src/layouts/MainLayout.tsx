@@ -10,6 +10,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { Navbar } from '@/components/Navbar';
 
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { SponsorWidget } from '@/components/SponsorWidget';
 
 import { useState, useEffect } from 'react';
 
@@ -36,6 +37,7 @@ export default function MainLayout() {
     return (
         <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
             <LoadingScreen isLoading={loading} />
+            <SponsorWidget />
             <Navbar />
 
             <div className="flex flex-1 w-full overflow-hidden relative">
