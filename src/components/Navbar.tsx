@@ -21,7 +21,7 @@ export const Navbar = () => {
                     size="icon"
                     onClick={() => setStoreListPanelOpen(!isStoreListPanelOpen)}
                     title={isStoreListPanelOpen ? "關閉店家列表" : "開啟店家列表"}
-                    className="hidden md:flex" // Only show on desktop as mobile has its own sheet
+                    className="flex" // Show on both mobile and desktop
                 >
                     {isStoreListPanelOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
                 </Button>

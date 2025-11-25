@@ -3,7 +3,7 @@ import { ControlPanel } from '@/components/sidebar/ControlPanel';
 import { StoreListPanel } from '@/components/sidebar/StoreListPanel';
 import { MapContainer } from '@/components/map/MapContainer';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 
 export default function MainLayout() {
     const { stores, loading, error } = useStores();
-    const { isStoreListPanelOpen } = useAppStore();
+    const { isStoreListPanelOpen, setStoreListPanelOpen } = useAppStore();
     const [showMobileTooltip, setShowMobileTooltip] = useState(false);
 
     useEffect(() => {
@@ -79,14 +79,9 @@ export default function MainLayout() {
                         </Sheet>
                     </div>
 
-                    <div className="md:hidden absolute top-4 right-4 z-50">
-                        {/* Right Sheet: Store List */}
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button variant="secondary" size="icon" className="shadow-md">
-                                    <Menu className="h-6 w-6" />
-                                </Button>
-                            </SheetTrigger>
+                    <div className="md:hidden">
+                        {/* Right Sheet: Store List - Controlled by Navbar toggle via store */}
+                        <Sheet open={isStoreListPanelOpen} onOpenChange={setStoreListPanelOpen}>
                             <SheetContent side="right" className="p-0 w-80">
                                 <StoreListPanel stores={stores} />
                             </SheetContent>
