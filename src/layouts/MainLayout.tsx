@@ -58,12 +58,14 @@ export default function MainLayout() {
                             </SheetContent>
                         </Sheet>
                     </div>
+
+                    {/* Desktop Store List Panel (Absolute Overlay) */}
+                    <div className={`hidden md:block absolute top-0 right-0 bottom-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96' : 'w-20'}`}>
+                        <StoreListPanel stores={stores} />
+                    </div>
                 </div>
 
-                {/* Right Panel: Store List (Desktop) */}
-                <div className={`hidden md:block h-full shrink-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96' : 'w-20'}`}>
-                    <StoreListPanel stores={stores} />
-                </div>
+                {/* Right Panel: Store List (Desktop) - REMOVED from flex flow */}
             </div>
         </div>
     );
