@@ -24,11 +24,6 @@ export default function MainLayout() {
         if (!hasClicked) {
             setShowMobileTooltip(true);
         }
-
-        // Close store list panel on mobile by default
-        if (window.innerWidth < 768) {
-            setStoreListPanelOpen(false);
-        }
     }, [setStoreListPanelOpen]);
 
     const handleMobileSidebarClick = () => {

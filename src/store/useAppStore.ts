@@ -38,7 +38,7 @@ export const useAppStore = create<AppState>((set) => ({
     userLocation: null,
     isRecommendationPanelOpen: false,
     recommendationResults: [],
-    isStoreListPanelOpen: true,
+    isStoreListPanelOpen: false,
 
     setCity: (city) => set({ selectedCity: city }),
     setDistrict: (district) => set({ selectedDistrict: district }),
