@@ -17,7 +17,7 @@ export const Navbar = () => {
             </div>
             <div className="flex items-center gap-2">
                 <Button
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={() => setStoreListPanelOpen(!isStoreListPanelOpen)}
                     title={isStoreListPanelOpen ? "關閉店家列表" : "開啟店家列表"}
