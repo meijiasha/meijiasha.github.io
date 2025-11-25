@@ -128,9 +128,9 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                 onClick={() => handleStoreClick(store)}
                             >
                                 <CardHeader className="p-4 pb-2">
-                                    <div className="flex justify-between items-center gap-2">
+                                    <div className="flex flex-col items-start gap-1">
                                         <CardTitle className="text-base font-bold text-gray-900 line-clamp-2">{store.name}</CardTitle>
-                                        <Badge variant="secondary" className={cn("shrink-0 bg-orange-100 text-orange-800 hover:bg-orange-200", getCategoryColor(store.category))}>{store.category}</Badge>
+                                        <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-4 pt-0">
