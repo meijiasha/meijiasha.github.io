@@ -87,7 +87,7 @@ export default function MainLayout() {
                     <div className="md:hidden">
                         {/* Right Sheet: Store List - Controlled by Navbar toggle via store */}
                         <Sheet open={isStoreListPanelOpen} onOpenChange={setStoreListPanelOpen}>
-                            <SheetContent side="right" className="p-0 w-80">
+                            <SheetContent side="bottom" className="p-0 h-[50vh] w-full">
                                 <StoreListPanel stores={stores} />
                             </SheetContent>
                         </Sheet>
