@@ -88,8 +88,9 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
     return (
         <div className="h-full flex flex-col bg-white border-r w-full md:w-80 relative overflow-y-auto">
             <div className="p-4 space-y-6">
-                <div>
-                    <h1 className="text-xl font-bold mb-1">咩呷啥</h1>
+                <div className="flex flex-col items-center mb-4">
+                    <img src="/logo.svg" alt="咩呷啥 Logo" className="h-16 w-auto mb-2" />
+                    <h1 className="text-xl font-bold text-primary">咩呷啥</h1>
                     <p className="text-sm text-gray-500">今天吃什麼？</p>
                 </div>
 
