@@ -9,8 +9,11 @@ interface MapContainerProps {
     stores: Store[];
 }
 
+import { DEFAULT_CITY } from "@/lib/locations";
+
 export const MapContainer = ({ stores }: MapContainerProps) => {
     const {
+        selectedCity,
         mapCenter,
         mapZoom,
         setMapCenter,
@@ -47,11 +50,13 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
             console.log("MapContainer: Displaying recommendation results:", recommendationResults.length);
             results = recommendationResults;
         } else {
-            console.log("MapContainer: Filtering stores. Total:", stores.length, "District:", selectedDistrict, "Category:", selectedCategory);
+            console.log("MapContainer: Filtering stores. Total:", stores.length, "City:", selectedCity, "District:", selectedDistrict, "Category:", selectedCategory);
             results = stores.filter((store) => {
+                const storeCity = store.city || DEFAULT_CITY;
+                const matchCity = storeCity === selectedCity;
                 const matchDistrict = selectedDistrict === '全部' || store.district === selectedDistrict;
                 const matchCategory = selectedCategory === '全部' || store.category === selectedCategory;
-                return matchDistrict && matchCategory;
+                return matchCity && matchDistrict && matchCategory;
             });
         }
 
