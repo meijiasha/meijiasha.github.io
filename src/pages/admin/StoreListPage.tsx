@@ -120,7 +120,7 @@ export default function StoreListPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>店名</TableHead>
+                            <TableHead className="w-[25%]">店名</TableHead>
                             <TableHead>縣市</TableHead>
                             <TableHead>行政區</TableHead>
                             <TableHead>分類</TableHead>
@@ -138,15 +138,17 @@ export default function StoreListPage() {
                         ) : (
                             currentItems.map((store) => (
                                 <TableRow key={store.id}>
-                                    <TableCell className="font-medium">
+                                    <TableCell className="font-medium align-middle">
                                         <div className="flex items-center space-x-2">
-                                            <span>{store.name}</span>
+                                            <span className="line-clamp-2 break-words" title={store.name}>
+                                                {store.name}
+                                            </span>
                                             {store.google_maps_url && (
                                                 <a
                                                     href={store.google_maps_url}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="text-gray-400 hover:text-blue-500"
+                                                    className="text-gray-400 hover:text-blue-500 shrink-0"
                                                 >
                                                     <ExternalLink className="h-3 w-3" />
                                                 </a>
