@@ -129,7 +129,9 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                             >
                                 <CardHeader className="p-4 pb-2">
                                     <div className="flex flex-col items-start gap-1">
-                                        <CardTitle className="text-base font-bold text-gray-900 line-clamp-2">{store.name}</CardTitle>
+                                        <div className="h-12 flex items-center w-full">
+                                            <CardTitle className="text-base font-bold text-gray-900 line-clamp-2 leading-tight">{store.name}</CardTitle>
+                                        </div>
                                         <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
                                     </div>
                                 </CardHeader>

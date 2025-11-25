@@ -194,7 +194,9 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                     <CardContent className="p-3">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <div className="font-bold">{store.name}</div>
+                                                <div className="h-12 flex items-center">
+                                                    <div className="font-bold line-clamp-2 leading-tight">{store.name}</div>
+                                                </div>
                                                 <Badge variant="secondary" className={cn("mt-1 text-xs", getCategoryColor(store.category))}>
                                                     {store.category}
                                                 </Badge>

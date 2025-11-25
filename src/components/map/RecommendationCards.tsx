@@ -79,7 +79,9 @@ export const RecommendationCards = () => {
                             )}
                         </div>
                         <CardContent className="p-4">
-                            <h3 className="font-bold text-lg truncate mb-1">{store.name}</h3>
+                            <div className="h-14 flex items-center mb-1">
+                                <h3 className="font-bold text-lg line-clamp-2 leading-tight w-full">{store.name}</h3>
+                            </div>
                             <div className="space-y-1 text-sm text-gray-600">
                                 <div className="flex items-start gap-2">
                                     <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
