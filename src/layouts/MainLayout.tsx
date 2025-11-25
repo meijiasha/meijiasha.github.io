@@ -93,13 +93,13 @@ export default function MainLayout() {
                         </Sheet>
                     </div>
 
-                    {/* Desktop Store List Panel (Absolute Overlay) */}
-                    <div className={`hidden md:block absolute top-0 right-0 bottom-0 z-10 transition-all duration-300 py-2 pr-2 pl-2 ${isStoreListPanelOpen ? 'w-96 translate-x-0 opacity-100' : 'w-0 translate-x-full opacity-0 pointer-events-none'}`}>
-                        <StoreListPanel stores={stores} />
+                    {/* Desktop Store List Panel (Collapsible Flex Item) */}
+                    <div className={`hidden md:block h-full shrink-0 z-10 shadow-xl border-l transition-all duration-300 ${isStoreListPanelOpen ? 'w-96 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
+                        <div className="w-96 h-full"> {/* Inner container to maintain width during transition */}
+                            <StoreListPanel stores={stores} />
+                        </div>
                     </div>
                 </div>
-
-                {/* Right Panel: Store List (Desktop) - REMOVED from flex flow */}
             </div>
         </div>
     );
