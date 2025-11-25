@@ -746,3 +746,58 @@ line-bot-server.js`。
 #### **程式碼品質**
 - **Linting**: 修復了 `useStores.ts` 和 `StoreFormPage.tsx` 中的 TypeScript 錯誤與 Lint 警告。
 - **架構優化**: 將資料讀取邏輯統一遷移至 `stores` 集合，為未來擴充奠定基礎。
+
+---
+
+## 🤖 AI Agent Handoff / 開發指南 (For Future AI Agents)
+
+本章節專為接手此專案的 AI Agent 設計，旨在快速建立 Context 並了解系統架構。
+
+### 1. 專案架構概覽 (Project Architecture)
+*   **核心框架**: React 19 + Vite (TypeScript)
+*   **UI 系統**: Shadcn UI (基於 Radix UI) + Tailwind CSS
+*   **狀態管理**: Zustand (`src/store/useAppStore.ts`)
+*   **路由管理**: React Router v7 (`src/App.tsx`, `src/layouts`)
+*   **地圖整合**: `@vis.gl/react-google-maps` (Google Maps API 的 React Wrapper)
+*   **後端服務**: Firebase v12 (Firestore, Auth, Hosting)
+
+### 2. 關鍵目錄結構 (Key Directories)
+*   `src/components/ui`: Shadcn UI 基礎元件 (Button, Card, Input...)。
+*   `src/components/sidebar`: 側邊欄相關元件 (`ControlPanel`, `StoreListPanel`)。
+*   `src/components/map`: 地圖相關元件 (`MapContainer`, `StoreMarker`)。
+*   `src/hooks`: 自定義 Hooks。
+    *   `useStores.ts`: 負責從 Firestore 讀取店家資料。
+    *   `useRecommendation.ts`: 負責隨機推薦與附近店家邏輯 (包含 Google Maps Places Service 整合)。
+*   `src/lib`: 工具函式與設定。
+    *   `firebase.ts`: Firebase 初始化與實例導出 (`db`, `auth`)。
+    *   `locations.ts`: **多縣市配置檔** (定義 City -> Districts 的對應關係)。
+*   `src/pages/admin`: 後台管理頁面 (`StoreListPage`, `StoreFormPage`)。
+
+### 3. 資料流與狀態 (Data Flow & State)
+*   **Global State (Zustand)**:
+    *   `selectedCity`: 當前選擇的縣市 (預設: 台北市)。
+    *   `selectedDistrict`: 當前選擇的行政區。
+    *   `selectedCategory`: 當前選擇的分類。
+    *   `userLocation`: 使用者的經緯度。
+*   **Database (Firestore)**:
+    *   **Collection**: `stores` (統一存放所有縣市的店家)。
+    *   **Schema**: 參考 `src/types/store.ts` 中的 `Store` 介面。關鍵欄位包含 `city`, `district`, `location` (GeoPoint), `place_id`。
+
+### 4. 部署流程 (Deployment)
+*   **CI/CD**: GitHub Actions (`.github/workflows/deploy.yml`)。
+*   **Trigger**: Push to `main` branch。
+*   **Environment Variables**:
+    *   **Local**: `.env.local` (VITE_GOOGLE_MAPS_API_KEY, etc.)
+    *   **Production**: GitHub Repository Secrets (GOOGLE_MAPS_API_KEY, etc.)
+
+### 5. 已知限制與注意事項 (Known Issues & Notes)
+*   **Google Maps API**:
+    *   `useRecommendation` 使用了 `PlacesService` 來獲取照片與營業狀態。需注意 API 配額與計費。
+    *   `StoreFormPage` 的自動填入功能依賴 `PlacesService` 的 `getDetails` 和 `textSearch`。
+*   **Firebase Rules**:
+    *   Firestore 安全性規則 (`firestore.rules`) 需與程式碼同步更新。目前設定為允許已登入使用者讀寫 `stores` 集合。
+*   **Legacy Code**: `legacy/` 資料夾存放舊版 Vanilla JS 程式碼，僅供參考，不應再維護或使用。
+
+### 6. 下一步建議 (Next Steps)
+*   **前台地圖整合**: 目前前台地圖功能尚未完全遷移至 React (仍在 `legacy/index.html` 運作中)。下一步應將 `src/components/map` 與 `src/components/sidebar` 整合至 `MainLayout`，完全取代舊版首頁。
+*   **效能優化**: 隨著店家數量增加，考慮在 `useStores` 中實作分頁或虛擬滾動 (Virtual Scrolling)。
