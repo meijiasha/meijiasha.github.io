@@ -664,3 +664,85 @@ line-bot-server.js`。
 
 - **注意事項**:
   - 使用者需手動在本地的 `config.js` 中填入實際的 Firebase API 金鑰.
+
+---
+
+## 📅 2025-11-25: 第一階段完成 - 後台系統遷移
+
+### 1. 專案初始化與架構搭建
+- **Vite + React + TypeScript**: 成功初始化專案，建立現代化開發環境。
+- **Shadcn UI + Tailwind CSS**: 完成 UI 元件庫設定，並解決了 Tailwind CSS 版本相容性問題。
+- **Firebase 整合**: 建立 `src/lib/firebase.ts`，並將舊有的 API Key 設定遷移至環境變數（或暫時保留於設定檔中）。
+
+### 2. 後台系統 (Admin System) 實作
+- **路由與版面**:
+    - 使用 `react-router-dom` 實作路由管理。
+    - 建立 `AdminLayout`，包含側邊欄導覽與登出功能。
+    - 實作路由保護 (Protected Routes)，未登入使用者會被導向登入頁。
+- **登入功能 (Authentication)**:
+    - 實作 `LoginPage`，整合 Firebase Authentication。
+    - **新增功能**: 加入「忘記密碼」功能，允許使用者透過 Email 重設密碼。
+    - **除錯優化**: 登入失敗時會顯示詳細的 Firebase 錯誤代碼 (如 `auth/invalid-credential`)，方便排查問題。
+- **店家列表 (Store List)**:
+    - 使用 Shadcn `Table` 元件展示店家資料。
+    - **分頁功能**: 實作前端分頁 (Client-side Pagination)，每頁顯示 10 筆資料。
+    - **除錯面板**: 在開發過程中加入 UI 除錯面板，顯示使用者權限與查詢狀態。
+- **新增/編輯店家 (Store Form)**:
+    - 使用 `react-hook-form` 與 `zod` 實作表單驗證。
+    - 支援新增與編輯模式 (共用 `StoreFormPage`)。
+    - **資料相容性修正**: 發現新舊系統欄位名稱不一致 (`updated_at` vs `lastEditedAt`)，已統一改回使用 `lastEditedAt` 以相容舊有資料。
+
+### 3. 問題排查與解決
+- **HTTP Referrer 限制**: 解決了本地開發環境 (`localhost`) 被 Google Cloud API Key 限制阻擋導致無法登入的問題。
+- **資料讀取權限**: 透過詳細日誌確認了使用者權限狀態。
+- **欄位名稱不一致**: 修正了 Firestore 查詢時因排序欄位 (`orderBy`) 與資料庫實際欄位不符，導致列表為空的問題。
+
+### 4. 下一步計畫
+- **第二階段：前台地圖 (Frontend Map)**:
+    - 整合 `@vis.gl/react-google-maps`。
+    - 實作側邊欄店家列表與篩選功能。
+    - 遷移地圖標記與 InfoWindow 邏輯。
+## Multi-City Expansion Plan (2025-11-25)
+
+### 1. Analysis
+- **Current State**: Stores are hardcoded to `stores_taipei` collection. `Store` interface lacks `city` field. Districts are hardcoded for Taipei.
+- **Goal**: Support multiple cities (e.g., New Taipei, Taichung).
+
+### 2. Strategy
+- **Unified Collection**: Migrate to a single `stores` collection with a `city` field.
+- **Configuration**: Centralize city/district data in a config file.
+
+### 3. Implementation Steps
+1.  **Configuration**: Create `src/lib/locations.ts` with city-district mappings.
+2.  **Schema**: Update `Store` type to include `city: string`.
+3.  **Admin UI**:
+    - Update `StoreListPage` to show `city`.
+    - Update `StoreFormPage` to include City selection and dynamic District dropdown.
+4.  **Frontend**: Update `useRecommendation` and UI to support city filtering.
+### 4. 實作成果 (2025-11-25 更新)
+
+#### **跨縣市擴充 (Multi-City Expansion)**
+- **資料結構更新**:
+    - 建立 `src/lib/locations.ts` 集中管理縣市與行政區資料。
+    - `Store` 介面新增 `city` 欄位。
+- **後台管理系統 (Admin)**:
+    - **表單更新**: 新增「縣市」下拉選單，行政區選單會根據縣市動態更新。
+    - **列表更新**: 新增「縣市」欄位顯示。
+    - **資料遷移**: 建立遷移工具 (`/admin/migration`)，成功將資料從 `stores_taipei` 遷移至 `stores` 集合。
+    - **權限設定**: 更新 `firestore.rules` 以支援新集合的讀寫權限。
+- **前台使用者介面 (Frontend)**:
+    - **控制面板**: 新增「縣市」選擇功能，切換縣市時會重置行政區篩選。
+    - **推薦邏輯**: `useRecommendation` 鉤子已更新，支援依據選定縣市進行隨機推薦。
+
+#### **功能修復與優化**
+- **Google Maps 自動填入 (Auto-Fill)**:
+    - 修復了 Google Maps URL 解析邏輯，支援座標型 URL。
+    - 加入 `useMap` 以獲取當前地圖實例，提供搜尋時的位置偏好 (Location Bias)。
+    - 實作 `textSearch` 作為 `findPlaceFromQuery` 的備援機制，大幅提升自動填入的成功率。
+- **現有分類建議 (Category Suggestions)**:
+    - 在後台新增/編輯頁面中，會自動列出系統中已存在的分類。
+    - 以可點擊的標籤 (Badge) 呈現，點擊後自動填入，提升資料一致性。
+
+#### **程式碼品質**
+- **Linting**: 修復了 `useStores.ts` 和 `StoreFormPage.tsx` 中的 TypeScript 錯誤與 Lint 警告。
+- **架構優化**: 將資料讀取邏輯統一遷移至 `stores` 集合，為未來擴充奠定基礎。
