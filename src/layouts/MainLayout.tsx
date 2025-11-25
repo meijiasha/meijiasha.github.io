@@ -40,19 +40,14 @@ export default function MainLayout() {
                         {/* Left Sheet: Control Panel */}
                         <Sheet>
                             <SheetTrigger asChild>
-                                <div className="relative"> {/* Wrapper for TooltipTrigger if needed, but Button is fine */}
-                                    <TooltipProvider>
-                                        <Tooltip delayDuration={0}>
-                                            <TooltipTrigger asChild>
-                                                <Button variant="secondary" size="icon" className="shadow-md w-12 h-12 rounded-full p-2 bg-white/90 backdrop-blur-sm hover:bg-white border-2 border-primary/20">
-                                                    <img src="/bowl.svg" alt="開啟篩選" className="w-full h-full object-contain" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="right">
-                                                <p>請按此</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                <div className="relative group">
+                                    <Button variant="secondary" size="icon" className="shadow-md w-12 h-12 rounded-full p-2 bg-white/90 backdrop-blur-sm hover:bg-white border-2 border-primary/20">
+                                        <img src="/bowl.svg" alt="開啟篩選" className="w-full h-full object-contain" />
+                                    </Button>
+                                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none animate-in fade-in slide-in-from-left-2 duration-500">
+                                        請按此
+                                        <div className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 border-4 border-transparent border-r-black/80"></div>
+                                    </div>
                                 </div>
                             </SheetTrigger>
                             <SheetContent side="left" className="p-0 w-80">
