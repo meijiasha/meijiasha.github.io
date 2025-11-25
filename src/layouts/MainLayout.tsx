@@ -45,7 +45,7 @@ export default function MainLayout() {
                                         <img src="/bowl.svg" alt="開啟篩選" className="w-full h-full object-contain" />
                                     </Button>
                                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none animate-in fade-in slide-in-from-left-2 duration-500">
-                                        請按此
+                                        請按此開啟側邊選單欄
                                         <div className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 border-4 border-transparent border-r-black/80"></div>
                                     </div>
                                 </div>
