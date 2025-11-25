@@ -7,9 +7,13 @@ interface StoreMarkerProps {
     onClick: (store: Store) => void;
 }
 
+import { DEFAULT_CITY } from "@/lib/locations";
+
 export const StoreMarker = ({ store, onClick }: StoreMarkerProps) => {
-    const { selectedStore } = useAppStore();
+    const { selectedStore, selectedCity } = useAppStore();
     const isSelected = selectedStore?.id === store.id;
+    const storeCity = store.city || DEFAULT_CITY;
+    const isSameCity = storeCity === selectedCity;
 
     return (
         <AdvancedMarker
@@ -17,6 +21,7 @@ export const StoreMarker = ({ store, onClick }: StoreMarkerProps) => {
             onClick={() => onClick(store)}
             title={store.name}
             zIndex={isSelected ? 100 : 1} // Bring selected marker to front
+            className={!isSameCity ? "opacity-75" : ""}
         >
             <Pin
                 background={isSelected ? '#ef962e' : '#EA4335'} // Orange if selected, Red (default) otherwise

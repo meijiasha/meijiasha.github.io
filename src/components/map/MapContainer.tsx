@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+import { Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { useAppStore } from '@/store/useAppStore';
 import { StoreMarker } from './StoreMarker';
 import { RecommendationCards } from './RecommendationCards';
@@ -27,6 +27,9 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
         setUserLocation
     } = useAppStore();
 
+    const map = useMap();
+    const coreLib = useMapsLibrary('core');
+
     // Get user location on mount
     useEffect(() => {
         if (navigator.geolocation) {
@@ -44,6 +47,26 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
         }
     }, [setUserLocation]);
 
+    // Auto-fit bounds when selectedCity changes
+    useEffect(() => {
+        if (!map || !coreLib || !stores.length) return;
+
+        const cityStores = stores.filter(store => {
+            const storeCity = store.city || DEFAULT_CITY;
+            return storeCity === selectedCity;
+        });
+
+        if (cityStores.length > 0) {
+            const bounds = new coreLib.LatLngBounds();
+            cityStores.forEach(store => {
+                if (typeof store.lat === 'number' && typeof store.lng === 'number') {
+                    bounds.extend({ lat: store.lat, lng: store.lng });
+                }
+            });
+            map.fitBounds(bounds);
+        }
+    }, [map, coreLib, selectedCity, stores]);
+
     const storesToDisplay = useMemo(() => {
         let results: Store[] = [];
         if (isRecommendationPanelOpen && recommendationResults.length > 0) {
@@ -52,11 +75,13 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
         } else {
             console.log("MapContainer: Filtering stores. Total:", stores.length, "City:", selectedCity, "District:", selectedDistrict, "Category:", selectedCategory);
             results = stores.filter((store) => {
-                const storeCity = store.city || DEFAULT_CITY;
-                const matchCity = storeCity === selectedCity;
+                // Show all cities, but filter by district/category if selected
+                // Note: District filtering usually implies a specific city, but if 'All' is selected, we show everything.
+                // If a specific district is selected (e.g. 'Xinyi'), it will only show stores in that district (likely only in the selected city).
+
                 const matchDistrict = selectedDistrict === '全部' || store.district === selectedDistrict;
                 const matchCategory = selectedCategory === '全部' || store.category === selectedCategory;
-                return matchCity && matchDistrict && matchCategory;
+                return matchDistrict && matchCategory;
             });
         }
 
