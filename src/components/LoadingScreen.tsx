@@ -57,7 +57,7 @@ export const LoadingScreen = ({ isLoading }: LoadingScreenProps) => {
             />
 
             <div className="flex flex-col items-center space-y-8 w-full max-w-md px-8 z-10 relative">
-                <img src="/logo.svg" alt="咩呷啥 Logo" className="h-24 w-auto animate-bounce rounded-full" />
+                <img src="/LOGO.svg" alt="咩呷啥 Logo" className="h-24 w-auto animate-bounce rounded-full" />
                 <div className="space-y-2 text-center w-full">
                     <h1 className="text-2xl font-bold text-primary">咩呷啥</h1>
                     <p className="text-gray-500">正在準備美食地圖...</p>

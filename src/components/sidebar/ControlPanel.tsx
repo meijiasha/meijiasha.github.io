@@ -87,7 +87,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-white border-r w-full md:w-80 relative overflow-y-auto">
+        <div className="h-full flex flex-col bg-white dark:bg-black border-r w-full md:w-80 relative overflow-y-auto">
             <div className="p-4 space-y-6">
                 <div className="space-y-4">
                     <div className="space-y-2">
@@ -171,7 +171,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                 {isRecommendationPanelOpen && (
                     <div className="mt-6 border-t pt-4 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-bold text-blue-800 flex items-center">
+                            <h3 className="font-bold text-blue-800 dark:text-blue-400 flex items-center">
                                 <Shuffle className="w-4 h-4 mr-2" /> 推薦結果
                             </h3>
                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setRecommendationPanelOpen(false)}>
@@ -182,7 +182,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                             {recommendationResults.map(store => (
                                 <Card
                                     key={store.id}
-                                    className="cursor-pointer hover:shadow-md border-blue-200"
+                                    className="cursor-pointer hover:shadow-md border-blue-200 dark:border-blue-900 dark:bg-card"
                                     onClick={() => handleStoreClick(store)}
                                 >
                                     <CardContent className="p-3">
@@ -201,7 +201,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                                 </Badge>
                                             )}
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-2">{store.address}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{store.address}</div>
                                     </CardContent>
                                 </Card>
                             ))}
