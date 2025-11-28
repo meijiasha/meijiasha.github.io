@@ -801,3 +801,20 @@ line-bot-server.js`。
 ### 6. 下一步建議 (Next Steps)
 *   **前台地圖整合**: 目前前台地圖功能尚未完全遷移至 React (仍在 `legacy/index.html` 運作中)。下一步應將 `src/components/map` 與 `src/components/sidebar` 整合至 `MainLayout`，完全取代舊版首頁。
 *   **效能優化**: 隨著店家數量增加，考慮在 `useStores` 中實作分頁或虛擬滾動 (Virtual Scrolling)。
+
+---
+
+## 📅 2025-11-28: UI 優化與修正 (UI Refinements & Fixes)
+
+### 1. 介面優化 (UI Refinements)
+- **推薦卡片 (Recommendation Cards)**:
+    - **統一高度**: 將卡片高度固定為 `450px`，確保版面整齊。
+    - **版面配置**: 強制保留兩行地址空間與 Instagram 按鈕空間，避免卡片高度跳動。
+    - **視覺調整**: 卡片背面圖片改為 `meijiasha.svg`，深色模式下店名改為橘色 (`#ef962e`)。
+- **店家列表 (Store List Panel)**:
+    - **移除邊框**: 移除面板、標題列與底部的邊框，創造更乾淨的視覺效果。
+    - **深色模式**: 優化深色模式下的顯示，確保無多餘邊框。
+
+### 2. 品牌與資源 (Branding & Assets)
+- **顏色標準化**: 將全站主色調 (Primary Orange) 統一為 `#ef962e`。更新了 `tailwind.config.js` 與 `index.css`。
+- **Logo 修復**: 將 `public/LOGO.svg` 重命名為 `public/logo.svg`，解決 Linux 環境 (GitHub Pages) 下的大小寫敏感問題。更新了所有程式碼引用。
