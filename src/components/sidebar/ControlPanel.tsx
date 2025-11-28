@@ -11,7 +11,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Shuffle, Navigation, X, Loader2 } from "lucide-react";
+import { Shuffle, Navigation, X, Loader2, Instagram } from "lucide-react";
+import { InstagramEmbed } from 'react-social-media-embed';
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
 import { useRecommendation } from "@/hooks/useRecommendation";
@@ -39,6 +40,20 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
 
     const { recommendRandom, recommendNearby, isRecommending } = useRecommendation();
     const [isOpenNow, setIsOpenNow] = useState(false);
+    const [expandedInstagramStoreIds, setExpandedInstagramStoreIds] = useState<Set<string>>(new Set());
+
+    const toggleInstagram = (storeId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setExpandedInstagramStoreIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(storeId)) {
+                newSet.delete(storeId);
+            } else {
+                newSet.add(storeId);
+            }
+            return newSet;
+        });
+    };
 
     // Get current districts based on selected city
     const currentDistricts = useMemo(() => {
@@ -171,7 +186,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                 {isRecommendationPanelOpen && (
                     <div className="mt-6 border-t pt-4 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-bold text-blue-800 dark:text-blue-400 flex items-center">
+                            <h3 className="font-bold text-foreground flex items-center">
                                 <Shuffle className="w-4 h-4 mr-2" /> 推薦結果
                             </h3>
                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setRecommendationPanelOpen(false)}>
@@ -182,7 +197,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                             {recommendationResults.map(store => (
                                 <Card
                                     key={store.id}
-                                    className="cursor-pointer hover:shadow-md border-blue-200 dark:border-blue-900 dark:bg-card"
+                                    className="cursor-pointer hover:shadow-md border-border bg-card text-card-foreground"
                                     onClick={() => handleStoreClick(store)}
                                 >
                                     <CardContent className="p-3">
@@ -201,7 +216,25 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                                 </Badge>
                                             )}
                                         </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{store.address}</div>
+                                        <div className="text-xs text-muted-foreground mt-2">{store.address}</div>
+                                        {store.instagram_url && (
+                                            <div className="mt-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full text-xs h-8 gap-2 text-pink-600 border-pink-200 hover:bg-pink-50 dark:text-pink-400 dark:border-pink-900 dark:hover:bg-pink-950/30"
+                                                    onClick={(e) => toggleInstagram(store.id, e)}
+                                                >
+                                                    <Instagram className="w-3 h-3" />
+                                                    {expandedInstagramStoreIds.has(store.id) ? "隱藏 Instagram" : "查看 Instagram"}
+                                                </Button>
+                                                {expandedInstagramStoreIds.has(store.id) && (
+                                                    <div className="mt-2 -mx-2 overflow-hidden rounded-lg border border-border" onClick={(e) => e.stopPropagation()}>
+                                                        <InstagramEmbed url={store.instagram_url} width="100%" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             ))}

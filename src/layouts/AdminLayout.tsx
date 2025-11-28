@@ -4,13 +4,12 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { LogOut, Store } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
 
 export default function AdminLayout() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
 
-    const { theme } = useTheme();
+    // const { setTheme } = useTheme(); // Theme is handled by ThemeProvider
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -23,29 +22,7 @@ export default function AdminLayout() {
         return () => unsubscribe();
     }, [navigate]);
 
-    // Force light mode in Admin
-    useEffect(() => {
-        const root = window.document.documentElement;
-        // Save current class list to restore later? 
-        // Actually we can just rely on theme state to restore.
-
-        // Force light
-        root.classList.remove("dark");
-        root.classList.add("light");
-
-        return () => {
-            // Restore based on theme state
-            root.classList.remove("light", "dark");
-            if (theme === "system") {
-                const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-                    ? "dark"
-                    : "light";
-                root.classList.add(systemTheme);
-            } else {
-                root.classList.add(theme);
-            }
-        };
-    }, [theme]);
+    // Removed force light mode logic to support dark mode properly
 
     const handleLogout = async () => {
         await signOut(auth);
@@ -57,31 +34,23 @@ export default function AdminLayout() {
     }
 
     return (
-        <div className="flex h-screen bg-gray-100">
-            {/* Sidebar */}
-            <aside className="w-64 bg-white shadow-md">
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold text-gray-800">咩呷啥 Admin</h1>
-                </div>
-                <nav className="mt-6 px-4 space-y-2">
-                    <Link to="/admin/stores">
-                        <Button variant="ghost" className="w-full justify-start">
-                            <Store className="mr-2 h-4 w-4" />
-                            店家管理
-                        </Button>
-                    </Link>
-                    {/* Add more links here */}
-                </nav>
-                <div className="absolute bottom-0 w-64 p-4 border-t">
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+        <div className="flex flex-col h-screen bg-muted/40">
+            {/* Header */}
+            <header className="flex h-16 items-center gap-4 border-b bg-background px-6 shadow-sm">
+                <Link to="/admin/stores" className="flex items-center gap-2 font-semibold md:text-lg">
+                    <Store className="h-6 w-6" />
+                    <span className="">咩呷啥 Admin</span>
+                </Link>
+                <div className="ml-auto flex items-center gap-4">
+                    <Button variant="ghost" size="sm" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
                         登出
                     </Button>
                 </div>
-            </aside>
+            </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-8">
+            <main className="flex-1 overflow-y-auto p-4 md:p-8">
                 <Outlet />
             </main>
         </div>

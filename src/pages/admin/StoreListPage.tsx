@@ -107,8 +107,8 @@ export default function StoreListPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">店家列表</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">店家列表</h2>
                 <Link to="/admin/stores/new">
                     <Button>
                         <Plus className="mr-2 h-4 w-4" /> 新增店家
@@ -116,16 +116,16 @@ export default function StoreListPage() {
                 </Link>
             </div>
 
-            <div className="rounded-md border bg-white">
+            <div className="rounded-md border bg-background text-foreground overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[25%]">店名</TableHead>
-                            <TableHead>縣市</TableHead>
-                            <TableHead>行政區</TableHead>
-                            <TableHead>分類</TableHead>
-                            <TableHead>地址</TableHead>
-                            <TableHead className="text-right">操作</TableHead>
+                            <TableHead className="w-[200px]">店名</TableHead>
+                            <TableHead className="w-[100px]">縣市</TableHead>
+                            <TableHead className="w-[100px]">行政區</TableHead>
+                            <TableHead className="w-[100px]">分類</TableHead>
+                            <TableHead className="w-[300px]">地址</TableHead>
+                            <TableHead className="w-[80px] text-right">操作</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -137,10 +137,10 @@ export default function StoreListPage() {
                             </TableRow>
                         ) : (
                             currentItems.map((store) => (
-                                <TableRow key={store.id}>
+                                <TableRow key={store.id} className="h-20">
                                     <TableCell className="font-medium align-middle">
-                                        <div className="flex items-center space-x-2">
-                                            <span className="line-clamp-2 break-words" title={store.name}>
+                                        <div className="flex items-center space-x-2 h-full">
+                                            <span className="line-clamp-2 break-words leading-tight" title={store.name}>
                                                 {store.name}
                                             </span>
                                             {store.google_maps_url && (

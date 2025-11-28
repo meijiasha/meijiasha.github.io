@@ -2,8 +2,10 @@ import { useMemo, useState, useEffect } from "react";
 import { cn, getCategoryColor } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink } from "lucide-react";
+import { MapPin, ExternalLink, X, Instagram } from "lucide-react";
+import { InstagramEmbed } from 'react-social-media-embed';
 import {
     Pagination,
     PaginationContent,
@@ -29,10 +31,25 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         setSelectedStore,
         setMapCenter,
         selectedDistrict,
-        selectedCategory
+        selectedCategory,
+        setStoreListPanelOpen
     } = useAppStore();
 
     const [currentPage, setCurrentPage] = useState(1);
+    const [expandedInstagramStoreIds, setExpandedInstagramStoreIds] = useState<Set<string>>(new Set());
+
+    const toggleInstagram = (storeId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setExpandedInstagramStoreIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(storeId)) {
+                newSet.delete(storeId);
+            } else {
+                newSet.add(storeId);
+            }
+            return newSet;
+        });
+    };
 
     // Filter stores based on selection
     const filteredStores = useMemo(() => {
@@ -63,12 +80,12 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
     };
 
     const glassStyle = {
-        background: 'rgba(255, 137, 0, 0.2)',
+        background: 'rgba(239, 150, 46, 0.2)',
         borderRadius: '16px 0 0 16px',
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(5px)',
         WebkitBackdropFilter: 'blur(5px)',
-        border: '1px solid rgba(255, 137, 0, 0.3)',
+        border: '1px solid rgba(239, 150, 46, 0.3)',
     };
 
     return (
@@ -76,11 +93,14 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
             className="h-full flex flex-col w-full relative overflow-hidden transition-all duration-300"
             style={glassStyle}
         >
-            <div className="p-4 border-b border-orange-200/30 flex justify-between items-center bg-white/10">
+            <div className="p-4 border-b border-border flex justify-between items-center bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-orange-950">店家列表</h1>
-                    <Badge variant="outline" className="bg-white/30 border-orange-200 text-orange-900">{filteredStores.length} 間</Badge>
+                    <h1 className="text-xl font-bold text-foreground">店家列表</h1>
+                    <Badge variant="outline" className="bg-background/50 text-muted-foreground">{filteredStores.length} 間</Badge>
                 </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setStoreListPanelOpen(false)}>
+                    <X className="h-4 w-4" />
+                </Button>
             </div>
 
             <ScrollArea className="flex-1 bg-transparent">
@@ -93,21 +113,21 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                         currentStores.map((store) => (
                             <Card
                                 key={store.id}
-                                className={`cursor-pointer transition-all hover:shadow-md bg-white/60 hover:bg-white/80 border-orange-100 ${selectedStore?.id === store.id ? 'border-orange-500 ring-1 ring-orange-500' : ''}`}
+                                className={`cursor-pointer transition-all hover:shadow-md bg-card hover:bg-accent/50 border-border ${selectedStore?.id === store.id ? 'border-primary ring-1 ring-primary' : ''}`}
                                 onClick={() => handleStoreClick(store)}
                             >
                                 <CardHeader className="p-3 md:p-4 pb-2 md:pb-2">
                                     <div className="flex flex-col items-start gap-1">
                                         <div className="h-12 flex items-center w-full">
-                                            <CardTitle className="text-base font-bold text-gray-900 line-clamp-2 leading-tight">{store.name}</CardTitle>
+                                            <CardTitle className="text-base font-bold text-card-foreground line-clamp-2 leading-tight">{store.name}</CardTitle>
                                         </div>
                                         <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
-                                    <div className="text-sm text-gray-700 space-y-1">
+                                    <div className="text-sm text-muted-foreground space-y-1">
                                         <div className="flex items-center">
-                                            <MapPin className="w-3 h-3 mr-1 text-orange-600" />
+                                            <MapPin className="w-3 h-3 mr-1 text-primary" />
                                             {store.district}
                                         </div>
                                         <div className="line-clamp-2 h-10 flex items-center">{store.address}</div>
@@ -123,6 +143,24 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                                 Google Maps
                                             </a>
                                         )}
+                                        {store.instagram_url && (
+                                            <div className="mt-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full text-xs h-8 gap-2 text-pink-600 border-pink-200 hover:bg-pink-50 dark:text-pink-400 dark:border-pink-900 dark:hover:bg-pink-950/30"
+                                                    onClick={(e) => toggleInstagram(store.id, e)}
+                                                >
+                                                    <Instagram className="w-3 h-3" />
+                                                    {expandedInstagramStoreIds.has(store.id) ? "隱藏 Instagram" : "查看 Instagram"}
+                                                </Button>
+                                                {expandedInstagramStoreIds.has(store.id) && (
+                                                    <div className="mt-2 -mx-2 overflow-hidden rounded-lg border border-border" onClick={(e) => e.stopPropagation()}>
+                                                        <InstagramEmbed url={store.instagram_url} width="100%" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -133,7 +171,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="p-4 border-t border-orange-200/30 bg-white/10">
+                <div className="p-4 border-t border-primary/30 bg-white/10">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>
@@ -146,7 +184,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
 
                             {/* Simple pagination: showing current page / total pages */}
                             <PaginationItem>
-                                <span className="px-4 text-sm text-orange-900">
+                                <span className="px-4 text-sm text-primary font-medium">
                                     {currentPage} / {totalPages}
                                 </span>
                             </PaginationItem>

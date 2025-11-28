@@ -44,12 +44,13 @@ const formSchema = z.object({
     longitude: z.coerce.number().optional(),
     place_id: z.string().optional(),
     phone_number: z.string().optional(),
+    instagram_url: z.string().url("請輸入有效的 URL").optional().or(z.literal("")),
 });
 
 export default function StoreFormPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const isEditMode = !!id;
+    // const isEditMode = !!id; // Unused after title change
     const [loading, setLoading] = useState(false);
     const placesLib = useMapsLibrary('places');
     const map = useMap();
@@ -76,6 +77,7 @@ export default function StoreFormPage() {
             longitude: 0,
             place_id: "",
             phone_number: "",
+            instagram_url: "",
         },
     });
 
@@ -124,6 +126,7 @@ export default function StoreFormPage() {
                     longitude: lng,
                     place_id: data.place_id || "",
                     phone_number: data.phone_number || "",
+                    instagram_url: data.instagram_url || "",
                 });
             } else {
                 console.error("Store not found");
@@ -336,13 +339,13 @@ export default function StoreFormPage() {
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     返回列表
                 </Button>
-                <h1 className="text-2xl font-bold">{isEditMode ? "編輯店家" : "新增店家"}</h1>
+                <h1 className="text-2xl font-bold">新增店家/編輯店家</h1>
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-card text-foreground p-4 md:p-6 rounded-lg shadow border">
 
-                    <div className="flex gap-4 items-end">
+                    <div className="flex flex-col sm:flex-row gap-4 items-end">
                         <FormField
                             control={form.control}
                             name="google_maps_url"
@@ -364,6 +367,20 @@ export default function StoreFormPage() {
 
                     <FormField
                         control={form.control}
+                        name="instagram_url"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Instagram Post/Reel 連結</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="https://www.instagram.com/p/..." {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
                         name="name"
                         render={({ field }) => (
                             <FormItem>
@@ -376,7 +393,7 @@ export default function StoreFormPage() {
                         )}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
                             name="city"
@@ -426,6 +443,20 @@ export default function StoreFormPage() {
 
                     <FormField
                         control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>地址</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="輸入地址" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
                         name="category"
                         render={({ field }) => (
                             <FormItem>
@@ -451,21 +482,9 @@ export default function StoreFormPage() {
                         )}
                     />
 
-                    <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>地址</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="輸入地址" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
 
-                    <div className="grid grid-cols-2 gap-4">
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
                             name="phone_number"
@@ -494,7 +513,7 @@ export default function StoreFormPage() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
                             name="latitude"
@@ -537,7 +556,7 @@ export default function StoreFormPage() {
                         )}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
                             name="price_level"

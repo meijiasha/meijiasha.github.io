@@ -82,7 +82,7 @@ export default function MainLayout() {
                     <div className="md:hidden">
                         {/* Right Sheet: Store List - Controlled by Navbar toggle via store */}
                         <Sheet open={isStoreListPanelOpen} onOpenChange={setStoreListPanelOpen} modal={false}>
-                            <SheetContent side="right" className="p-0 w-80 top-16 h-[calc(100vh-4rem)] border-t bg-transparent shadow-none" hideClose>
+                            <SheetContent side="right" className="p-0 w-80 top-16 h-[calc(100vh-4rem)] border-t bg-transparent shadow-none" hideClose onInteractOutside={(e) => e.preventDefault()}>
                                 <StoreListPanel stores={stores} />
                             </SheetContent>
                         </Sheet>

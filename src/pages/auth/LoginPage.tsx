@@ -72,53 +72,69 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex h-screen items-center justify-center bg-gray-100">
-            <Card className="w-[400px]">
-                <CardHeader>
-                    <CardTitle className="text-center">後台登入</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="admin@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="password">密碼</Label>
-                                <Button
-                                    type="button"
-                                    variant="link"
-                                    className="px-0 font-normal text-xs"
-                                    onClick={handleResetPassword}
-                                    disabled={loading}
-                                >
-                                    忘記密碼？
-                                </Button>
+        <div className="relative flex h-screen items-center justify-center bg-gray-100 overflow-hidden">
+            {/* Background Pattern */}
+            <div
+                className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+                style={{
+                    backgroundImage: "url('/bowl.svg')",
+                    backgroundRepeat: "repeat",
+                    backgroundSize: "60px 60px",
+                    backgroundPosition: "center"
+                }}
+            />
+
+            <div className="z-10 relative flex flex-col items-center gap-6">
+                <div className="bg-white p-4 rounded-full shadow-lg">
+                    <img src="/LOGO.svg" alt="Logo" className="w-20 h-20 rounded-full object-cover" />
+                </div>
+                <Card className="w-[400px] shadow-xl bg-white/90 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-center">後台登入</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="admin@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
                             </div>
-                            <Input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                        </div>
-                        {error && <p className="text-sm text-red-500">{error}</p>}
-                        {message && <p className="text-sm text-green-500">{message}</p>}
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? "處理中..." : "登入"}
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="password">密碼</Label>
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        className="px-0 font-normal text-xs"
+                                        onClick={handleResetPassword}
+                                        disabled={loading}
+                                    >
+                                        忘記密碼？
+                                    </Button>
+                                </div>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            {error && <p className="text-sm text-red-500">{error}</p>}
+                            {message && <p className="text-sm text-green-500">{message}</p>}
+                            <Button type="submit" className="w-full" disabled={loading}>
+                                {loading ? "處理中..." : "登入"}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

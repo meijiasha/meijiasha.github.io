@@ -22,4 +22,5 @@ export interface Store {
     dishes?: string; // Recommended dishes
     distance?: number; // Calculated distance from user
     photo_url?: string; // Fetched from Places API
+    instagram_url?: string; // Instagram Post/Reel URL
 }
