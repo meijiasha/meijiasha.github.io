@@ -82,14 +82,14 @@ export default function MainLayout() {
                     <div className="md:hidden">
                         {/* Right Sheet: Store List - Controlled by Navbar toggle via store */}
                         <Sheet open={isStoreListPanelOpen} onOpenChange={setStoreListPanelOpen} modal={false}>
-                            <SheetContent side="right" className="p-0 w-80 top-16 h-[calc(100vh-4rem)] border-t bg-transparent shadow-none" hideClose onInteractOutside={(e) => e.preventDefault()}>
+                            <SheetContent side="right" className="p-0 w-80 top-16 h-[calc(100vh-4rem)] border-none bg-transparent shadow-none" hideClose onInteractOutside={(e) => e.preventDefault()}>
                                 <StoreListPanel stores={stores} />
                             </SheetContent>
                         </Sheet>
                     </div>
 
                     {/* Desktop Store List Panel (Collapsible Flex Item) */}
-                    <div className={`hidden md:block h-full shrink-0 z-10 shadow-xl border-l transition-all duration-300 ${isStoreListPanelOpen ? 'w-96 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
+                    <div className={`hidden md:block h-full shrink-0 z-10 shadow-xl transition-all duration-300 ${isStoreListPanelOpen ? 'w-96 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
                         <div className="w-96 h-full"> {/* Inner container to maintain width during transition */}
                             <StoreListPanel stores={stores} />
                         </div>

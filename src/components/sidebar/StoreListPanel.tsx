@@ -85,7 +85,6 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(5px)',
         WebkitBackdropFilter: 'blur(5px)',
-        border: '1px solid rgba(239, 150, 46, 0.3)',
     };
 
     return (
@@ -93,7 +92,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
             className="h-full flex flex-col w-full relative overflow-hidden transition-all duration-300"
             style={glassStyle}
         >
-            <div className="p-4 border-b border-border flex justify-between items-center bg-background/80 backdrop-blur-sm">
+            <div className="p-4 border-b border-border dark:border-b-0 flex justify-between items-center bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
                     <h1 className="text-xl font-bold text-foreground">店家列表</h1>
                     <Badge variant="outline" className="bg-background/50 text-muted-foreground">{filteredStores.length} 間</Badge>
@@ -171,7 +170,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="p-4 border-t border-primary/30 bg-white/10">
+                <div className="p-4 border-t border-primary/30 dark:border-t-0 bg-white/10">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>
