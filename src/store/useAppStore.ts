@@ -13,6 +13,8 @@ interface AppState {
     isRecommendationPanelOpen: boolean;
     recommendationResults: Store[];
     isStoreListPanelOpen: boolean;
+    isUserLocationInfoOpen: boolean;
+    locateUserTrigger: number;
 
     setCity: (city: string) => void;
     setDistrict: (district: string) => void;
@@ -25,6 +27,8 @@ interface AppState {
     setRecommendationPanelOpen: (isOpen: boolean) => void;
     setRecommendationResults: (results: Store[]) => void;
     setStoreListPanelOpen: (isOpen: boolean) => void;
+    setUserLocationInfoOpen: (isOpen: boolean) => void;
+    triggerLocateUser: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -39,6 +43,8 @@ export const useAppStore = create<AppState>((set) => ({
     isRecommendationPanelOpen: false,
     recommendationResults: [],
     isStoreListPanelOpen: false,
+    isUserLocationInfoOpen: true,
+    locateUserTrigger: 0,
 
     setCity: (city) => set({ selectedCity: city }),
     setDistrict: (district) => set({ selectedDistrict: district }),
@@ -51,4 +57,6 @@ export const useAppStore = create<AppState>((set) => ({
     setRecommendationPanelOpen: (isOpen) => set({ isRecommendationPanelOpen: isOpen }),
     setRecommendationResults: (results) => set({ recommendationResults: results }),
     setStoreListPanelOpen: (isOpen) => set({ isStoreListPanelOpen: isOpen }),
+    setUserLocationInfoOpen: (isOpen) => set({ isUserLocationInfoOpen: isOpen }),
+    triggerLocateUser: () => set({ locateUserTrigger: Date.now() }),
 }));

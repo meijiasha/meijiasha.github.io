@@ -1,0 +1,76 @@
+import React from 'react';
+import styled from 'styled-components';
+import { useTheme } from "@/components/theme-provider";
+
+const Switch = () => {
+  const { theme, setTheme } = useTheme();
+  const isLight = theme === 'light';
+
+  const toggleTheme = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTheme(e.target.checked ? 'light' : 'dark');
+  };
+
+  return (
+    <StyledWrapper>
+      <label className="switch">
+        <input type="checkbox" checked={isLight} onChange={toggleTheme} />
+        <span className="slider" />
+      </label>
+    </StyledWrapper>
+  );
+}
+
+const StyledWrapper = styled.div`
+  /* The switch - the box around the slider */
+  .switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 2.5em;
+    height: 1.5em;
+  }
+
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
+    --background: #cd5412;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--background);
+    transition: .5s;
+    border-radius: 30px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 1em;
+    width: 1em;
+    border-radius: 50%;
+    left: 10%;
+    bottom: 15%;
+    box-shadow: inset 8px -4px 0px 0px #fff000;
+    background: var(--background);
+    transition: .5s;
+  }
+
+  input:checked + .slider {
+    background-color: #ef962e;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(100%);
+    box-shadow: inset 15px -4px 0px 15px #fff000;
+  }`;
+
+export default Switch;

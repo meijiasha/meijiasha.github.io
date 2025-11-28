@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Map, AdvancedMarker, Pin, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { useAppStore } from '@/store/useAppStore';
 import { StoreMarker } from './StoreMarker';
@@ -11,7 +11,22 @@ interface MapContainerProps {
 
 import { DEFAULT_CITY } from "@/lib/locations";
 
+import { darkModeStyles } from './mapStyles';
+import { useTheme } from '@/components/theme-provider';
+
 export const MapContainer = ({ stores }: MapContainerProps) => {
+    const { theme } = useTheme();
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        if (theme === 'system') {
+            const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            setIsDark(systemIsDark);
+        } else {
+            setIsDark(theme === 'dark');
+        }
+    }, [theme]);
+
     const {
         selectedCity,
         mapCenter,
@@ -24,7 +39,10 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
         isRecommendationPanelOpen,
         recommendationResults,
         userLocation,
-        setUserLocation
+        setUserLocation,
+        isUserLocationInfoOpen,
+        setUserLocationInfoOpen,
+        locateUserTrigger
     } = useAppStore();
 
     const map = useMap();
@@ -49,7 +67,8 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
 
     // Auto-fit bounds when selectedCity changes
     useEffect(() => {
-        if (!map || !coreLib || !stores.length) return;
+        // If recommendation panel is open, we let the other effect handle bounds
+        if (!map || !coreLib || !stores.length || isRecommendationPanelOpen) return;
 
         const cityStores = stores.filter(store => {
             const storeCity = store.city || DEFAULT_CITY;
@@ -65,7 +84,64 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
             });
             map.fitBounds(bounds);
         }
-    }, [map, coreLib, selectedCity, stores]);
+    }, [map, coreLib, selectedCity, stores, isRecommendationPanelOpen]);
+
+    // Auto-fit bounds for recommendations
+    useEffect(() => {
+        if (!map || !coreLib) return;
+
+        if (isRecommendationPanelOpen && recommendationResults.length > 0) {
+            console.log("MapContainer: Fitting bounds for recommendations");
+            const bounds = new coreLib.LatLngBounds();
+            let hasValidCoords = false;
+            recommendationResults.forEach(store => {
+                if (typeof store.lat === 'number' && typeof store.lng === 'number') {
+                    bounds.extend({ lat: store.lat, lng: store.lng });
+                    hasValidCoords = true;
+                }
+            });
+
+            if (hasValidCoords) {
+                // Fit bounds with padding to position markers in the top area
+                // We want the markers to be in the top 1/3 of the screen
+                // So we add padding to the bottom equal to 2/3 of the screen height
+                const bottomPadding = window.innerHeight * 0.65;
+
+                map.fitBounds(bounds, {
+                    top: 50,
+                    right: 50,
+                    left: 50,
+                    bottom: bottomPadding
+                });
+            }
+        }
+    }, [map, coreLib, isRecommendationPanelOpen, recommendationResults]);
+
+    // Handle Locate Me trigger
+    useEffect(() => {
+        if (!map || !userLocation || locateUserTrigger === 0) return;
+
+        console.log("MapContainer: Locate user triggered");
+
+        // Always open the info window
+        setUserLocationInfoOpen(true);
+        setMapZoom(16);
+
+        if (isRecommendationPanelOpen) {
+            // If recommendation panel is open, center with offset
+            console.log("MapContainer: Centering user with offset (panel open)");
+            map.panTo(userLocation);
+
+            // Pan down to move user up
+            setTimeout(() => {
+                map.panBy(0, window.innerHeight / 6);
+            }, 100);
+        } else {
+            // Normal centering
+            console.log("MapContainer: Centering user normally");
+            map.panTo(userLocation);
+        }
+    }, [locateUserTrigger, map, userLocation, isRecommendationPanelOpen, setUserLocationInfoOpen, setMapZoom]);
 
     const storesToDisplay = useMemo(() => {
         let results: Store[] = [];
@@ -109,6 +185,7 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
                 disableDefaultUI={true}
                 mapId={"bf51a910020fa25a"} // Required for AdvancedMarker. Using a demo ID or user should provide one.
                 style={{ width: '100%', height: '100%' }}
+                styles={isDark ? darkModeStyles : []}
                 gestureHandling={'greedy'}
             >
                 {storesToDisplay.map((store) => (
@@ -122,9 +199,29 @@ export const MapContainer = ({ stores }: MapContainerProps) => {
                 {userLocation &&
                     typeof userLocation.lat === 'number' && !isNaN(userLocation.lat) &&
                     typeof userLocation.lng === 'number' && !isNaN(userLocation.lng) && (
-                        <AdvancedMarker position={userLocation} title="您的位置">
-                            <Pin background={'#4285F4'} glyphColor={'#FFF'} borderColor={'#FFF'} />
-                        </AdvancedMarker>
+                        <>
+                            <AdvancedMarker position={userLocation} onClick={() => setUserLocationInfoOpen(true)}>
+                                <Pin background={'#4285F4'} glyphColor={'#FFF'} borderColor={'#FFF'} />
+                                {isUserLocationInfoOpen && (
+                                    <div className="absolute left-1/2 bottom-full mb-10 -translate-x-1/2 bg-primary text-primary-foreground text-xs px-3 py-1.5 rounded-md whitespace-nowrap shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300 z-50">
+                                        <span>你在這裡</span>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setUserLocationInfoOpen(false);
+                                            }}
+                                            className="hover:bg-primary-foreground/20 rounded-full p-0.5 transition-colors"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 6 6 18" />
+                                                <path d="m6 6 12 12" />
+                                            </svg>
+                                        </button>
+                                        <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-primary"></div>
+                                    </div>
+                                )}
+                            </AdvancedMarker>
+                        </>
                     )}
             </Map>
 

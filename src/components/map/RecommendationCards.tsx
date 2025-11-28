@@ -5,6 +5,7 @@ import { MapPin, Phone, X, Instagram } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
+import { useMap } from '@vis.gl/react-google-maps';
 import { GOOGLE_MAPS_API_KEY } from "@/lib/config";
 import { cn, getCategoryColor } from "@/lib/utils";
 
@@ -35,9 +36,56 @@ export const RecommendationCards = () => {
 
     if (!isRecommendationPanelOpen || recommendationResults.length === 0) return null;
 
+    const map = useMap();
+
     const handleStoreClick = (store: Store) => {
         setSelectedStore(store);
-        setMapCenter({ lat: store.lat, lng: store.lng });
+
+        if (map) {
+            // Calculate offset to center store in top 1/3 of screen
+            // We want the store to be at y = window.innerHeight / 3
+            // Map center is at y = window.innerHeight / 2
+            // So we need to shift the map center DOWN by (window.innerHeight / 2 - window.innerHeight / 3) = window.innerHeight / 6
+            // Shifting map center down means panning by (0, window.innerHeight / 6)
+
+            // First set center to store
+            map.panTo({ lat: store.lat, lng: store.lng });
+
+            // Then pan by offset
+            // Note: panBy takes x, y in pixels. Positive y moves the map content UP (so the center moves DOWN relative to content? No.)
+            // panBy(x, y): "Changes the center of the map by the given distance in pixels."
+            // If y is positive, the center moves down.
+            // If center moves down, the map content moves up.
+            // We want the store (content) to move UP to the top 1/3.
+            // So we need the center to move DOWN.
+            // So y should be positive.
+
+            // Wait, let's verify direction.
+            // Center is (0,0). Store is at (0,0).
+            // We want store at (0, -H/6) relative to center? No, screen coordinates.
+            // Center is H/2. Target is H/3.
+            // Target is ABOVE center.
+            // So we need to move the map DOWN? No, move the map UP so the point moves UP?
+            // If I drag the map UP, the content moves UP.
+            // Dragging UP means the center latitude decreases (moves South).
+            // Wait.
+            // If I want the store to be higher on the screen, I need to look at a point SOUTH of the store.
+            // So the new center should be SOUTH of the store.
+            // To move center South, y pixel coordinate increases.
+            // So panBy(0, positive) moves center South (down).
+            // Yes.
+
+            // Use a timeout to allow the first pan to complete/start? 
+            // Actually panTo is smooth. panBy might interrupt or queue.
+            // Better to calculate the target LatLng directly if possible, but panBy is easier for pixel offsets.
+            // Let's try chaining.
+
+            setTimeout(() => {
+                map.panBy(0, window.innerHeight / 6);
+            }, 100);
+        } else {
+            setMapCenter({ lat: store.lat, lng: store.lng });
+        }
     };
 
     const getPhotoUrl = (store: Store) => {
@@ -80,6 +128,11 @@ export const RecommendationCards = () => {
                             {/* Back Face (Logo) - Now Default Visible (0deg) */}
                             <Card
                                 className="absolute inset-0 w-full h-full shadow-xl border-2 border-primary bg-primary [backface-visibility:hidden] flex items-center justify-center cursor-pointer z-10"
+                                style={{
+                                    backgroundImage: "url('/bowl-25trans.svg')",
+                                    backgroundRepeat: "repeat",
+                                    backgroundSize: "50px" // Adjust size if needed, but default might be fine. Let's start without size or maybe a reasonable size.
+                                }}
                             >
                                 <div className="relative w-full h-full flex items-center justify-center">
                                     <img src="/meijiasha.svg" alt="Logo" className="w-32 h-32 opacity-90" />
@@ -162,7 +215,7 @@ export const RecommendationCards = () => {
             <Button
                 variant="secondary"
                 size="icon"
-                className="absolute top-[-40px] right-4 pointer-events-auto shadow-md rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
+                className="absolute top-[-40px] right-4 pointer-events-auto shadow-md rounded-full bg-white/80 backdrop-blur-sm hover:bg-white dark:bg-black dark:text-white dark:hover:bg-gray-800"
                 onClick={() => setRecommendationPanelOpen(false)}
             >
                 <X className="w-4 h-4" />

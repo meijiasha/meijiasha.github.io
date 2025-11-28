@@ -28,18 +28,23 @@ export const SponsorWidget = () => {
                 <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white hover:bg-gray-100"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md z-10 transition-opacity bg-white hover:bg-gray-100 dark:bg-black dark:hover:bg-gray-800 dark:text-white"
                     onClick={handleClose}
                 >
                     <X className="h-3 w-3" />
                     <span className="sr-only">Close Sponsor</span>
                 </Button>
                 <div className="overflow-hidden rounded-lg shadow-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm">
-                    <img
-                        src="/banner-sponsor.jpg"
-                        alt="Sponsor"
-                        className="max-w-[200px] h-auto md:max-w-[280px] object-cover hover:scale-105 transition-transform duration-300"
-                    />
+                    <a href="https://www.god-dice.com/" target="_blank" rel="noopener noreferrer" className="block">
+                        <img
+                            src="/banner-sponsor.jpg"
+                            alt="Sponsor"
+                            className="max-w-[150px] h-auto md:max-w-[250px] object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                    </a>
+                    <div className="bg-white/60 text-black text-[10px] py-1 px-2 text-center backdrop-blur-md">
+                        感謝 <a href="https://www.god-dice.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">上帝骰</a> 贊助
+                    </div>
                 </div>
             </div>
         </div>

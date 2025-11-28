@@ -1,10 +1,20 @@
-import { ModeToggle } from "@/components/mode-toggle";
+import ThemeSwitch from "@/components/ui/ThemeSwitch";
 import { Button } from "@/components/ui/button";
-import { PanelRightOpen, PanelRightClose } from "lucide-react";
+import { PanelRightOpen, PanelRightClose, Crosshair } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 
 export const Navbar = () => {
-    const { isStoreListPanelOpen, setStoreListPanelOpen } = useAppStore();
+    const { isStoreListPanelOpen, setStoreListPanelOpen, userLocation, triggerLocateUser } = useAppStore();
+
+    // Added handleLocateMe function
+    const handleLocateMe = () => {
+        if (userLocation) {
+            triggerLocateUser();
+        } else {
+            // Optional: Show a toast or alert if location is not available
+            console.warn("User location not available");
+        }
+    };
 
     return (
         <div className="h-16 border-b bg-white dark:bg-gray-950 px-4 flex items-center justify-between shrink-0 z-20 relative shadow-sm">
@@ -25,7 +35,16 @@ export const Navbar = () => {
                 >
                     {isStoreListPanelOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
                 </Button>
-                <ModeToggle />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLocateMe}
+                    title="顯示我的位置"
+                    className="text-muted-foreground hover:text-primary"
+                >
+                    <Crosshair className="w-5 h-5" />
+                </Button>
+                <ThemeSwitch />
             </div>
         </div>
     );
