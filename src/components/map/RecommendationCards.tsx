@@ -117,7 +117,7 @@ export const RecommendationCards = () => {
                 {recommendationResults.map((store, index) => (
                     <div
                         key={store.id}
-                        className="w-[350px] h-[450px] shrink-0 snap-center perspective-1000 group animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards"
+                        className="w-[350px] h-[50vh] md:h-[450px] shrink-0 snap-center perspective-1000 group animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards"
                         style={{ animationDelay: `${index * 150}ms` }}
                     >
                         <div

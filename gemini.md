@@ -85,6 +85,8 @@
 - **顏色標準化**: 將全站主色調 (Primary Orange) 統一為 `#ef962e`。更新了 `tailwind.config.js` 與 `index.css`。
     - **Logo 修正**: 將 `public/LOGO.svg` 更名為 `public/logo.svg` 以解決 Linux 環境下的路徑問題。
     - **主題切換按鈕**: 調整了 Navbar 上主題切換按鈕 (ThemeSwitch) 的尺寸，使其更為精緻 (寬度縮小至 2.5em，高度縮小至 1.5em)。
+    - **手機版卡片高度**: 將手機版推薦卡片的高度調整為畫面高度的 50% (`50vh`)，桌面版維持固定 450px。
+
 - **Logo 修復**: 將 `public/LOGO.svg` 重命名為 `public/logo.svg`，解決 Linux 環境 (GitHub Pages) 下的大小寫敏感問題。更新了所有程式碼引用。
 
 ---
