@@ -86,7 +86,7 @@ export default function LoginPage() {
 
             <div className="z-10 relative flex flex-col items-center gap-6">
                 <div className="bg-white p-4 rounded-full shadow-lg">
-                    <img src="/LOGO.svg" alt="Logo" className="w-20 h-20 rounded-full object-cover" />
+                    <img src="/logo.svg" alt="Logo" className="w-20 h-20 rounded-full object-cover" />
                 </div>
                 <Card className="w-[400px] shadow-xl bg-white/90 backdrop-blur-sm">
                     <CardHeader>
