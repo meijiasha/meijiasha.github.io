@@ -86,6 +86,9 @@
     - **Logo 修正**: 將 `public/LOGO.svg` 更名為 `public/logo.svg` 以解決 Linux 環境下的路徑問題。
     - **主題切換按鈕**: 調整了 Navbar 上主題切換按鈕 (ThemeSwitch) 的尺寸，使其更為精緻 (寬度縮小至 2.5em，高度縮小至 1.5em)。
     - **手機版卡片高度**: 將手機版推薦卡片的高度調整為畫面高度的 50% (`50vh`)，桌面版維持固定 450px。
+    - **瀏覽分析**: 啟用了 Google Analytics。在 `src/lib/firebase.ts` 中初始化了 `getAnalytics`，使用現有的 Measurement ID (`G-07JZNDTJN7`) 進行追蹤。
+    - **後台分析頁面**: 在管理後台新增了「瀏覽分析」頁面 (`/admin/analytics`)。該頁面提供 Looker Studio 報表的嵌入區塊 (iframe) 以及前往 Google Analytics 的連結。
+    - **Looker Studio 指南**: 新增了 `docs/looker_studio_setup.md` 文件，詳細說明如何連接 GA4 數據、建立報表並嵌入至後台。
 
 - **Logo 修復**: 將 `public/LOGO.svg` 重命名為 `public/logo.svg`，解決 Linux 環境 (GitHub Pages) 下的大小寫敏感問題。更新了所有程式碼引用。
 

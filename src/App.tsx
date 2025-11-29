@@ -6,6 +6,7 @@ import LoginPage from "@/pages/auth/LoginPage";
 import StoreListPage from "@/pages/admin/StoreListPage";
 import StoreFormPage from "@/pages/admin/StoreFormPage";
 import MigrationPage from "@/pages/admin/MigrationPage";
+import AnalyticsPage from "@/pages/admin/AnalyticsPage";
 
 import MainLayout from "@/layouts/MainLayout";
 
@@ -22,7 +23,9 @@ function App() {
             <Route path="stores" element={<StoreListPage />} />
             <Route path="stores/new" element={<StoreFormPage />} />
             <Route path="stores/:id" element={<StoreFormPage />} />
+            <Route path="stores/:id" element={<StoreFormPage />} />
             <Route path="migration" element={<MigrationPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 
         </Routes>

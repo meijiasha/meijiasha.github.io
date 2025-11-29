@@ -41,6 +41,10 @@ export default function AdminLayout() {
                     <Store className="h-6 w-6" />
                     <span className="">咩呷啥 Admin</span>
                 </Link>
+                <nav className="flex items-center gap-4 ml-6 text-sm font-medium">
+                    <Link to="/admin/stores" className="transition-colors hover:text-foreground/80 text-foreground/60">店家管理</Link>
+                    <Link to="/admin/analytics" className="transition-colors hover:text-foreground/80 text-foreground/60">瀏覽分析</Link>
+                </nav>
                 <div className="ml-auto flex items-center gap-4">
                     <Button variant="ghost" size="sm" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
