@@ -12,7 +12,7 @@ import MainLayout from "@/layouts/MainLayout";
 
 function App() {
   return (
-    <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+    <APIProvider apiKey={GOOGLE_MAPS_API_KEY} language="zh-TW" region="TW">
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout />} />
