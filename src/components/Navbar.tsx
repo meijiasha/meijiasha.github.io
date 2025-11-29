@@ -1,10 +1,16 @@
+
 import ThemeSwitch from "@/components/ui/ThemeSwitch";
 import { Button } from "@/components/ui/button";
 import { PanelRightOpen, PanelRightClose, Crosshair } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 
 export const Navbar = () => {
-    const { isStoreListPanelOpen, setStoreListPanelOpen, userLocation, triggerLocateUser } = useAppStore();
+    const {
+        isStoreListPanelOpen,
+        setStoreListPanelOpen,
+        userLocation,
+        triggerLocateUser
+    } = useAppStore();
 
     // Added handleLocateMe function
     const handleLocateMe = () => {

@@ -1,7 +1,8 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, X, Instagram, Clock } from "lucide-react";
+import { MapPin, Phone, X, Instagram, Clock, ExternalLink } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
@@ -205,11 +206,26 @@ export const RecommendationCards = () => {
                                             <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>
                                                 {store.category}
                                             </Badge>
+                                            {store.dishes && (
+                                                <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
+                                                    <span className="shrink-0">👍</span>
+                                                    <span className="line-clamp-1">{store.dishes}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-1 text-sm text-gray-600 pb-6">
                                             <div className="flex items-start gap-2">
                                                 <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
-                                                <span className="line-clamp-2 min-h-[2.5rem]">{store.address}</span>
+                                                <a
+                                                    href={store.google_maps_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="line-clamp-2 min-h-[2.5rem] hover:underline hover:text-primary flex items-center gap-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {store.address}
+                                                    <ExternalLink className="h-3 w-3 shrink-0" />
+                                                </a>
                                             </div>
                                             {store.phone_number && (
                                                 <div className="flex items-center gap-2">

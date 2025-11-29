@@ -177,7 +177,7 @@ export function useRecommendation() {
                     return { ...store, distance: dist }; // Store type doesn't have distance, but we can add it temporarily or extend type
                 })
                 .filter(s => s.distance <= 2) // 2km radius
-                .sort((a, b) => a.distance - b.distance)
+                .sort(() => 0.5 - Math.random()) // Shuffle randomly
                 .slice(0, 3);
 
             if (nearbyStores.length === 0) {

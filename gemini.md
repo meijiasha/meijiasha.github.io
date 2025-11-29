@@ -797,7 +797,26 @@ line-bot-server.js`。
     - 將原本的分類按鈕列表，修改為更節省空間的下拉式選單 (`<select>`)。
     - 相關的 `script.js` 邏輯也已更新，以對應下拉選單的操作。
     - **隨機推薦功能增強**:
-    * **側邊欄結果顯示**:
+
+## 📅 2025-11-29: Admin UI Fixes & Mobile Responsiveness
+
+### 1. Bug Fixes
+- **Geocoding Syntax Error**: Fixed a critical syntax error in `src/lib/geocoding.ts` that prevented the app from building.
+- **Missing District on Edit**:
+    - Addressed an issue where the "District" field would disappear when editing an existing store.
+    - Implemented a robust `parseAddress` function in `geocoding.ts` to better handle City/District extraction from Google Maps results using fuzzy matching.
+    - Added a workaround in `StoreFormPage.tsx` to explicitly set the district value after form reset, resolving a potential race condition with the dependent dropdowns.
+- **Deferred "Locate Me" Sync**: Temporarily reverted the feature that automatically updates City/District dropdowns based on user location due to complexity and bugs. The button now only centers the map.
+
+### 2. Admin UI Improvements
+- **Separate Edit/Delete Actions**:
+    - In the Admin Store List (`StoreListPage.tsx`), replaced the "Actions" dropdown menu with separate, direct-access buttons for "Edit" (Pencil icon) and "Delete" (Trash icon).
+    - This improves accessibility and reduces the number of clicks required for common actions.
+- **Mobile Responsiveness**:
+    - Implemented a responsive design for the Admin Store List.
+    - **Desktop**: Displays the standard data table.
+    - **Mobile**: Automatically switches to a card-based layout, showing key information (Name, Category, Location) and large, touch-friendly Edit/Delete buttons.
+
     現在點擊「隨機推薦店家」後，推薦結果除了顯示在地圖上，也會同步列表在側邊欄中。列表中的店家是可點擊的，點擊後會將地圖平移至店家位
     置並打開資訊視窗。
     * **智慧推薦邏輯**:

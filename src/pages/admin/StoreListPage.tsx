@@ -21,13 +21,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ExternalLink, Search, X, Files } from "lucide-react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { auth } from "@/lib/firebase";
 
@@ -273,7 +266,8 @@ export default function StoreListPage() {
                 </div>
             )}
 
-            <div className="rounded-md border bg-background text-foreground overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block rounded-md border bg-background text-foreground overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -282,7 +276,7 @@ export default function StoreListPage() {
                             <TableHead className="w-[100px]">行政區</TableHead>
                             <TableHead className="w-[100px]">分類</TableHead>
                             <TableHead className="w-[300px]">地址</TableHead>
-                            <TableHead className="w-[80px] text-right">操作</TableHead>
+                            <TableHead className="w-[120px] text-right">操作</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -317,34 +311,86 @@ export default function StoreListPage() {
                                     <TableCell>{store.category}</TableCell>
                                     <TableCell className="truncate max-w-[200px]">{store.address}</TableCell>
                                     <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Link to={`/admin/stores/${store.id}`}>
+                                                <Button variant="ghost" size="icon" title="編輯">
+                                                    <Pencil className="h-4 w-4" />
                                                 </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <Link to={`/admin/stores/${store.id}`}>
-                                                    <DropdownMenuItem>
-                                                        <Pencil className="mr-2 h-4 w-4" /> 編輯
-                                                    </DropdownMenuItem>
-                                                </Link>
-                                                <DropdownMenuItem
-                                                    onClick={() => handleDelete(store.id)}
-                                                    className="text-red-600"
-                                                >
-                                                    <Trash2 className="mr-2 h-4 w-4" /> 刪除
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                            </Link>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDelete(store.id)}
+                                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                title="刪除"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {filteredStores.length === 0 ? (
+                    <div className="text-center p-8 text-muted-foreground border rounded-lg bg-muted/20">
+                        {showDuplicates ? "沒有發現重複的店家" : "沒有符合條件的店家"}
+                    </div>
+                ) : (
+                    currentItems.map((store) => (
+                        <div key={store.id} className="p-4 border rounded-lg bg-card text-card-foreground shadow-sm space-y-3">
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-lg leading-tight">{store.name}</h3>
+                                        {store.google_maps_url && (
+                                            <a
+                                                href={store.google_maps_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-gray-400 hover:text-blue-500 shrink-0"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 text-sm">
+                                        <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded-md text-xs">
+                                            {store.category}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {store.city} {store.district}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-sm text-muted-foreground break-words">
+                                {store.address}
+                            </div>
+
+                            <div className="flex gap-2 pt-2 border-t mt-2">
+                                <Link to={`/admin/stores/${store.id}`} className="flex-1">
+                                    <Button variant="outline" className="w-full h-9">
+                                        <Pencil className="mr-2 h-4 w-4" /> 編輯
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleDelete(store.id)}
+                                    className="flex-1 h-9 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-900"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" /> 刪除
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* Pagination */}

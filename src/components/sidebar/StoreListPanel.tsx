@@ -142,6 +142,12 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                                 );
                                             })()}
                                         </div>
+                                        {store.dishes && (
+                                            <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
+                                                <span className="shrink-0">👍</span>
+                                                <span className="line-clamp-1">{store.dishes}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-3 md:p-4 pt-0 md:pt-0">

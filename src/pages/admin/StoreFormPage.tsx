@@ -123,6 +123,9 @@ export default function StoreFormPage() {
                 const lat = data.location?.latitude || data.lat || data.latitude || 0;
                 const lng = data.location?.longitude || data.lng || data.longitude || 0;
 
+                console.log("Fetched store data:", data);
+                console.log("City:", data.city, "District:", data.district);
+
                 form.reset({
                     name: data.name,
                     city: data.city || DEFAULT_CITY, // Default to Taipei for existing data
@@ -140,6 +143,26 @@ export default function StoreFormPage() {
                     instagram_url: data.instagram_url || "",
                     opening_hours_periods: data.opening_hours_periods || [],
                 });
+
+                // Force set district after a small delay to ensure city update has processed
+                if (data.district) {
+                    setTimeout(() => {
+                        console.log("Force setting district to:", data.district);
+                        form.setValue("district", data.district);
+                    }, 50);
+                }
+
+                // Debug form state and districts
+                setTimeout(() => {
+                    const currentCity = form.getValues("city");
+                    const currentDist = form.getValues("district");
+                    console.log("Check after reset - City:", currentCity, "District:", currentDist);
+                    // We can't easily access currentDistricts here as it's a component variable, 
+                    // but we can log what it should be.
+                    import("@/lib/locations").then(({ DISTRICTS }) => {
+                        console.log("Expected districts for", currentCity, ":", DISTRICTS[currentCity as any]);
+                    });
+                }, 200);
             } else {
                 console.error("Store not found");
                 alert("找不到店家資料");
@@ -250,112 +273,32 @@ export default function StoreFormPage() {
                 }
                 form.setValue("opening_hours_periods", periods);
 
-                // Initialize variables for City/District detection
-                let locality = ""; // District (e.g., Tucheng District)
-                let sublocality = "";
+                // Use shared robust parsing logic
+                import("@/lib/geocoding").then(({ parseAddress }) => {
+                    const { city, district } = parseAddress(place.formatted_address || "", place.address_components || []);
 
-                let foundCity = false;
-                let detectedCity = ""; // Local variable to track city
-                let foundDistrict = false;
+                    if (city) {
+                        form.setValue("city", city);
+                        // Wait for city update to propagate if needed, or just set district directly
+                        // Since we are setting form values, react-hook-form handles state.
+                        // However, the District Select options depend on the City.
+                        // We might need a small timeout or just set it and hope the Select updates options in time.
+                        // Actually, if we set 'city', the 'currentDistricts' derived variable will update on next render.
+                        // If we set 'district' immediately, it might be valid but the Select options might not be ready yet?
+                        // No, react-hook-form holds the value. The Select component just displays it.
+                        // As long as the value is valid for the *future* options, it should be fine.
 
-                if (place.address_components) {
-                    // Parse address components to find City and District
-                    for (const component of place.address_components) {
-                        const types = component.types;
-                        const value = component.long_name;
-
-                        if (types.includes("administrative_area_level_1")) { // 縣市
-                            // Try to match City for form
-                            for (const cityValue of Object.values(CITIES)) {
-                                if (value.includes(cityValue) || cityValue.includes(value)) {
-                                    form.setValue("city", cityValue);
-                                    foundCity = true;
-                                    // Store detected city locally to ensure we use the correct city for district lookup
-                                    // form.getValues("city") might not update immediately in the same render cycle
-                                    detectedCity = cityValue;
-                                    break;
-                                }
-                            }
-                        } else if (types.includes("locality")) { // 區 / 鄉鎮
-                            locality = value;
-                        } else if (types.includes("sublocality_level_1")) {
-                            sublocality = value;
+                        if (district) {
+                            // Small delay to ensure City change triggers re-render of options?
+                            // Or just set it. Let's try setting it.
+                            setTimeout(() => {
+                                form.setValue("district", district);
+                            }, 50);
                         }
                     }
 
-                    // Re-scanning components to be cleaner and capture adminArea2 properly
-                    let adminArea2 = "";
-                    for (const component of place.address_components) {
-                        if (component.types.includes("administrative_area_level_2")) {
-                            adminArea2 = component.long_name;
-                        }
-                    }
-
-                    // District detection logic
-                    // Wrap in setTimeout to ensure city state updates and re-renders occur first
-                    // This ensures currentDistricts in the Select component are updated before we try to set the value
-                    setTimeout(() => {
-                        if (foundCity) {
-                            // Use the locally detected city if available, otherwise fallback to form state
-                            const currentCity = (detectedCity || form.getValues("city")) as CityName;
-                            const cityDistricts = DISTRICTS[currentCity];
-
-                            if (!cityDistricts) return;
-
-                            // Check locality first
-                            if (locality && cityDistricts.includes(locality)) {
-                                form.setValue("district", locality);
-                                foundDistrict = true;
-                            }
-                            // Then check sublocality
-                            else if (sublocality && cityDistricts.includes(sublocality)) {
-                                form.setValue("district", sublocality);
-                                foundDistrict = true;
-                            }
-                            // Then check administrative_area_level_2 (Critical fix for New Taipei City districts like Tucheng)
-                            else if (adminArea2 && cityDistricts.includes(adminArea2)) {
-                                form.setValue("district", adminArea2);
-                                foundDistrict = true;
-                            }
-                            // Fallback: check if any component matches a district in the list
-                            else {
-                                for (const component of place.address_components!) {
-                                    const val = component.long_name;
-                                    if (cityDistricts.includes(val)) {
-                                        form.setValue("district", val);
-                                        foundDistrict = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }, 100);
-                }
-
-                // Fallback for City/District if not found via components
-                if (!foundCity && place.formatted_address) {
-                    for (const city of Object.values(CITIES)) {
-                        if (place.formatted_address.includes(city)) {
-                            form.setValue("city", city);
-                            foundCity = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (foundCity && !foundDistrict && place.formatted_address) {
-                    const currentCity = form.getValues("city") as CityName;
-                    if (currentCity && DISTRICTS[currentCity]) {
-                        for (const dist of DISTRICTS[currentCity]) {
-                            if (place.formatted_address.includes(dist)) {
-                                form.setValue("district", dist);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                alert("已自動填入店家資訊！");
+                    alert("已自動填入店家資訊！");
+                });
             }
         };
 

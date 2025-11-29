@@ -11,7 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Shuffle, Navigation, X, Loader2, Instagram, Clock } from "lucide-react";
+import { Shuffle, Navigation, X, Loader2, Instagram, Clock, ExternalLink } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
@@ -106,8 +106,8 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
         <div className="h-full flex flex-col bg-white dark:bg-black border-r w-full md:w-80 relative overflow-y-auto">
             <div className="p-4 space-y-6">
                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label>縣市</Label>
+                    <div className="flex items-center gap-4">
+                        <Label className="w-16 shrink-0">縣市</Label>
                         <Select value={selectedCity} onValueChange={handleCityChange}>
                             <SelectTrigger>
                                 <SelectValue placeholder="選擇縣市" />
@@ -120,8 +120,8 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                         </Select>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>行政區</Label>
+                    <div className="flex items-center gap-4">
+                        <Label className="w-16 shrink-0">行政區</Label>
                         <Select value={selectedDistrict} onValueChange={setDistrict}>
                             <SelectTrigger>
                                 <SelectValue placeholder="選擇行政區" />
@@ -135,8 +135,8 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                         </Select>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>分類</Label>
+                    <div className="flex items-center gap-4">
+                        <Label className="w-16 shrink-0">分類</Label>
                         <Select value={selectedCategory} onValueChange={setCategory} disabled={availableCategories.length === 0}>
                             <SelectTrigger>
                                 <SelectValue placeholder="選擇分類" />
@@ -226,6 +226,12 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                                         );
                                                     })()}
                                                 </div>
+                                                {store.dishes && (
+                                                    <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
+                                                        <span className="shrink-0">👍</span>
+                                                        <span className="line-clamp-1">{store.dishes}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             {store.distance !== undefined && (
                                                 <Badge variant="outline" className="text-xs shrink-0 ml-2">
@@ -233,7 +239,18 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                                 </Badge>
                                             )}
                                         </div>
-                                        <div className="text-xs text-muted-foreground mt-2">{store.address}</div>
+                                        <div className="text-xs text-muted-foreground mt-2">
+                                            <a
+                                                href={store.google_maps_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="hover:underline hover:text-primary flex items-center gap-1"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {store.address}
+                                                <ExternalLink className="h-3 w-3 shrink-0" />
+                                            </a>
+                                        </div>
                                         {store.instagram_url && (
                                             <div className="mt-2">
                                                 <Button
