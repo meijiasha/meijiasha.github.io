@@ -43,6 +43,7 @@ export default function AdminLayout() {
                 </Link>
                 <nav className="flex items-center gap-4 ml-6 text-sm font-medium">
                     <Link to="/admin/stores" className="transition-colors hover:text-foreground/80 text-foreground/60">店家管理</Link>
+                    <Link to="/admin/batch-update" className="transition-colors hover:text-foreground/80 text-foreground/60">批次新增</Link>
                     <Link to="/admin/analytics" className="transition-colors hover:text-foreground/80 text-foreground/60">瀏覽分析</Link>
                 </nav>
                 <div className="ml-auto flex items-center gap-4">

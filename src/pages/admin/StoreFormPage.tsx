@@ -215,172 +215,36 @@ export default function StoreFormPage() {
             return;
         }
 
-        // Regex from legacy code
-        // Updated to exclude '!' from capture group to avoid capturing data parameters
-        const placeIdMatch = url.match(/(?:placeid\/|!1s)([^&/?!]+)/);
-        const nameMatch = url.match(/google\.com\/maps\/place\/([^/]+)/);
-
-        let placeId = null;
-        let query = null;
-
-        if (placeIdMatch && placeIdMatch[1]) {
-            placeId = placeIdMatch[1];
-            // If ID contains ':', it's likely a coordinate/FID pair (0x...:0x...), not a valid Place ID.
-            // In this case, we should ignore it and fall back to name search.
-            if (placeId.includes(':')) {
-                console.log("Ignored invalid Place ID (contains ':'):", placeId);
-                placeId = null;
-            }
-        }
-
-        if (nameMatch && nameMatch[1]) {
-            query = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
-        }
-
-        // Use map instance if available for location bias
+        // Use map instance if available, otherwise create a dummy div
         const service = new placesLib.PlacesService(map || document.createElement('div'));
 
-        const handlePlaceResult = (place: google.maps.places.PlaceResult) => {
-            if (place) {
-                form.setValue("name", place.name || "");
-                // Use formatted_address directly as it contains the full address in the correct locale (zh-TW)
-                form.setValue("address", place.formatted_address || "");
-                form.setValue("place_id", place.place_id || "");
-                if (place.formatted_phone_number) {
-                    form.setValue("phone_number", place.formatted_phone_number);
+        try {
+            // Dynamic import to avoid circular dependencies if any, and ensure code splitting
+            const { fetchStoreDataFromUrl } = await import("@/lib/googleMapsStoreFetcher");
+            const data = await fetchStoreDataFromUrl(url, service);
+
+            form.setValue("name", data.name);
+            form.setValue("address", data.address);
+            form.setValue("place_id", data.place_id);
+            form.setValue("phone_number", data.phone_number);
+            form.setValue("latitude", data.latitude);
+            form.setValue("longitude", data.longitude);
+            form.setValue("opening_hours_periods", data.opening_hours_periods);
+
+            if (data.city) {
+                form.setValue("city", data.city);
+                if (data.district) {
+                    setTimeout(() => {
+                        form.setValue("district", data.district);
+                    }, 50);
                 }
-                if (place.geometry?.location) {
-                    form.setValue("latitude", place.geometry.location.lat());
-                    form.setValue("longitude", place.geometry.location.lng());
-                }
-                // Save opening hours periods
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let periods: any[] = [];
-                if (place.opening_hours && place.opening_hours.periods) {
-                    periods = place.opening_hours.periods;
-                } else {
-                    // No opening_hours.periods found in place result
-                }
-                form.setValue("opening_hours_periods", periods);
-
-                // Use shared robust parsing logic
-                import("@/lib/geocoding").then(({ parseAddress }) => {
-                    const { city, district } = parseAddress(place.formatted_address || "", place.address_components || []);
-
-                    if (city) {
-                        form.setValue("city", city);
-                        // Wait for city update to propagate if needed, or just set district directly
-                        // Since we are setting form values, react-hook-form handles state.
-                        // However, the District Select options depend on the City.
-                        // We might need a small timeout or just set it and hope the Select updates options in time.
-                        // Actually, if we set 'city', the 'currentDistricts' derived variable will update on next render.
-                        // If we set 'district' immediately, it might be valid but the Select options might not be ready yet?
-                        // No, react-hook-form holds the value. The Select component just displays it.
-                        // As long as the value is valid for the *future* options, it should be fine.
-
-                        if (district) {
-                            // Small delay to ensure City change triggers re-render of options?
-                            // Or just set it. Let's try setting it.
-                            setTimeout(() => {
-                                form.setValue("district", district);
-                            }, 50);
-                        }
-                    }
-
-                    alert("已自動填入店家資訊！");
-                });
             }
-        };
 
-        const performTextSearch = (searchQuery: string) => {
-            const request: google.maps.places.TextSearchRequest = {
-                query: searchQuery,
-            };
-            service.textSearch(request, (results, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                    const firstResult = results[0];
-                    if (firstResult.place_id) {
-                        // Use detailFields to get all necessary info including opening_hours
-                        service.getDetails({
-                            placeId: firstResult.place_id,
-                            fields: detailFields
-                        }, (place, detailStatus) => {
-                            if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
-                                handlePlaceResult(place);
-                            } else {
-                                handlePlaceResult(firstResult);
-                            }
-                        });
-                    } else {
-                        handlePlaceResult(firstResult);
-                    }
-                } else {
-                    alert("無法自動取得店家資訊 (TextSearch 也失敗)");
-                }
-            });
-        };
+            alert("已自動填入店家資訊！");
 
-        // Fields supported by findPlaceFromQuery
-        const searchFields = ['name', 'formatted_address', 'place_id', 'geometry'];
-        // Fields supported by getDetails (includes phone, address components, opening hours)
-        const detailFields = ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'address_components', 'opening_hours'];
-
-        if (placeId) {
-            // getDetails supports all fields
-            service.getDetails({ placeId: placeId, fields: detailFields }, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                    handlePlaceResult(place);
-                } else {
-                    // Fallback to text search if ID fails
-                    if (query) {
-                        // Use searchFields for findPlaceFromQuery to avoid "Unsupported field name" error
-                        service.findPlaceFromQuery({ query: query, fields: searchFields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
-                            if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                                const res = results[0];
-                                if (res.place_id) {
-                                    // Get full details using place_id
-                                    service.getDetails({ placeId: res.place_id, fields: detailFields }, (detailedPlace, detailedStatus) => {
-                                        if (detailedStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace) {
-                                            handlePlaceResult(detailedPlace);
-                                        } else {
-                                            handlePlaceResult(res);
-                                        }
-                                    });
-                                } else {
-                                    handlePlaceResult(res);
-                                }
-                            } else {
-                                performTextSearch(query!);
-                            }
-                        });
-                    } else {
-                        alert("無法自動取得店家資訊 (ID 無效且無名稱)");
-                    }
-                }
-            });
-        } else if (query) {
-            // Use searchFields for findPlaceFromQuery
-            service.findPlaceFromQuery({ query: query, fields: searchFields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                    const res = results[0];
-                    if (res.place_id) {
-                        // Get full details using place_id
-                        service.getDetails({ placeId: res.place_id, fields: detailFields }, (detailedPlace, detailedStatus) => {
-                            if (detailedStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace) {
-                                handlePlaceResult(detailedPlace);
-                            } else {
-                                handlePlaceResult(res);
-                            }
-                        });
-                    } else {
-                        handlePlaceResult(res);
-                    }
-                } else {
-                    performTextSearch(query!);
-                }
-            });
-        } else {
-            alert("無法解析 Google Maps 網址");
+        } catch (error) {
+            console.error("Auto-fill error:", error);
+            alert(`自動填入失敗: ${(error as Error).message}`);
         }
     };
 

@@ -9,6 +9,9 @@ export interface Store {
     place_id: string;
     lat: number;
     lng: number;
+    latitude?: number;
+    longitude?: number;
+    location?: any; // GeoPoint
     rating?: number;
     user_ratings_total?: number;
     price_level?: number;

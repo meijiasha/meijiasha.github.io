@@ -47,6 +47,8 @@ export default function StoreListPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
     // Derived data for filters
     const uniqueCities = useMemo(() => {
         const cities = new Set(stores.map(s => s.city).filter(Boolean));
@@ -69,29 +71,43 @@ export default function StoreListPage() {
 
     // Filter logic
     const filteredStores = useMemo(() => {
+        let result = stores;
+
         if (showDuplicates) {
             const nameCounts = new Map<string, number>();
             stores.forEach(s => {
                 const name = s.name.trim();
                 nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
             });
-            return stores.filter(s => (nameCounts.get(s.name.trim()) || 0) > 1)
-                .sort((a, b) => a.name.localeCompare(b.name));
+            result = stores.filter(s => (nameCounts.get(s.name.trim()) || 0) > 1);
+        } else {
+            result = stores.filter(store => {
+                const matchName = store.name.toLowerCase().includes(filterName.toLowerCase());
+                const matchCity = filterCity === "all" || store.city === filterCity;
+                const matchDistrict = filterDistrict === "all" || store.district === filterDistrict;
+                const matchCategory = filterCategory === "all" || store.category === filterCategory;
+                return matchName && matchCity && matchDistrict && matchCategory;
+            });
         }
 
-        return stores.filter(store => {
-            const matchName = store.name.toLowerCase().includes(filterName.toLowerCase());
-            const matchCity = filterCity === "all" || store.city === filterCity;
-            const matchDistrict = filterDistrict === "all" || store.district === filterDistrict;
-            const matchCategory = filterCategory === "all" || store.category === filterCategory;
-            return matchName && matchCity && matchDistrict && matchCategory;
+        // Sort result
+        return result.sort((a, b) => {
+            // Default sort by lastEditedAt
+            const dateA = a.lastEditedAt?.seconds || 0;
+            const dateB = b.lastEditedAt?.seconds || 0;
+
+            if (sortOrder === "desc") {
+                return dateB - dateA;
+            } else {
+                return dateA - dateB;
+            }
         });
-    }, [stores, filterName, filterCity, filterDistrict, filterCategory, showDuplicates]);
+    }, [stores, filterName, filterCity, filterDistrict, filterCategory, showDuplicates, sortOrder]);
 
     // Reset pagination when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filterName, filterCity, filterDistrict, filterCategory, showDuplicates]);
+    }, [filterName, filterCity, filterDistrict, filterCategory, showDuplicates, sortOrder]);
 
     // Calculate pagination
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -147,7 +163,7 @@ export default function StoreListPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("確定要刪除這家店嗎？此動作無法復原。")) return;
         try {
-            await deleteDoc(doc(db, "stores_taipei", id));
+            await deleteDoc(doc(db, "stores", id));
             setStores(stores.filter((store) => store.id !== id));
         } catch (error) {
             console.error("Error deleting store:", error);
@@ -163,6 +179,62 @@ export default function StoreListPage() {
         setShowDuplicates(false);
     };
 
+    const handleExportCSV = () => {
+        if (stores.length === 0) {
+            alert("沒有資料可以匯出");
+            return;
+        }
+
+        // Define CSV headers
+        const headers = [
+            "店名", "縣市", "行政區", "地址", "電話", "分類",
+            "Google Maps 網址", "Place ID", "緯度", "經度",
+            "價位", "招牌菜", "描述", "Instagram 連結"
+        ];
+
+        // Convert data to CSV rows
+        const rows = stores.map(store => [
+            store.name,
+            store.city,
+            store.district,
+            store.address,
+            store.phone_number || "",
+            store.category,
+            store.google_maps_url || "",
+            store.place_id || "",
+            store.lat || "",
+            store.lng || "",
+            store.price_level || "",
+            store.dishes || "",
+            store.description || "",
+            store.instagram_url || ""
+        ].map(field => {
+            // Escape quotes and wrap in quotes if contains comma or newline
+            const stringField = String(field || "");
+            if (stringField.includes(",") || stringField.includes("\n") || stringField.includes('"')) {
+                return `"${stringField.replace(/"/g, '""')}"`;
+            }
+            return stringField;
+        }));
+
+        // Combine headers and rows
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        // Create blob and download
+        // Add BOM for Excel compatibility with UTF-8
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `stores_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (loading) {
         return <div>Loading stores...</div>;
     }
@@ -172,6 +244,14 @@ export default function StoreListPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">店家列表</h2>
                 <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                        variant="outline"
+                        onClick={handleExportCSV}
+                        className="flex-1 sm:flex-none"
+                    >
+                        <Files className="mr-2 h-4 w-4" />
+                        匯出 CSV
+                    </Button>
                     <Button
                         variant={showDuplicates ? "secondary" : "outline"}
                         onClick={() => {
@@ -243,6 +323,23 @@ export default function StoreListPage() {
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <Button
+                        variant="ghost"
+                        onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                        className="px-2 lg:px-4"
+                        title={sortOrder === "desc" ? "目前：新 -> 舊" : "目前：舊 -> 新"}
+                    >
+                        {sortOrder === "desc" ? (
+                            <>
+                                <span className="mr-2">新→舊</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="mr-2">舊→新</span>
+                            </>
+                        )}
+                    </Button>
 
                     {(filterName || filterCity !== "all" || filterDistrict !== "all" || filterCategory !== "all") && (
                         <Button variant="ghost" onClick={clearFilters} className="px-2 lg:px-4">
