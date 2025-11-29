@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { collection, getDocs, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -12,7 +12,15 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Plus, Pencil, Trash2, ExternalLink, Search, X, Files } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,7 +29,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { auth } from "@/lib/firebase"; // Added auth import
+import { auth } from "@/lib/firebase";
 
 import {
     Pagination,
@@ -35,15 +43,68 @@ export default function StoreListPage() {
     const [stores, setStores] = useState<Store[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Filter state
+    const [filterName, setFilterName] = useState("");
+    const [filterCity, setFilterCity] = useState("all");
+    const [filterDistrict, setFilterDistrict] = useState("all");
+    const [filterCategory, setFilterCategory] = useState("all");
+    const [showDuplicates, setShowDuplicates] = useState(false);
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Derived data for filters
+    const uniqueCities = useMemo(() => {
+        const cities = new Set(stores.map(s => s.city).filter(Boolean));
+        return Array.from(cities).sort();
+    }, [stores]);
+
+    const uniqueDistricts = useMemo(() => {
+        let filtered = stores;
+        if (filterCity !== "all") {
+            filtered = stores.filter(s => s.city === filterCity);
+        }
+        const districts = new Set(filtered.map(s => s.district).filter(Boolean));
+        return Array.from(districts).sort();
+    }, [stores, filterCity]);
+
+    const uniqueCategories = useMemo(() => {
+        const categories = new Set(stores.map(s => s.category).filter(Boolean));
+        return Array.from(categories).sort();
+    }, [stores]);
+
+    // Filter logic
+    const filteredStores = useMemo(() => {
+        if (showDuplicates) {
+            const nameCounts = new Map<string, number>();
+            stores.forEach(s => {
+                const name = s.name.trim();
+                nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+            });
+            return stores.filter(s => (nameCounts.get(s.name.trim()) || 0) > 1)
+                .sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        return stores.filter(store => {
+            const matchName = store.name.toLowerCase().includes(filterName.toLowerCase());
+            const matchCity = filterCity === "all" || store.city === filterCity;
+            const matchDistrict = filterDistrict === "all" || store.district === filterDistrict;
+            const matchCategory = filterCategory === "all" || store.category === filterCategory;
+            return matchName && matchCity && matchDistrict && matchCategory;
+        });
+    }, [stores, filterName, filterCity, filterDistrict, filterCategory, showDuplicates]);
+
+    // Reset pagination when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterName, filterCity, filterDistrict, filterCategory, showDuplicates]);
+
     // Calculate pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = stores.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(stores.length / itemsPerPage);
+    const currentItems = filteredStores.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredStores.length / itemsPerPage);
 
     // Fetch stores
     useEffect(() => {
@@ -101,6 +162,14 @@ export default function StoreListPage() {
         }
     };
 
+    const clearFilters = () => {
+        setFilterName("");
+        setFilterCity("all");
+        setFilterDistrict("all");
+        setFilterCategory("all");
+        setShowDuplicates(false);
+    };
+
     if (loading) {
         return <div>Loading stores...</div>;
     }
@@ -109,12 +178,100 @@ export default function StoreListPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">店家列表</h2>
-                <Link to="/admin/stores/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" /> 新增店家
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                        variant={showDuplicates ? "secondary" : "outline"}
+                        onClick={() => {
+                            if (showDuplicates) {
+                                setShowDuplicates(false);
+                            } else {
+                                clearFilters(); // Clear other filters when showing duplicates
+                                setShowDuplicates(true);
+                            }
+                        }}
+                        className="flex-1 sm:flex-none"
+                    >
+                        <Files className="mr-2 h-4 w-4" />
+                        {showDuplicates ? "顯示所有" : "找出重複"}
                     </Button>
-                </Link>
+                    <Link to="/admin/stores/new" className="flex-1 sm:flex-none">
+                        <Button className="w-full">
+                            <Plus className="mr-2 h-4 w-4" /> 新增店家
+                        </Button>
+                    </Link>
+                </div>
             </div>
+
+            {/* Filters */}
+            {!showDuplicates && (
+                <div className="flex flex-col md:flex-row gap-4 p-4 bg-muted/50 rounded-lg border">
+                    <div className="relative flex-1 md:max-w-xs">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="搜尋店名..."
+                            value={filterName}
+                            onChange={(e) => setFilterName(e.target.value)}
+                            className="pl-8 bg-background"
+                        />
+                    </div>
+
+                    <Select value={filterCity} onValueChange={(val) => { setFilterCity(val); setFilterDistrict("all"); }}>
+                        <SelectTrigger className="w-full md:w-[140px] bg-background">
+                            <SelectValue placeholder="縣市" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">所有縣市</SelectItem>
+                            {uniqueCities.map(city => (
+                                <SelectItem key={city} value={city}>{city}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={filterDistrict} onValueChange={setFilterDistrict}>
+                        <SelectTrigger className="w-full md:w-[140px] bg-background">
+                            <SelectValue placeholder="行政區" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">所有行政區</SelectItem>
+                            {uniqueDistricts.map(district => (
+                                <SelectItem key={district} value={district}>{district}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger className="w-full md:w-[140px] bg-background">
+                            <SelectValue placeholder="分類" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">所有分類</SelectItem>
+                            {uniqueCategories.map(category => (
+                                <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {(filterName || filterCity !== "all" || filterDistrict !== "all" || filterCategory !== "all") && (
+                        <Button variant="ghost" onClick={clearFilters} className="px-2 lg:px-4">
+                            <X className="mr-2 h-4 w-4" /> 清除篩選
+                        </Button>
+                    )}
+                </div>
+            )}
+
+            {showDuplicates && (
+                <div className="p-4 bg-yellow-50/50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-sm">
+                    <p className="font-medium text-yellow-800 dark:text-yellow-200">
+                        正在顯示重複店家
+                    </p>
+                    <p className="text-yellow-700 dark:text-yellow-300 mt-1">
+                        以下列出店名完全相同的店家。您可以檢查並刪除多餘的資料。
+                        <Button variant="link" className="h-auto p-0 ml-2 text-yellow-800 underline" onClick={() => setShowDuplicates(false)}>
+                            返回列表
+                        </Button>
+                    </p>
+                </div>
+            )}
 
             <div className="rounded-md border bg-background text-foreground overflow-x-auto">
                 <Table>
@@ -129,10 +286,10 @@ export default function StoreListPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {stores.length === 0 ? (
+                        {filteredStores.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="text-center h-24">
-                                    沒有店家資料
+                                    {showDuplicates ? "沒有發現重複的店家" : "沒有符合條件的店家"}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -191,7 +348,7 @@ export default function StoreListPage() {
             </div>
 
             {/* Pagination */}
-            {stores.length > 0 && (
+            {filteredStores.length > 0 && (
                 <Pagination className="mt-4">
                     <PaginationContent>
                         <PaginationItem>

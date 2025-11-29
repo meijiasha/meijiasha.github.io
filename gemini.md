@@ -88,7 +88,11 @@
     - **手機版卡片高度**: 將手機版推薦卡片的高度調整為畫面高度的 50% (`50vh`)，桌面版維持固定 450px。
     - **瀏覽分析**: 啟用了 Google Analytics。在 `src/lib/firebase.ts` 中初始化了 `getAnalytics`，使用現有的 Measurement ID (`G-07JZNDTJN7`) 進行追蹤。
     - **後台分析頁面**: 在管理後台新增了「瀏覽分析」頁面 (`/admin/analytics`)。該頁面提供 Looker Studio 報表的嵌入區塊 (iframe) 以及前往 Google Analytics 的連結。
+    - **Looker Studio 整合**: 已將 Looker Studio 報表成功嵌入至後台分析頁面，取代了原本的佔位符。
     - **Looker Studio 指南**: 新增了 `docs/looker_studio_setup.md` 文件，詳細說明如何連接 GA4 數據、建立報表並嵌入至後台。
+    - **店家列表篩選**: 在店家列表頁面新增了篩選功能，支援依據「店名」(即時搜尋)、「縣市」、「行政區」及「分類」進行篩選。
+    - **重複店家檢測**: 新增「找出重複店家」按鈕，可快速篩選出店名完全相同的店家資料，方便管理員清理重複數據。
+    - **自動填入優化**: 優化了新增店家時的「自動填入」功能。現在會請求 Google Places API 的 `address_components` 欄位，並解析出準確的「縣市」與「行政區」，解決了單純依賴地址字串比對不準確的問題。
 
 - **Logo 修復**: 將 `public/LOGO.svg` 重命名為 `public/logo.svg`，解決 Linux 環境 (GitHub Pages) 下的大小寫敏感問題。更新了所有程式碼引用。
 

@@ -228,10 +228,45 @@ export default function StoreFormPage() {
                     form.setValue("longitude", place.geometry.location.lng());
                 }
 
-                // Try to guess city and district
-                if (place.formatted_address) {
-                    let foundCity = false;
-                    // Check for City
+                // Improved City/District detection using address_components
+                let foundCity = false;
+                let foundDistrict = false;
+
+                if (place.address_components) {
+                    // 1. Try to find City
+                    for (const component of place.address_components) {
+                        const componentName = component.long_name;
+                        // Check against CITIES values
+                        for (const cityValue of Object.values(CITIES)) {
+                            // Google often returns "Taipei City" but our value is "台北市"
+                            // We need to match loosely or check if component contains our city name
+                            // Actually, Google API in Taiwan usually returns Chinese "台北市" if language is zh-TW.
+                            // Assuming the environment is zh-TW. If not, this might be tricky.
+                            // Let's try exact match or "contains" match.
+                            if (componentName.includes(cityValue) || cityValue.includes(componentName)) {
+                                form.setValue("city", cityValue);
+                                foundCity = true;
+
+                                // 2. Try to find District within this City
+                                const cityDistricts = DISTRICTS[cityValue as CityName];
+                                for (const comp of place.address_components) {
+                                    const distName = comp.long_name;
+                                    if (cityDistricts.includes(distName)) {
+                                        form.setValue("district", distName);
+                                        foundDistrict = true;
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        if (foundCity) break;
+                    }
+                }
+
+                // Fallback to formatted_address if address_components didn't work (or weren't available)
+                if (!foundCity && place.formatted_address) {
+                    console.log("Fallback to formatted_address parsing");
                     for (const city of Object.values(CITIES)) {
                         if (place.formatted_address.includes(city)) {
                             form.setValue("city", city);
@@ -242,28 +277,28 @@ export default function StoreFormPage() {
                             for (const dist of cityDistricts) {
                                 if (place.formatted_address.includes(dist)) {
                                     form.setValue("district", dist);
+                                    foundDistrict = true;
                                     break;
                                 }
                             }
                             break;
                         }
                     }
+                }
 
-                    // Fallback: If no city found, check all districts (might be risky if same district name exists in multiple cities, but rare in Taiwan major cities)
-                    if (!foundCity) {
-                        for (const [city, dists] of Object.entries(DISTRICTS)) {
-                            for (const dist of dists) {
-                                if (place.formatted_address.includes(dist)) {
-                                    form.setValue("city", city as CityName); // This sets the city name value
-                                    form.setValue("district", dist);
-                                    foundCity = true;
-                                    break;
-                                }
+                // Final fallback for District if City found but District not found (check all districts for that city in address string)
+                if (foundCity && !foundDistrict && place.formatted_address) {
+                    const currentCity = form.getValues("city") as CityName;
+                    if (currentCity && DISTRICTS[currentCity]) {
+                        for (const dist of DISTRICTS[currentCity]) {
+                            if (place.formatted_address.includes(dist)) {
+                                form.setValue("district", dist);
+                                break;
                             }
-                            if (foundCity) break;
                         }
                     }
                 }
+
                 alert("已自動填入店家資訊！");
             }
         };
@@ -275,18 +310,15 @@ export default function StoreFormPage() {
             };
             service.textSearch(request, (results, status) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                    // textSearch results might not have all fields (like phone number),
-                    // so we might need to fetch details for the first result.
                     const firstResult = results[0];
                     if (firstResult.place_id) {
                         service.getDetails({
                             placeId: firstResult.place_id,
-                            fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number']
+                            fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'address_components']
                         }, (place, detailStatus) => {
                             if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
                                 handlePlaceResult(place);
                             } else {
-                                // If details fail, just use what we have
                                 handlePlaceResult(firstResult);
                             }
                         });
@@ -299,17 +331,31 @@ export default function StoreFormPage() {
             });
         };
 
+        const fields = ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'address_components'];
+
         if (placeId) {
-            service.getDetails({ placeId: placeId, fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number'] }, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
+            service.getDetails({ placeId: placeId, fields: fields }, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK && place) {
                     handlePlaceResult(place);
                 } else {
-                    // Fallback to text search if ID fails (e.g. if !1s was not a place ID)
+                    // Fallback to text search if ID fails
                     if (query) {
                         console.log("ID lookup failed, trying findPlaceFromQuery for:", query);
-                        service.findPlaceFromQuery({ query: query, fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number'] }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
+                        service.findPlaceFromQuery({ query: query, fields: fields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
                             if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                                handlePlaceResult(results[0]);
+                                // findPlaceFromQuery results might not have address_components, so getDetails again
+                                const res = results[0];
+                                if (res.place_id) {
+                                    service.getDetails({ placeId: res.place_id, fields: fields }, (detailedPlace, detailedStatus) => {
+                                        if (detailedStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace) {
+                                            handlePlaceResult(detailedPlace);
+                                        } else {
+                                            handlePlaceResult(res);
+                                        }
+                                    });
+                                } else {
+                                    handlePlaceResult(res);
+                                }
                             } else {
                                 performTextSearch(query!);
                             }
@@ -320,9 +366,20 @@ export default function StoreFormPage() {
                 }
             });
         } else if (query) {
-            service.findPlaceFromQuery({ query: query, fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number'] }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
+            service.findPlaceFromQuery({ query: query, fields: fields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                    handlePlaceResult(results[0]);
+                    const res = results[0];
+                    if (res.place_id) {
+                        service.getDetails({ placeId: res.place_id, fields: fields }, (detailedPlace, detailedStatus) => {
+                            if (detailedStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace) {
+                                handlePlaceResult(detailedPlace);
+                            } else {
+                                handlePlaceResult(res);
+                            }
+                        });
+                    } else {
+                        handlePlaceResult(res);
+                    }
                 } else {
                     performTextSearch(query!);
                 }
