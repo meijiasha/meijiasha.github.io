@@ -189,7 +189,7 @@ export default function BatchUpdatePage() {
                         query: searchQuery,
                     };
 
-                    await new Promise<void>((resolve, reject) => {
+                    await new Promise<void>((resolve) => {
                         service.textSearch(request, async (results, status) => {
                             if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
                                 const place = results[0];
@@ -282,8 +282,8 @@ export default function BatchUpdatePage() {
                 <button
                     onClick={() => setActiveTab("add")}
                     className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${activeTab === "add"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
                         }`}
                 >
                     批次新增 (網址)
@@ -291,8 +291,8 @@ export default function BatchUpdatePage() {
                 <button
                     onClick={() => setActiveTab("enrich")}
                     className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${activeTab === "enrich"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
                         }`}
                 >
                     批次補全 (自動搜尋)
