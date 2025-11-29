@@ -152,6 +152,7 @@
 3.  **Admin UI**:
     - Update `StoreListPage` to show `city`.
     - Update `StoreFormPage` to include City selection and dynamic District dropdown.
+    - **Improved Auto-fill**: Enhanced `StoreFormPage.tsx` to correctly detect districts from `administrative_area_level_2` (e.g., for New Taipei City) and fixed a race condition using `setTimeout`. Added debug tool `public/debug_maps.html`.
 4.  **Frontend**: Update `useRecommendation` and UI to support city filtering.
 
 ### 4. 實作成果 (2025-11-25 更新)

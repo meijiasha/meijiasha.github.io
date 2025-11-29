@@ -11,11 +11,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Shuffle, Navigation, X, Loader2, Instagram } from "lucide-react";
+import { Shuffle, Navigation, X, Loader2, Instagram, Clock } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
 import { useRecommendation } from "@/hooks/useRecommendation";
+import { getStoreStatus } from "@/lib/time";
 
 import { CITIES, DISTRICTS, DEFAULT_CITY, type CityName } from "@/lib/locations";
 
@@ -206,9 +207,25 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                                 <div className="h-12 flex items-center">
                                                     <div className="font-bold line-clamp-2 leading-tight">{store.name}</div>
                                                 </div>
-                                                <Badge variant="secondary" className={cn("mt-1 text-xs", getCategoryColor(store.category))}>
-                                                    {store.category}
-                                                </Badge>
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>
+                                                        {store.category}
+                                                    </Badge>
+                                                    {(() => {
+                                                        const { isOpen } = getStoreStatus(store.opening_hours_periods);
+                                                        return isOpen ? (
+                                                            <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-sm gap-1 text-xs px-1.5 h-5">
+                                                                <Clock className="w-3 h-3" />
+                                                                營業中
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="secondary" className="bg-gray-500/80 text-white hover:bg-gray-600/80 shadow-sm gap-1 text-xs px-1.5 h-5">
+                                                                <Clock className="w-3 h-3" />
+                                                                休息中
+                                                            </Badge>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                             {store.distance !== undefined && (
                                                 <Badge variant="outline" className="text-xs shrink-0 ml-2">
@@ -238,6 +255,10 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                                     </CardContent>
                                 </Card>
                             ))}
+                        </div>
+                        <div className="p-4 text-center text-xs text-muted-foreground border-t border-border/50 mt-4">
+                            營業時間資訊抓取自 Google Maps ，
+                            <strong>還請確認營業時間</strong>。
                         </div>
                     </div>
                 )}

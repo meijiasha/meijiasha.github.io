@@ -1,13 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, X, Instagram } from "lucide-react";
+import { MapPin, Phone, X, Instagram, Clock } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
 import { useMap } from '@vis.gl/react-google-maps';
 import { GOOGLE_MAPS_API_KEY } from "@/lib/config";
 import { cn, getCategoryColor } from "@/lib/utils";
+import { getStoreStatus } from "@/lib/time";
 
 import { useState } from "react";
 
@@ -90,19 +91,15 @@ export const RecommendationCards = () => {
 
     const getPhotoUrl = (store: Store) => {
         if (store.photo_url) {
-            console.log(`RecommendationCards: Using fetched photo_url for ${store.name}`);
             return store.photo_url;
         }
         if (store.photo_reference) {
-            console.log(`RecommendationCards: Using photo_reference for ${store.name}`);
             return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${store.photo_reference}&key=${GOOGLE_MAPS_API_KEY}`;
         }
         // Fallback to Static Map
         if (store.lat && store.lng) {
-            console.log(`RecommendationCards: Using Static Map fallback for ${store.name}`);
             return `https://maps.googleapis.com/maps/api/staticmap?center=${store.lat},${store.lng}&zoom=15&size=400x300&markers=color:red%7C${store.lat},${store.lng}&key=${GOOGLE_MAPS_API_KEY}`;
         }
-        console.warn(`RecommendationCards: No photo or location for ${store.name}, using placeholder`);
         return "/placeholder.svg";
     };
 
@@ -110,107 +107,150 @@ export const RecommendationCards = () => {
         return null;
     }
 
-    console.log("RecommendationCards: Rendering cards for", recommendationResults.length, "stores");
     return (
         <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center items-end pointer-events-none px-4 pb-4">
             <div className="flex gap-4 overflow-x-auto max-w-full pb-2 pointer-events-auto snap-x snap-mandatory px-4 items-end">
-                {recommendationResults.map((store, index) => (
-                    <div
-                        key={store.id}
-                        className="w-[350px] h-[50vh] md:h-[450px] shrink-0 snap-center perspective-1000 group animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards"
-                        style={{ animationDelay: `${index * 150}ms` }}
-                    >
-                        <div
-                            className={cn(
-                                "relative w-full h-full transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]"
-                            )}
-                        >
-                            {/* Back Face (Logo) - Now Default Visible (0deg) */}
-                            <Card
-                                className="absolute inset-0 w-full h-full shadow-xl border-2 border-primary bg-primary [backface-visibility:hidden] flex items-center justify-center cursor-pointer z-10"
-                                style={{
-                                    backgroundImage: "url('/bowl-25trans.svg')",
-                                    backgroundRepeat: "repeat",
-                                    backgroundSize: "50px" // Adjust size if needed, but default might be fine. Let's start without size or maybe a reasonable size.
-                                }}
-                            >
-                                <div className="relative w-full h-full flex items-center justify-center">
-                                    <img src="/meijiasha.svg" alt="Logo" className="w-32 h-32 opacity-90" />
-                                </div>
-                            </Card>
+                {recommendationResults.map((store, index) => {
+                    const { isOpen, nextTime } = getStoreStatus(store.opening_hours_periods);
 
-                            {/* Front Face (Info) - Now Flipped (180deg) */}
-                            <Card
-                                className="relative w-full h-full shadow-xl border-2 border-white/50 bg-white/90 backdrop-blur-md hover:bg-white transition-colors cursor-pointer [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col"
-                                onClick={() => handleStoreClick(store)}
+                    return (
+                        <div
+                            key={store.id}
+                            className="w-[350px] h-[50vh] md:h-[450px] shrink-0 snap-center perspective-1000 group animate-in zoom-in-50 fade-in slide-in-from-bottom-12 duration-700 ease-out fill-mode-backwards"
+                            style={{ animationDelay: `${index * 150}ms` }}
+                        >
+                            <div
+                                className={cn(
+                                    "relative w-full h-full transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]"
+                                )}
                             >
-                                <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-gray-100">
-                                    <img
-                                        src={getPhotoUrl(store)}
-                                        alt={store.name}
-                                        className="w-full h-full object-cover transition-transform hover:scale-105"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            if (!target.src.includes('staticmap')) {
-                                                target.src = `https://maps.googleapis.com/maps/api/staticmap?center=${store.lat},${store.lng}&zoom=17&size=400x300&markers=color:red%7C${store.lat},${store.lng}&key=${GOOGLE_MAPS_API_KEY}`;
-                                            } else {
-                                                target.src = "https://placehold.co/400x300?text=No+Image";
-                                            }
-                                        }}
-                                    />
-                                    {store.distance !== undefined && (
-                                        <Badge variant="secondary" className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm text-black shadow-sm">
-                                            {store.distance.toFixed(1)} km
-                                        </Badge>
-                                    )}
-                                </div>
-                                <CardContent className="p-4 flex-1 overflow-y-auto">
-                                    <div className="flex flex-col items-start gap-1 mb-2">
-                                        <div className="h-14 flex items-center w-full">
-                                            <h3 className="font-bold text-lg line-clamp-2 leading-tight w-full dark:text-primary">{store.name}</h3>
-                                        </div>
-                                        <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>
-                                            {store.category}
-                                        </Badge>
-                                    </div>
-                                    <div className="space-y-1 text-sm text-gray-600">
-                                        <div className="flex items-start gap-2">
-                                            <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
-                                            <span className="line-clamp-2 min-h-[2.5rem]">{store.address}</span>
-                                        </div>
-                                        {store.phone_number && (
-                                            <div className="flex items-center gap-2">
-                                                <Phone className="w-4 h-4 shrink-0 text-gray-400" />
-                                                <span>{store.phone_number}</span>
-                                            </div>
-                                        )}
-                                        <div className="mt-2">
-                                            <div className="h-8">
-                                                {store.instagram_url && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="w-full text-xs h-8 gap-2 text-pink-600 border-pink-200 hover:bg-pink-50 dark:text-pink-400 dark:border-pink-900 dark:hover:bg-pink-950/30"
-                                                        onClick={(e) => toggleInstagram(store.id, e)}
-                                                    >
-                                                        <Instagram className="w-3 h-3" />
-                                                        {expandedInstagramStoreIds.has(store.id) ? "隱藏 Instagram" : "查看 Instagram"}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                            {store.instagram_url && expandedInstagramStoreIds.has(store.id) && (
-                                                <div className="mt-2 -mx-2 overflow-hidden rounded-lg border border-border" onClick={(e) => e.stopPropagation()}>
-                                                    <InstagramEmbed url={store.instagram_url} width="100%" />
-                                                </div>
+                                {/* Back Face (Logo) - Now Default Visible (0deg) */}
+                                <Card
+                                    className="absolute inset-0 w-full h-full shadow-xl border-2 border-primary bg-primary [backface-visibility:hidden] flex items-center justify-center cursor-pointer z-10"
+                                    style={{
+                                        backgroundImage: "url('/bowl-25trans.svg')",
+                                        backgroundRepeat: "repeat",
+                                        backgroundSize: "50px" // Adjust size if needed, but default might be fine. Let's start without size or maybe a reasonable size.
+                                    }}
+                                >
+                                    <div className="relative w-full h-full flex items-center justify-center">
+                                        <img src="/logo.svg" alt="Logo" className="w-32 h-32 opacity-90" />
+                                        {/* Open/Closed Badge on Back Face */}
+                                        <div className="absolute top-2 left-2">
+                                            {isOpen ? (
+                                                <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-sm gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    營業中
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="secondary" className="bg-gray-500/80 text-white hover:bg-gray-600/80 shadow-sm gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    休息中
+                                                </Badge>
                                             )}
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                    <div className="absolute bottom-2 w-full text-center">
+                                        <p className="text-[10px] text-white/80 px-2">
+                                            * 營業時間資訊抓取自 Google Maps ，
+                                            <strong>還請確認營業時間</strong>。
+                                        </p>
+                                    </div>
+                                </Card>
+
+                                {/* Front Face (Info) - Now Flipped (180deg) */}
+                                <Card
+                                    className="relative w-full h-full shadow-xl border-2 border-white/50 bg-white/90 backdrop-blur-md hover:bg-white transition-colors cursor-pointer [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col"
+                                    onClick={() => handleStoreClick(store)}
+                                >
+                                    <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-gray-100">
+                                        <img
+                                            src={getPhotoUrl(store)}
+                                            alt={store.name}
+                                            className="w-full h-full object-cover transition-transform hover:scale-105"
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                if (!target.src.includes('staticmap')) {
+                                                    target.src = `https://maps.googleapis.com/maps/api/staticmap?center=${store.lat},${store.lng}&zoom=17&size=400x300&markers=color:red%7C${store.lat},${store.lng}&key=${GOOGLE_MAPS_API_KEY}`;
+                                                } else {
+                                                    target.src = "https://placehold.co/400x300?text=No+Image";
+                                                }
+                                            }}
+                                        />
+                                        {store.distance !== undefined && (
+                                            <Badge variant="secondary" className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm text-black shadow-sm">
+                                                {store.distance.toFixed(1)} km
+                                            </Badge>
+                                        )}
+                                        {/* Open/Closed Badge */}
+                                        <div className="absolute top-2 left-2">
+                                            {isOpen ? (
+                                                <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-sm gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    營業中 {nextTime && `• 營業至 ${nextTime}`}
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="secondary" className="bg-gray-500/80 text-white hover:bg-gray-600/80 shadow-sm gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    休息中 {nextTime && `• ${nextTime} 開店`}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <CardContent className="p-4 flex-1 overflow-y-auto relative">
+                                        <div className="flex flex-col items-start gap-1 mb-2">
+                                            <div className="h-14 flex items-center w-full">
+                                                <h3 className="font-bold text-lg line-clamp-2 leading-tight w-full dark:text-primary">{store.name}</h3>
+                                            </div>
+                                            <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>
+                                                {store.category}
+                                            </Badge>
+                                        </div>
+                                        <div className="space-y-1 text-sm text-gray-600 pb-6">
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
+                                                <span className="line-clamp-2 min-h-[2.5rem]">{store.address}</span>
+                                            </div>
+                                            {store.phone_number && (
+                                                <div className="flex items-center gap-2">
+                                                    <Phone className="w-4 h-4 shrink-0 text-gray-400" />
+                                                    <span>{store.phone_number}</span>
+                                                </div>
+                                            )}
+                                            <div className="mt-2">
+                                                <div className="h-8">
+                                                    {store.instagram_url && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full text-xs h-8 gap-2 text-pink-600 border-pink-200 hover:bg-pink-50 dark:text-pink-400 dark:border-pink-900 dark:hover:bg-pink-950/30"
+                                                            onClick={(e) => toggleInstagram(store.id, e)}
+                                                        >
+                                                            <Instagram className="w-3 h-3" />
+                                                            {expandedInstagramStoreIds.has(store.id) ? "隱藏 Instagram" : "查看 Instagram"}
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                {store.instagram_url && expandedInstagramStoreIds.has(store.id) && (
+                                                    <div className="mt-2 -mx-2 overflow-hidden rounded-lg border border-border" onClick={(e) => e.stopPropagation()}>
+                                                        <InstagramEmbed url={store.instagram_url} width="100%" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="absolute bottom-2 left-0 right-0 text-center">
+                                            <p className="text-[10px] text-muted-foreground">
+                                                * 營業時間資訊抓取自 Google Maps ，
+                                                <strong>還請確認營業時間</strong>。
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    )
+                })}
+            </div >
 
             <Button
                 variant="secondary"
@@ -220,6 +260,6 @@ export const RecommendationCards = () => {
             >
                 <X className="w-4 h-4" />
             </Button>
-        </div>
+        </div >
     );
 };

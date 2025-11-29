@@ -24,7 +24,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, MapPin } from "lucide-react";
+import { ArrowLeft, Save, MapPin, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { formatOpeningHours } from "@/lib/time";
 import { useMapsLibrary, useMap } from "@vis.gl/react-google-maps";
 import { Badge } from "@/components/ui/badge";
 import { useStores } from "@/hooks/useStores";
@@ -45,7 +47,10 @@ const formSchema = z.object({
     place_id: z.string().optional(),
     phone_number: z.string().optional(),
     instagram_url: z.string().url("請輸入有效的 URL").optional().or(z.literal("")),
+    opening_hours_periods: z.array(z.any()).optional(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function StoreFormPage() {
     const { id } = useParams();
@@ -60,12 +65,13 @@ export default function StoreFormPage() {
     // Derive unique categories
     const uniqueCategories = Array.from(new Set(stores.map(s => s.category).filter(Boolean))).sort();
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    // Use explicit type for useForm to match schema
+    const form = useForm<FormValues>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         resolver: zodResolver(formSchema) as any,
         defaultValues: {
             name: "",
-            city: DEFAULT_CITY,
+            city: "",
             district: "",
             category: "",
             address: "",
@@ -78,6 +84,7 @@ export default function StoreFormPage() {
             place_id: "",
             phone_number: "",
             instagram_url: "",
+            opening_hours_periods: [],
         },
     });
 
@@ -92,12 +99,16 @@ export default function StoreFormPage() {
     }, [id]);
 
     // Reset district when city changes (if district doesn't belong to new city)
+    // Reset district when city changes (if district doesn't belong to new city)
+    // Commented out to prevent race condition with auto-fill
+    /*
     useEffect(() => {
         const district = form.getValues("district");
         if (district && !currentDistricts.includes(district)) {
             form.setValue("district", "");
         }
     }, [selectedCity, currentDistricts, form]);
+    */
 
     const fetchStore = async (storeId: string) => {
         setLoading(true);
@@ -127,6 +138,7 @@ export default function StoreFormPage() {
                     place_id: data.place_id || "",
                     phone_number: data.phone_number || "",
                     instagram_url: data.instagram_url || "",
+                    opening_hours_periods: data.opening_hours_periods || [],
                 });
             } else {
                 console.error("Store not found");
@@ -228,12 +240,22 @@ export default function StoreFormPage() {
                     form.setValue("latitude", place.geometry.location.lat());
                     form.setValue("longitude", place.geometry.location.lng());
                 }
+                // Save opening hours periods
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                let periods: any[] = [];
+                if (place.opening_hours && place.opening_hours.periods) {
+                    periods = place.opening_hours.periods;
+                } else {
+                    // No opening_hours.periods found in place result
+                }
+                form.setValue("opening_hours_periods", periods);
 
                 // Initialize variables for City/District detection
                 let locality = ""; // District (e.g., Tucheng District)
                 let sublocality = "";
 
                 let foundCity = false;
+                let detectedCity = ""; // Local variable to track city
                 let foundDistrict = false;
 
                 if (place.address_components) {
@@ -248,6 +270,9 @@ export default function StoreFormPage() {
                                 if (value.includes(cityValue) || cityValue.includes(value)) {
                                     form.setValue("city", cityValue);
                                     foundCity = true;
+                                    // Store detected city locally to ensure we use the correct city for district lookup
+                                    // form.getValues("city") might not update immediately in the same render cycle
+                                    detectedCity = cityValue;
                                     break;
                                 }
                             }
@@ -258,33 +283,53 @@ export default function StoreFormPage() {
                         }
                     }
 
-                    // District detection logic
-                    if (foundCity) {
-                        const currentCity = form.getValues("city") as CityName;
-                        const cityDistricts = DISTRICTS[currentCity];
+                    // Re-scanning components to be cleaner and capture adminArea2 properly
+                    let adminArea2 = "";
+                    for (const component of place.address_components) {
+                        if (component.types.includes("administrative_area_level_2")) {
+                            adminArea2 = component.long_name;
+                        }
+                    }
 
-                        // Check locality first
-                        if (locality && cityDistricts.includes(locality)) {
-                            form.setValue("district", locality);
-                            foundDistrict = true;
-                        }
-                        // Then check sublocality (sometimes used for districts)
-                        else if (sublocality && cityDistricts.includes(sublocality)) {
-                            form.setValue("district", sublocality);
-                            foundDistrict = true;
-                        }
-                        // Fallback: check if any component matches a district in the list
-                        else {
-                            for (const component of place.address_components) {
-                                const val = component.long_name;
-                                if (cityDistricts.includes(val)) {
-                                    form.setValue("district", val);
-                                    foundDistrict = true;
-                                    break;
+                    // District detection logic
+                    // Wrap in setTimeout to ensure city state updates and re-renders occur first
+                    // This ensures currentDistricts in the Select component are updated before we try to set the value
+                    setTimeout(() => {
+                        if (foundCity) {
+                            // Use the locally detected city if available, otherwise fallback to form state
+                            const currentCity = (detectedCity || form.getValues("city")) as CityName;
+                            const cityDistricts = DISTRICTS[currentCity];
+
+                            if (!cityDistricts) return;
+
+                            // Check locality first
+                            if (locality && cityDistricts.includes(locality)) {
+                                form.setValue("district", locality);
+                                foundDistrict = true;
+                            }
+                            // Then check sublocality
+                            else if (sublocality && cityDistricts.includes(sublocality)) {
+                                form.setValue("district", sublocality);
+                                foundDistrict = true;
+                            }
+                            // Then check administrative_area_level_2 (Critical fix for New Taipei City districts like Tucheng)
+                            else if (adminArea2 && cityDistricts.includes(adminArea2)) {
+                                form.setValue("district", adminArea2);
+                                foundDistrict = true;
+                            }
+                            // Fallback: check if any component matches a district in the list
+                            else {
+                                for (const component of place.address_components!) {
+                                    const val = component.long_name;
+                                    if (cityDistricts.includes(val)) {
+                                        form.setValue("district", val);
+                                        foundDistrict = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    }
+                    }, 100);
                 }
 
                 // Fallback for City/District if not found via components
@@ -315,7 +360,6 @@ export default function StoreFormPage() {
         };
 
         const performTextSearch = (searchQuery: string) => {
-            console.log("Falling back to textSearch for:", searchQuery);
             const request: google.maps.places.TextSearchRequest = {
                 query: searchQuery,
             };
@@ -323,9 +367,10 @@ export default function StoreFormPage() {
                 if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
                     const firstResult = results[0];
                     if (firstResult.place_id) {
+                        // Use detailFields to get all necessary info including opening_hours
                         service.getDetails({
                             placeId: firstResult.place_id,
-                            fields: ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'address_components']
+                            fields: detailFields
                         }, (place, detailStatus) => {
                             if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
                                 handlePlaceResult(place);
@@ -342,22 +387,26 @@ export default function StoreFormPage() {
             });
         };
 
-        const fields = ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'address_components'];
+        // Fields supported by findPlaceFromQuery
+        const searchFields = ['name', 'formatted_address', 'place_id', 'geometry'];
+        // Fields supported by getDetails (includes phone, address components, opening hours)
+        const detailFields = ['name', 'formatted_address', 'place_id', 'geometry', 'formatted_phone_number', 'address_components', 'opening_hours'];
 
         if (placeId) {
-            service.getDetails({ placeId: placeId, fields: fields }, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
+            // getDetails supports all fields
+            service.getDetails({ placeId: placeId, fields: detailFields }, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK && place) {
                     handlePlaceResult(place);
                 } else {
                     // Fallback to text search if ID fails
                     if (query) {
-                        console.log("ID lookup failed, trying findPlaceFromQuery for:", query);
-                        service.findPlaceFromQuery({ query: query, fields: fields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
+                        // Use searchFields for findPlaceFromQuery to avoid "Unsupported field name" error
+                        service.findPlaceFromQuery({ query: query, fields: searchFields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
                             if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                                // findPlaceFromQuery results might not have address_components, so getDetails again
                                 const res = results[0];
                                 if (res.place_id) {
-                                    service.getDetails({ placeId: res.place_id, fields: fields }, (detailedPlace, detailedStatus) => {
+                                    // Get full details using place_id
+                                    service.getDetails({ placeId: res.place_id, fields: detailFields }, (detailedPlace, detailedStatus) => {
                                         if (detailedStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace) {
                                             handlePlaceResult(detailedPlace);
                                         } else {
@@ -377,11 +426,13 @@ export default function StoreFormPage() {
                 }
             });
         } else if (query) {
-            service.findPlaceFromQuery({ query: query, fields: fields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
+            // Use searchFields for findPlaceFromQuery
+            service.findPlaceFromQuery({ query: query, fields: searchFields }, (results: google.maps.places.PlaceResult[] | null, status: google.maps.places.PlacesServiceStatus) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
                     const res = results[0];
                     if (res.place_id) {
-                        service.getDetails({ placeId: res.place_id, fields: fields }, (detailedPlace, detailedStatus) => {
+                        // Get full details using place_id
+                        service.getDetails({ placeId: res.place_id, fields: detailFields }, (detailedPlace, detailedStatus) => {
                             if (detailedStatus === google.maps.places.PlacesServiceStatus.OK && detailedPlace) {
                                 handlePlaceResult(detailedPlace);
                             } else {
@@ -431,6 +482,28 @@ export default function StoreFormPage() {
                             <MapPin className="h-4 w-4 mr-2" />
                             自動填入
                         </Button>
+                    </div>
+
+                    {/* Opening Hours Display */}
+                    <div className="rounded-lg border p-4 bg-muted/50">
+                        <h3 className="font-medium mb-2 flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            營業時間 (自動抓取)
+                        </h3>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                            {(() => {
+                                const periods = form.watch("opening_hours_periods");
+                                const formattedHours = formatOpeningHours(periods);
+                                return formattedHours.map((line, i) => (
+                                    <div key={i} className={cn(
+                                        "flex justify-between",
+                                        line.includes("休息") ? "text-gray-400" : "text-foreground"
+                                    )}>
+                                        {line}
+                                    </div>
+                                ));
+                            })()}
+                        </div>
                     </div>
 
                     <FormField

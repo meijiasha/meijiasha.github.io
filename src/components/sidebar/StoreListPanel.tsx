@@ -4,8 +4,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink, X, Instagram } from "lucide-react";
+import { MapPin, ExternalLink, X, Instagram, Clock } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
+import { getStoreStatus } from "@/lib/time";
 import {
     Pagination,
     PaginationContent,
@@ -103,6 +104,10 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
             </div>
 
             <ScrollArea className="flex-1 bg-transparent">
+                <div className="p-4 pb-0 text-center text-xs text-muted-foreground border-b border-border/50 mb-2">
+                    營業時間資訊抓取自 Google Maps ，
+                    <strong>還請確認營業時間</strong>。
+                </div>
                 <div className="p-4 space-y-4">
                     {filteredStores.length === 0 ? (
                         <div className="text-center text-gray-500 py-8">
@@ -120,7 +125,23 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                         <div className="h-12 flex items-center w-full">
                                             <CardTitle className="text-base font-bold text-card-foreground line-clamp-2 leading-tight">{store.name}</CardTitle>
                                         </div>
-                                        <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
+                                            {(() => {
+                                                const { isOpen } = getStoreStatus(store.opening_hours_periods);
+                                                return isOpen ? (
+                                                    <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-sm gap-1 text-xs px-1.5 h-5">
+                                                        <Clock className="w-3 h-3" />
+                                                        營業中
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="bg-gray-500/80 text-white hover:bg-gray-600/80 shadow-sm gap-1 text-xs px-1.5 h-5">
+                                                        <Clock className="w-3 h-3" />
+                                                        休息中
+                                                    </Badge>
+                                                );
+                                            })()}
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
@@ -170,29 +191,22 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="p-4 border-t border-primary/30 dark:border-t-0 bg-white/10">
+                <div className="p-2 border-t border-border bg-background/80 backdrop-blur-sm">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>
                                 <PaginationPrevious
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p - 1)); }}
-                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                                 />
                             </PaginationItem>
-
-                            {/* Simple pagination: showing current page / total pages */}
-                            <PaginationItem>
-                                <span className="px-4 text-sm text-primary font-medium">
-                                    {currentPage} / {totalPages}
-                                </span>
-                            </PaginationItem>
-
+                            <span className="text-sm text-muted-foreground mx-2">
+                                {currentPage} / {totalPages}
+                            </span>
                             <PaginationItem>
                                 <PaginationNext
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p + 1)); }}
-                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                                 />
                             </PaginationItem>
                         </PaginationContent>

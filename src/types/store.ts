@@ -23,4 +23,16 @@ export interface Store {
     distance?: number; // Calculated distance from user
     photo_url?: string; // Fetched from Places API
     instagram_url?: string; // Instagram Post/Reel URL
+    opening_hours_periods?: OpeningHoursPeriod[]; // Structured opening hours from Google Maps
+}
+
+export interface OpeningHoursPeriod {
+    open: {
+        day: number;
+        time: string;
+    };
+    close?: {
+        day: number;
+        time: string;
+    };
 }
