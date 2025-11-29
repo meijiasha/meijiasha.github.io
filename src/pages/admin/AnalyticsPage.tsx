@@ -41,24 +41,15 @@ export default function AnalyticsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="h-full pb-12">
-                    <div className="w-full h-full bg-muted/20 rounded-lg border-2 border-dashed border-muted flex items-center justify-center flex-col gap-4 text-muted-foreground">
-                        <BarChart3 className="h-12 w-12 opacity-50" />
-                        <p>在此處嵌入 Looker Studio iframe</p>
-                        <div className="text-sm max-w-md text-center">
-                            請至 Looker Studio 建立報表，選擇 "檔案" &gt; "嵌入報表"，複製 iframe 代碼並貼入程式碼中。
-                        </div>
-                    </div>
-                    {/* 
-                    Example Embed Code:
-                    <iframe 
-                        width="100%" 
-                        height="100%" 
-                        src="https://lookerstudio.google.com/embed/reporting/YOUR_REPORT_ID/page/YOUR_PAGE_ID" 
-                        frameBorder="0" 
-                        style={{ border: 0 }} 
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src="https://lookerstudio.google.com/embed/reporting/623c21e1-ed1e-40b5-ac8d-5af0baede872/page/U5GhF"
+                        frameBorder="0"
+                        style={{ border: 0 }}
                         allowFullScreen
-                    ></iframe> 
-                    */}
+                        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+                    </iframe>
                 </CardContent>
             </Card>
         </div>
