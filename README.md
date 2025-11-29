@@ -21,6 +21,10 @@
 - [x] **身分驗證**: 登入頁面 (`LoginPage`)、Firebase Auth 整合、忘記密碼功能
 - [x] **店家列表**: 使用 Shadcn Table 展示資料，支援分頁 (Pagination) 與刪除功能
 - [x] **店家管理**: 新增與編輯店家表單 (`StoreFormPage`)，整合 Google Maps 連結解析
+- [x] **UI/UX 優化**:
+    - **手機版適配**: 後台列表在手機上自動切換為卡片式顯示 (Responsive Card View)
+    - **操作優化**: 獨立顯示編輯與刪除按鈕，提升操作效率
+    - **地址解析**: 優化 Google Maps 地址自動填入邏輯，支援模糊比對 (Fuzzy Matching)
 
 ## 🛠️ 安裝與執行 (Setup)
 
