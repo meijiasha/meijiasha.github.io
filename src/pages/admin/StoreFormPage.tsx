@@ -152,17 +152,7 @@ export default function StoreFormPage() {
                     }, 50);
                 }
 
-                // Debug form state and districts
-                setTimeout(() => {
-                    const currentCity = form.getValues("city");
-                    const currentDist = form.getValues("district");
-                    console.log("Check after reset - City:", currentCity, "District:", currentDist);
-                    // We can't easily access currentDistricts here as it's a component variable, 
-                    // but we can log what it should be.
-                    import("@/lib/locations").then(({ DISTRICTS }) => {
-                        console.log("Expected districts for", currentCity, ":", DISTRICTS[currentCity as any]);
-                    });
-                }, 200);
+
             } else {
                 console.error("Store not found");
                 alert("找不到店家資料");

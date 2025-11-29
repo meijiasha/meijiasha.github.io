@@ -21,7 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ExternalLink, Search, X, Files } from "lucide-react";
-import { MoreHorizontal } from "lucide-react";
+
 import { auth } from "@/lib/firebase";
 
 import {

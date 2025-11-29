@@ -817,6 +817,11 @@ line-bot-server.js`。
     - **Desktop**: Displays the standard data table.
     - **Mobile**: Automatically switches to a card-based layout, showing key information (Name, Category, Location) and large, touch-friendly Edit/Delete buttons.
 
+### 3. Build Fixes
+- **TypeScript Errors**: Fixed `TS7053` in `StoreFormPage.tsx` by removing temporary debug code that used implicit `any` indexing.
+- **Unused Imports**: Fixed `TS6133` in `StoreListPage.tsx` by removing the unused `MoreHorizontal` import.
+- **Verification**: Confirmed successful build with `npm run build`.
+
     現在點擊「隨機推薦店家」後，推薦結果除了顯示在地圖上，也會同步列表在側邊欄中。列表中的店家是可點擊的，點擊後會將地圖平移至店家位
     置並打開資訊視窗。
     * **智慧推薦邏輯**:
