@@ -3,9 +3,9 @@ import { ControlPanel } from '@/components/sidebar/ControlPanel';
 import { StoreListPanel } from '@/components/sidebar/StoreListPanel';
 import { MapContainer } from '@/components/map/MapContainer';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAppStore } from '@/store/useAppStore';
 import { Navbar } from '@/components/Navbar';
 
@@ -71,10 +71,7 @@ export default function MainLayout() {
                             </SheetTrigger>
                             <SheetContent side="left" className="p-0 w-80 pt-12">
                                 <ControlPanel stores={stores} />
-                                <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary bg-white/50 p-1">
-                                    <X className="h-4 w-4" />
-                                    <span className="sr-only">Close</span>
-                                </SheetClose>
+
                             </SheetContent>
                         </Sheet>
                     </div>
