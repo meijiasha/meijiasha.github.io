@@ -10,21 +10,24 @@
 - **UI 元件**: [Shadcn UI](https://ui.shadcn.com/)
 - **路由管理**: [React Router](https://reactrouter.com/)
 - **表單處理**: [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
-- **後端服務**: [Firebase](https://firebase.google.com/) (Authentication, Firestore, Functions)
+- **地圖整合**: [@vis.gl/react-google-maps](https://visgl.github.io/react-google-maps/)
+- **PWA**: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)
 
-## 📅 目前進度 (Phase 1: Admin System)
+## 📅 目前進度 (Current Progress)
 
-已完成後台管理系統的基礎建設與核心功能：
+### Phase 1: 後台管理系統 (Admin System) ✅
+- [x] **完整功能**: 登入驗證、店家列表管理、新增/編輯表單
+- [x] **UI/UX**: 響應式設計、深色模式支援、Google Maps 地址自動填入
 
-- [x] **專案初始化**: Vite + React + TypeScript + Tailwind CSS + Shadcn UI
-- [x] **路由架構**: 實作 `AdminLayout` 與路由保護 (Protected Routes)
-- [x] **身分驗證**: 登入頁面 (`LoginPage`)、Firebase Auth 整合、忘記密碼功能
-- [x] **店家列表**: 使用 Shadcn Table 展示資料，支援分頁 (Pagination) 與刪除功能
-- [x] **店家管理**: 新增與編輯店家表單 (`StoreFormPage`)，整合 Google Maps 連結解析
-- [x] **UI/UX 優化**:
-    - **手機版適配**: 後台列表在手機上自動切換為卡片式顯示 (Responsive Card View)
-    - **操作優化**: 獨立顯示編輯與刪除按鈕，提升操作效率
-    - **地址解析**: 優化 Google Maps 地址自動填入邏輯，支援模糊比對 (Fuzzy Matching)
+### Phase 2: 前台地圖 (Frontend Map) ✅
+- [x] **React 遷移**: 將舊版首頁完全遷移至 React 架構 (`MainLayout`)
+- [x] **地圖功能**: 整合 Google Maps、使用者定位、深色地圖樣式
+- [x] **側邊欄**: 實作響應式側邊欄 (Desktop: 固定 / Mobile: Drawer)
+- [x] **推薦系統**: 隨機推薦卡片 UI 與邏輯遷移
+
+### Phase 3: PWA 支援 (Progressive Web App) ✅
+- [x] **安裝支援**: 支援安裝至桌面與手機主畫面
+- [x] **離線能力**: Service Worker 快取與離線頁面支援
 
 ## 🛠️ 安裝與執行 (Setup)
 
@@ -34,7 +37,7 @@
     ```
 
 2.  **設定環境變數**:
-    請確保 `src/lib/firebase.ts` 中包含正確的 Firebase 設定，或設定對應的環境變數。
+    請確保 `.env` 或 `src/lib/config.ts` 中包含正確的 API Key 設定。
 
 3.  **啟動開發伺服器**:
     ```bash
@@ -48,16 +51,21 @@
 
 ## 📂 專案結構
 
-- `src/components`: 共用元件 (包含 Shadcn UI 元件)
-- `src/layouts`: 頁面佈局 (如 `AdminLayout`)
-- `src/lib`: 工具函式與設定 (如 `firebase.ts`, `utils.ts`)
-- `src/pages`: 頁面組件
-    - `admin`: 後台相關頁面 (`StoreListPage`, `StoreFormPage`)
-    - `auth`: 認證相關頁面 (`LoginPage`)
-- `src/types`: TypeScript 型別定義
+- `src/components`:
+    - `map`: 地圖相關元件 (`MapContainer`, `StoreMarker`)
+    - `sidebar`: 側邊欄元件 (`ControlPanel`, `StoreListPanel`)
+    - `ui`: Shadcn UI 基礎元件
+- `src/layouts`: 頁面佈局 (`MainLayout`, `AdminLayout`)
+- `src/lib`: 工具函式 (`firebase.ts`, `locations.ts`)
+- `src/pages`:
+    - `admin`: 後台管理頁面
+    - `auth`: 登入頁面
+- `src/hooks`: 自定義 Hooks (`useStores`, `useRecommendation`)
+- `src/store`: Zustand 狀態管理 (`useAppStore`)
 
 ## 📝 文件紀錄
 
 - `gemini.md`: 詳細的開發日誌與決策紀錄
 - `task.md`: 開發任務清單與狀態
 - `walkthrough.md`: 功能展示與驗證報告
+- `pwa_implementation_plan.md`: PWA 實作計畫細節
