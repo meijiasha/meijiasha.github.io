@@ -16,10 +16,10 @@
 - [x] **推薦卡片**: 遷移隨機推薦功能的 UI
 
 ## PWA 實作 (PWA Implementation)
-- [ ] **套件安裝**: 安裝 `vite-plugin-pwa` 與 `workbox-window`
-- [ ] **Vite 設定**: 設定 `vite.config.ts` 中的 PWA plugin
-- [ ] **圖示準備**: 生成 PWA 所需的圖示 (192x192, 512x512)
-- [ ] **Service Worker**: 註冊 Service Worker 並處理更新提示
+- [x] **套件安裝**: 安裝 `vite-plugin-pwa` 與 `workbox-window`
+- [x] **Vite 設定**: 設定 `vite.config.ts` 中的 PWA plugin
+- [x] **圖示準備**: 生成 PWA 所需的圖示 (192x192, 512x512)
+- [x] **Service Worker**: 註冊 Service Worker 並處理更新提示
 
 ## 其他優化
 - [ ] **效能優化**: 實作店家列表的分頁或虛擬滾動 (Virtual Scrolling)

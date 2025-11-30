@@ -11,7 +11,8 @@
     "module": "ESNext",
     "types": [
       "vite/client",
-      "google.maps"
+      "google.maps",
+      "vite-plugin-pwa/client"
     ],
     "skipLibCheck": true,
     /* Bundler mode */
