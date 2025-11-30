@@ -30,7 +30,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         setStoreListPanelOpen
     } = useAppStore();
 
-    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+    const [currentPage, setCurrentPage] = useState(1);
     const [expandedInstagramStoreIds, setExpandedInstagramStoreIds] = useState<Set<string>>(new Set());
 
     const toggleInstagram = (storeId: string, e: React.MouseEvent) => {
@@ -57,18 +57,26 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         });
     }, [stores, selectedCity, selectedDistrict, selectedCategory]);
 
-    // Reset to initial count when filters change
+    // Reset to first page when filters change
     useEffect(() => {
-        setVisibleCount(ITEMS_PER_PAGE);
+        setCurrentPage(1);
     }, [selectedCity, selectedDistrict, selectedCategory]);
 
-    // Load More logic
+    // Pagination logic
+    const totalPages = Math.ceil(filteredStores.length / ITEMS_PER_PAGE);
+    
     const currentStores = useMemo(() => {
-        return filteredStores.slice(0, visibleCount);
-    }, [filteredStores, visibleCount]);
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredStores.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredStores, currentPage]);
 
-    const handleLoadMore = () => {
-        setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+        // Scroll to top of the list when changing pages
+        const scrollArea = document.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollArea) {
+            scrollArea.scrollTop = 0;
+        }
     };
 
     const handleStoreClick = (store: Store) => {
@@ -189,15 +197,27 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                                 </Card>
                             ))}
 
-                            {/* Load More Button */}
-                            {visibleCount < filteredStores.length && (
-                                <div className="pt-2 pb-4">
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-between items-center pt-2 pb-4">
                                     <Button
                                         variant="outline"
-                                        className="w-full"
-                                        onClick={handleLoadMore}
+                                        size="sm"
+                                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                        disabled={currentPage === 1}
                                     >
-                                        載入更多 ({filteredStores.length - visibleCount} 間)
+                                        上一頁
+                                    </Button>
+                                    <span className="text-sm text-muted-foreground">
+                                        {currentPage} / {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        下一頁
                                     </Button>
                                 </div>
                             )}
