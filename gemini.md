@@ -163,6 +163,13 @@
 - **Unified Collection**: Migrate to a single `stores` collection with a `city` field.
 - **Configuration**: Centralize city/district data in a config file.
 
+### 2025-12-01 Project Structure & Git Hygiene
+- **Project Structure**: Confirmed separation of concerns. `meijiasha.github.io` (Frontend) and `meijiasha-line-bot` (Backend) remain separate repositories.
+- **Git History Cleanup**: 
+    - Unified commit author email to `meijiasha.tw@gmail.com`.
+    - Rewrote history to replace `seraphwu@gmail.com` and `wingfly.tw@gmail.com` with `meijiasha.tw@gmail.com`.
+    - Verified `HEAD` history is clean of old emails.
+
 ### 3. Implementation Steps
 1.  **Configuration**: Create `src/lib/locations.ts` with city-district mappings.
 2.  **Schema**: Update `Store` type to include `city: string`.
