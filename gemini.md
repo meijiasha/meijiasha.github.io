@@ -10,6 +10,11 @@
 *   **地圖整合**: `@vis.gl/react-google-maps` (Google Maps API 的 React Wrapper)
 *   **後端服務**: Firebase v12 (Firestore, Auth, Hosting)
 
+### 1.1 開發規範 (Development Guidelines)
+*   **語言**: 所有文件、溝通訊息、Commit 訊息皆須使用 **繁體中文 (Traditional Chinese)**。
+*   **Commit 格式**: `<type>: <description>` (描述請使用繁體中文)。
+    *   範例: `feat: 新增使用者登入功能`, `fix: 修正地圖顯示錯誤`, `docs: 更新部署文件`。
+
 ### 2. 關鍵目錄結構 (Key Directories)
 *   `src/components/ui`: Shadcn UI 基礎元件 (Button, Card, Input...)。
 *   `src/components/sidebar`: 側邊欄相關元件 (`ControlPanel`, `StoreListPanel`)。
