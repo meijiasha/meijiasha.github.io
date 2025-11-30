@@ -57,12 +57,12 @@
 
 ### 1. 現況盤點
 - **後台系統 (Admin)**: 已完成並穩定運作 (React + Shadcn UI)。
-- **前台地圖 (Frontend)**: 目前仍依賴舊版 `legacy/index.html`。`src/components/map` 中已有部分 React 元件 (`MapContainer`, `RecommendationCards`)，但尚未完全整合至主頁面。
-- **PWA**: 尚未實作，但已備有詳細計畫 (`pwa_implementation_plan.md`)。
+- **前台地圖 (Frontend)**: 已遷移至 React 架構 (`src/layouts/MainLayout.tsx`)，整合了地圖、側邊欄與推薦功能。
+- **PWA**: 尚未實作。
 
 ### 2. 下一步重點 (Next Focus)
-- **Phase 2: 前台地圖遷移**: 將前台功能完全遷移至 React 架構，取代舊版首頁。
-- **PWA 實作**: 在前台遷移完成後，加入 PWA 支援以提升行動裝置體驗。
+- **PWA 實作**: 加入 PWA 支援以提升行動裝置體驗。
+- **效能優化**: 針對地圖與列表進行效能調校。
 
 ---
 

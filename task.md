@@ -9,11 +9,11 @@
 - [x] **UI/UX 優化**: 手機版適配、操作優化、地址解析模糊比對
 
 ## 第二階段：前台地圖 (Phase 2: Frontend Map)
-- [ ] **地圖整合**: 整合 `@vis.gl/react-google-maps`
-- [ ] **側邊欄功能**: 實作側邊欄店家列表與篩選功能
-- [ ] **地圖標記**: 遷移地圖標記 (Markers) 與 InfoWindow 邏輯
-- [ ] **狀態管理**: 使用 Zustand 管理地圖狀態與篩選條件
-- [ ] **推薦卡片**: 遷移隨機推薦功能的 UI
+- [x] **地圖整合**: 整合 `@vis.gl/react-google-maps`
+- [x] **側邊欄功能**: 實作側邊欄店家列表與篩選功能
+- [x] **地圖標記**: 遷移地圖標記 (Markers) 與 InfoWindow 邏輯
+- [x] **狀態管理**: 使用 Zustand 管理地圖狀態與篩選條件
+- [x] **推薦卡片**: 遷移隨機推薦功能的 UI
 
 ## PWA 實作 (PWA Implementation)
 - [ ] **套件安裝**: 安裝 `vite-plugin-pwa` 與 `workbox-window`
