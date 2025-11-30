@@ -32,7 +32,7 @@ export const SponsorWidget = () => {
                     onClick={handleClose}
                 >
                     <X className="h-3 w-3" />
-                    <span className="sr-only">Close Sponsor</span>
+                    <span className="sr-only">關閉贊助</span>
                 </Button>
                 <div className="overflow-hidden rounded-lg shadow-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm">
                     <a href="https://www.god-dice.com/" target="_blank" rel="noopener noreferrer" className="block">

@@ -457,7 +457,7 @@ export default function StoreFormPage() {
                             name="latitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>緯度 (Latitude)</FormLabel>
+                                    <FormLabel>緯度</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="any" placeholder="0.0" {...field} />
                                     </FormControl>
@@ -470,7 +470,7 @@ export default function StoreFormPage() {
                             name="longitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>經度 (Longitude)</FormLabel>
+                                    <FormLabel>經度</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="any" placeholder="0.0" {...field} />
                                     </FormControl>

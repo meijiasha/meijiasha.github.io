@@ -32,7 +32,7 @@ export default function MainLayout() {
     };
 
     // Handle error state
-    if (error) return <div className="flex items-center justify-center h-screen text-red-500">Error: {error}</div>;
+    if (error) return <div className="flex items-center justify-center h-screen text-red-500">錯誤: {error}</div>;
 
     return (
         <div className="flex flex-col h-screen w-full overflow-hidden bg-background">

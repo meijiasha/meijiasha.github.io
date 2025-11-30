@@ -30,7 +30,7 @@ export default function AdminLayout() {
     };
 
     if (loading) {
-        return <div className="flex h-screen items-center justify-center">Loading...</div>;
+        return <div className="flex h-screen items-center justify-center">載入中...</div>;
     }
 
     return (

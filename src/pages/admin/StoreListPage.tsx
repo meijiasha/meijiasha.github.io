@@ -236,7 +236,7 @@ export default function StoreListPage() {
     };
 
     if (loading) {
-        return <div>Loading stores...</div>;
+        return <div>載入店家資料中...</div>;
     }
 
     return (
