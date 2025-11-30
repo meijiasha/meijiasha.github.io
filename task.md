@@ -21,8 +21,8 @@
 - [x] **圖示準備**: 生成 PWA 所需的圖示 (192x192, 512x512)
 - [x] **Service Worker**: 註冊 Service Worker 並處理更新提示
 
-## Maintenance
-- [x] Git History Cleanup (Unified author to meijiasha.tw@gmail.com)
+## 維護 (Maintenance)
+- [x] Git 歷史清理 (統一作者為 meijiasha.tw@gmail.com)
 
 ## 其他優化
 - [ ] **效能優化**: 實作店家列表的分頁或虛擬滾動 (Virtual Scrolling)

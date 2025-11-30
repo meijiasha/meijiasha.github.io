@@ -153,31 +153,31 @@
 
 ---
 
-## Multi-City Expansion Plan (2025-11-25)
+## 多縣市擴展計畫 (2025-11-25)
 
-### 1. Analysis
-- **Current State**: Stores are hardcoded to `stores_taipei` collection. `Store` interface lacks `city` field. Districts are hardcoded for Taipei.
-- **Goal**: Support multiple cities (e.g., New Taipei, Taichung).
+### 1. 分析
+- **現況**: 店家資料被寫死在 `stores_taipei` 集合。`Store` 介面缺少 `city` 欄位。行政區被寫死為台北市。
+- **目標**: 支援多縣市 (例如：新北市、台中市)。
 
-### 2. Strategy
-- **Unified Collection**: Migrate to a single `stores` collection with a `city` field.
-- **Configuration**: Centralize city/district data in a config file.
+### 2. 策略
+- **統一集合**: 遷移至單一 `stores` 集合，並新增 `city` 欄位。
+- **配置**: 將縣市/行政區資料集中管理於設定檔。
 
-### 2025-12-01 Project Structure & Git Hygiene
-- **Project Structure**: Confirmed separation of concerns. `meijiasha.github.io` (Frontend) and `meijiasha-line-bot` (Backend) remain separate repositories.
-- **Git History Cleanup**: 
-    - Unified commit author email to `meijiasha.tw@gmail.com`.
-    - Rewrote history to replace `seraphwu@gmail.com` and `wingfly.tw@gmail.com` with `meijiasha.tw@gmail.com`.
-    - Verified `HEAD` history is clean of old emails.
+### 2025-12-01 專案結構與 Git 衛生管理
+- **專案結構**: 確認職責分離。`meijiasha.github.io` (前端) 與 `meijiasha-line-bot` (後端) 維持獨立儲存庫。
+- **Git 歷史清理**: 
+    - 統一 Commit 作者 Email 為 `meijiasha.tw@gmail.com`。
+    - 重寫歷史紀錄，將 `seraphwu@gmail.com` 與 `wingfly.tw@gmail.com` 替換為 `meijiasha.tw@gmail.com`。
+    - 驗證 `HEAD` 歷史紀錄已清除舊 Email。
 
-### 3. Implementation Steps
-1.  **Configuration**: Create `src/lib/locations.ts` with city-district mappings.
-2.  **Schema**: Update `Store` type to include `city: string`.
-3.  **Admin UI**:
-    - Update `StoreListPage` to show `city`.
-    - Update `StoreFormPage` to include City selection and dynamic District dropdown.
-    - **Improved Auto-fill**: Enhanced `StoreFormPage.tsx` to correctly detect districts from `administrative_area_level_2` (e.g., for New Taipei City) and fixed a race condition using `setTimeout`. Added debug tool `public/debug_maps.html`.
-4.  **Frontend**: Update `useRecommendation` and UI to support city filtering.
+### 3. 實作步驟
+1.  **配置**: 建立 `src/lib/locations.ts` 定義縣市與行政區對應。
+2.  **Schema**: 更新 `Store` 型別以包含 `city: string`。
+3.  **後台 UI**:
+    - 更新 `StoreListPage` 顯示 `city`。
+    - 更新 `StoreFormPage` 加入縣市選擇與動態行政區下拉選單。
+    - **自動填入優化**: 增強 `StoreFormPage.tsx` 以正確偵測 `administrative_area_level_2` (例如新北市的行政區)，並修正了使用 `setTimeout` 的競態條件。新增除錯工具 `public/debug_maps.html`。
+4.  **前台**: 更新 `useRecommendation` 與 UI 以支援縣市篩選。
 
 ### 4. 實作成果 (2025-11-25 更新)
 
