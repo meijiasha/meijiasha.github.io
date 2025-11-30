@@ -53,6 +53,19 @@
 
 ---
 
+## 📅 2025-12-01: 專案檢視與未來規劃 (Project Review & Roadmap)
+
+### 1. 現況盤點
+- **後台系統 (Admin)**: 已完成並穩定運作 (React + Shadcn UI)。
+- **前台地圖 (Frontend)**: 目前仍依賴舊版 `legacy/index.html`。`src/components/map` 中已有部分 React 元件 (`MapContainer`, `RecommendationCards`)，但尚未完全整合至主頁面。
+- **PWA**: 尚未實作，但已備有詳細計畫 (`pwa_implementation_plan.md`)。
+
+### 2. 下一步重點 (Next Focus)
+- **Phase 2: 前台地圖遷移**: 將前台功能完全遷移至 React 架構，取代舊版首頁。
+- **PWA 實作**: 在前台遷移完成後，加入 PWA 支援以提升行動裝置體驗。
+
+---
+
 ## 📅 2025-11-28: UI 優化與修正 (UI Refinements & Fixes)
 
 ### 1. 介面優化 (UI Refinements)
