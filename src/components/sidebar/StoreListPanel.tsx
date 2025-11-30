@@ -7,13 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, ExternalLink, X, Instagram, Clock } from "lucide-react";
 import { InstagramEmbed } from 'react-social-media-embed';
 import { getStoreStatus } from "@/lib/time";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
+
 import type { Store } from "@/types/store";
 import { useAppStore } from "@/store/useAppStore";
 
@@ -36,7 +30,7 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         setStoreListPanelOpen
     } = useAppStore();
 
-    const [currentPage, setCurrentPage] = useState(1);
+    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
     const [expandedInstagramStoreIds, setExpandedInstagramStoreIds] = useState<Set<string>>(new Set());
 
     const toggleInstagram = (storeId: string, e: React.MouseEvent) => {
@@ -63,17 +57,19 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
         });
     }, [stores, selectedCity, selectedDistrict, selectedCategory]);
 
-    // Reset to page 1 when filters change
+    // Reset to initial count when filters change
     useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedDistrict, selectedCategory]);
+        setVisibleCount(ITEMS_PER_PAGE);
+    }, [selectedCity, selectedDistrict, selectedCategory]);
 
-    // Pagination logic
-    const totalPages = Math.ceil(filteredStores.length / ITEMS_PER_PAGE);
+    // Load More logic
     const currentStores = useMemo(() => {
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredStores.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    }, [filteredStores, currentPage]);
+        return filteredStores.slice(0, visibleCount);
+    }, [filteredStores, visibleCount]);
+
+    const handleLoadMore = () => {
+        setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+    };
 
     const handleStoreClick = (store: Store) => {
         setSelectedStore(store);
@@ -114,111 +110,101 @@ export const StoreListPanel = ({ stores }: StoreListPanelProps) => {
                             沒有符合條件的店家
                         </div>
                     ) : (
-                        currentStores.map((store) => (
-                            <Card
-                                key={store.id}
-                                className={`cursor-pointer transition-all hover:shadow-md bg-card hover:bg-accent/50 border-border ${selectedStore?.id === store.id ? 'border-primary ring-1 ring-primary' : ''}`}
-                                onClick={() => handleStoreClick(store)}
-                            >
-                                <CardHeader className="p-3 md:p-4 pb-2 md:pb-2">
-                                    <div className="flex flex-col items-start gap-1">
-                                        <div className="h-12 flex items-center w-full">
-                                            <CardTitle className="text-base font-bold text-card-foreground line-clamp-2 leading-tight">{store.name}</CardTitle>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
-                                            {(() => {
-                                                const { isOpen } = getStoreStatus(store.opening_hours_periods);
-                                                return isOpen ? (
-                                                    <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-sm gap-1 text-xs px-1.5 h-5">
-                                                        <Clock className="w-3 h-3" />
-                                                        營業中
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="secondary" className="bg-gray-500/80 text-white hover:bg-gray-600/80 shadow-sm gap-1 text-xs px-1.5 h-5">
-                                                        <Clock className="w-3 h-3" />
-                                                        休息中
-                                                    </Badge>
-                                                );
-                                            })()}
-                                        </div>
-                                        {store.dishes && (
-                                            <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
-                                                <span className="shrink-0">👍</span>
-                                                <span className="line-clamp-1">{store.dishes}</span>
+                        <>
+                            {currentStores.map((store) => (
+                                <Card
+                                    key={store.id}
+                                    className={`cursor-pointer transition-all hover:shadow-md bg-card hover:bg-accent/50 border-border ${selectedStore?.id === store.id ? 'border-primary ring-1 ring-primary' : ''}`}
+                                    onClick={() => handleStoreClick(store)}
+                                >
+                                    <CardHeader className="p-3 md:p-4 pb-2 md:pb-2">
+                                        <div className="flex flex-col items-start gap-1">
+                                            <div className="h-12 flex items-center w-full">
+                                                <CardTitle className="text-base font-bold text-card-foreground line-clamp-2 leading-tight">{store.name}</CardTitle>
                                             </div>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
-                                    <div className="text-sm text-muted-foreground space-y-1">
-                                        <div className="flex items-center">
-                                            <MapPin className="w-3 h-3 mr-1 text-primary" />
-                                            {store.district}
+                                            <div className="flex flex-wrap gap-2">
+                                                <Badge variant="secondary" className={cn("text-xs", getCategoryColor(store.category))}>{store.category}</Badge>
+                                                {(() => {
+                                                    const { isOpen } = getStoreStatus(store.opening_hours_periods);
+                                                    return isOpen ? (
+                                                        <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-sm gap-1 text-xs px-1.5 h-5">
+                                                            <Clock className="w-3 h-3" />
+                                                            營業中
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="secondary" className="bg-gray-500/80 text-white hover:bg-gray-600/80 shadow-sm gap-1 text-xs px-1.5 h-5">
+                                                            <Clock className="w-3 h-3" />
+                                                            休息中
+                                                        </Badge>
+                                                    );
+                                                })()}
+                                            </div>
+                                            {store.dishes && (
+                                                <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
+                                                    <span className="shrink-0">👍</span>
+                                                    <span className="line-clamp-1">{store.dishes}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="line-clamp-2 h-10 flex items-center">{store.address}</div>
-                                        {store.google_maps_url && (
-                                            <a
-                                                href={store.google_maps_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-center text-blue-600 hover:underline mt-2"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <ExternalLink className="w-3 h-3 mr-1" />
-                                                Google Maps
-                                            </a>
-                                        )}
-                                        {store.instagram_url && (
-                                            <div className="mt-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="w-full text-xs h-8 gap-2 text-pink-600 border-pink-200 hover:bg-pink-50 dark:text-pink-400 dark:border-pink-900 dark:hover:bg-pink-950/30"
-                                                    onClick={(e) => toggleInstagram(store.id, e)}
+                                    </CardHeader>
+                                    <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
+                                        <div className="text-sm text-muted-foreground space-y-1">
+                                            <div className="flex items-center">
+                                                <MapPin className="w-3 h-3 mr-1 text-primary" />
+                                                {store.district}
+                                            </div>
+                                            <div className="line-clamp-2 h-10 flex items-center">{store.address}</div>
+                                            {store.google_maps_url && (
+                                                <a
+                                                    href={store.google_maps_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center text-blue-600 hover:underline mt-2"
+                                                    onClick={(e) => e.stopPropagation()}
                                                 >
-                                                    <Instagram className="w-3 h-3" />
-                                                    {expandedInstagramStoreIds.has(store.id) ? "隱藏 Instagram" : "查看 Instagram"}
-                                                </Button>
-                                                {expandedInstagramStoreIds.has(store.id) && (
-                                                    <div className="mt-2 -mx-2 overflow-hidden rounded-lg border border-border" onClick={(e) => e.stopPropagation()}>
-                                                        <InstagramEmbed url={store.instagram_url} width="100%" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))
+                                                    <ExternalLink className="w-3 h-3 mr-1" />
+                                                    Google Maps
+                                                </a>
+                                            )}
+                                            {store.instagram_url && (
+                                                <div className="mt-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full text-xs h-8 gap-2 text-pink-600 border-pink-200 hover:bg-pink-50 dark:text-pink-400 dark:border-pink-900 dark:hover:bg-pink-950/30"
+                                                        onClick={(e) => toggleInstagram(store.id, e)}
+                                                    >
+                                                        <Instagram className="w-3 h-3" />
+                                                        {expandedInstagramStoreIds.has(store.id) ? "隱藏 Instagram" : "查看 Instagram"}
+                                                    </Button>
+                                                    {expandedInstagramStoreIds.has(store.id) && (
+                                                        <div className="mt-2 -mx-2 overflow-hidden rounded-lg border border-border" onClick={(e) => e.stopPropagation()}>
+                                                            <InstagramEmbed url={store.instagram_url} width="100%" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+
+                            {/* Load More Button */}
+                            {visibleCount < filteredStores.length && (
+                                <div className="pt-2 pb-4">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={handleLoadMore}
+                                    >
+                                        載入更多 ({filteredStores.length - visibleCount} 間)
+                                    </Button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </ScrollArea>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-                <div className="p-2 border-t border-border bg-background/80 backdrop-blur-sm">
-                    <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                                <PaginationPrevious
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                                />
-                            </PaginationItem>
-                            <span className="text-sm text-muted-foreground mx-2">
-                                {currentPage} / {totalPages}
-                            </span>
-                            <PaginationItem>
-                                <PaginationNext
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                                />
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-            )}
         </div>
     );
 };
