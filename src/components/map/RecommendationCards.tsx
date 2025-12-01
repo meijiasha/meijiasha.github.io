@@ -135,7 +135,7 @@ export const RecommendationCards = () => {
                                     }}
                                 >
                                     <div className="relative w-full h-full flex items-center justify-center">
-                                        <img src="/logo.svg" alt="Logo" className="w-32 h-32 opacity-90" />
+                                        <img src="/meijiasha.svg" alt="Logo" className="w-32 h-32 opacity-90" />
                                         {/* Open/Closed Badge on Back Face */}
                                         <div className="absolute top-2 left-2">
                                             {isOpen ? (

@@ -73,6 +73,11 @@
 - **分析結果**: 經比對 `meijiasha.github.io` (前端) 與 `meijiasha-line-bot` (後端) 兩個專案，確認兩者職責分明且文件獨立。
 - **決策**: 維持雙工作區模式，**無需進行合併**。前端專案保留歷史紀錄，後端專案記錄拆分後的開發細節。
 
+### 4. UI 樣式調整 (UI Updates)
+- **推薦卡片 (Recommendation Cards)**:
+    - **背景樣式**: 調整卡片背面樣式，使用 `bowl-25trans.svg` 作為重複排列的背景。
+    - **前景圖示**: 將原本的 `logo.svg` 更換為 `meijiasha.svg`，提升品牌識別度。
+
 ---
 
 ## 📅 2025-11-28: UI 優化與修正 (UI Refinements & Fixes)
