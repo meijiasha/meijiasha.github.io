@@ -169,7 +169,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                             disabled={isRecommending}
                         >
                             {isRecommending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shuffle className="mr-2 h-4 w-4" />}
-                            隨機推薦
+                            推薦店家隨機抽卡
                         </Button>
                         <Button
                             variant="outline"
@@ -178,7 +178,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                             disabled={isRecommending}
                         >
                             {isRecommending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Navigation className="mr-2 h-4 w-4" />}
-                            推薦附近
+                            附近呷啥隨機抽卡
                         </Button>
                     </div>
                 </div>
@@ -188,7 +188,7 @@ export const ControlPanel = ({ stores }: ControlPanelProps) => {
                     <div className="mt-6 border-t pt-4 animate-in slide-in-from-top-2">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="font-bold text-foreground flex items-center">
-                                <Shuffle className="w-4 h-4 mr-2" /> 推薦結果
+                                <Shuffle className="w-4 h-4 mr-2" /> 推薦店家隨機抽卡結果
                             </h3>
                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setRecommendationPanelOpen(false)}>
                                 <X className="w-4 h-4" />
