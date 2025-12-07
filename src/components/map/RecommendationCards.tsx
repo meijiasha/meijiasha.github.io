@@ -97,10 +97,7 @@ export const RecommendationCards = () => {
         if (store.photo_reference) {
             return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${store.photo_reference}&key=${GOOGLE_MAPS_API_KEY}`;
         }
-        // Fallback to Static Map
-        if (store.lat && store.lng) {
-            return `https://maps.googleapis.com/maps/api/staticmap?center=${store.lat},${store.lng}&zoom=15&size=400x300&markers=color:red%7C${store.lat},${store.lng}&key=${GOOGLE_MAPS_API_KEY}`;
-        }
+        // Fallback to local placeholder (Cost Saving: Removed Static Map fallback)
         return "/placeholder.svg";
     };
 
@@ -168,14 +165,11 @@ export const RecommendationCards = () => {
                                         <img
                                             src={getPhotoUrl(store)}
                                             alt={store.name}
+                                            loading="lazy"
                                             className="w-full h-full object-cover transition-transform hover:scale-105"
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement;
-                                                if (!target.src.includes('staticmap')) {
-                                                    target.src = `https://maps.googleapis.com/maps/api/staticmap?center=${store.lat},${store.lng}&zoom=17&size=400x300&markers=color:red%7C${store.lat},${store.lng}&key=${GOOGLE_MAPS_API_KEY}`;
-                                                } else {
-                                                    target.src = "https://placehold.co/400x300?text=No+Image";
-                                                }
+                                                target.src = "/placeholder.svg"; // Fallback to local placeholder
                                             }}
                                         />
                                         {store.distance !== undefined && (
